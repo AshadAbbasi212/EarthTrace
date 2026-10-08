@@ -1,0 +1,83 @@
+# Global Photo Geolocator Configuration
+# Note: NO API KEYS, TOKENS, OR CREDENTIALS ARE USED OR PERMITTED.
+
+server:
+  host: "127.0.0.1"
+  port: 8000
+  passphrase_enabled: false
+  passphrase: ""
+  rate_limit_per_minute: 30
+
+storage:
+  jobs_dir: "jobs"
+  cache_dir: ".geo-cache"
+  models_dir: "models"
+  data_dir: "data"
+  eval_dir: "eval"
+  logs_dir: "logs"
+  retention_hours: 24
+  auto_delete_expired: true
+  strip_exif_on_store: true
+
+hardware:
+  device: "cuda"  # "cuda" or "cpu"
+  max_vram_gb: 4.0
+  unload_after_use: true
+  empty_cache_after_step: true
+
+models:
+  vlm:
+    model_id: "Qwen/Qwen2.5-VL-3B-Instruct"  # Fits within tight 4GB VRAM target
+    fallback_model_id: "HuggingFaceTB/SmolVLM-Instruct"
+    quantization: "4bit"  # "4bit", "8bit", or "fp16"
+    max_image_dim: 1024
+    temperature: 0.1
+    max_tokens: 1024
+  clip:
+    model_id: "openai/clip-vit-base-patch32"
+    device: "cuda"
+  dinov2:
+    model_id: "facebook/dinov2-small"
+    device: "cuda"
+  geo_prior:
+    model_id: "vincent-claes/GeoCLIP"
+    device: "cpu"  # Keep lightweight on CPU to reserve GPU for vision
+
+providers:
+  osm:
+    endpoints:
+      - "https://overpass-api.de/api/interpreter"
+      - "https://overpass.private.coffee/api/interpreter"
+      - "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
+    timeout_sec: 45
+    min_retry_delay_sec: 2.0
+    max_retries: 3
+  nominatim:
+    endpoint: "https://nominatim.openstreetmap.org/search"
+    rate_limit_sec: 1.1
+    user_agent: "GlobalPhotoGeolocator/1.0 (Local Open-Source Tool)"
+  dem:
+    terrarium_tile_url: "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
+    default_zoom: 12
+    max_zoom: 14
+  satellite:
+    default_source: "google"
+    sources:
+      google: "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+      esri: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+      sentinel: "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/GoogleMapsCompatible/{z}/{y}/{x}.jpg"
+  geophoto:
+    wikipedia_endpoint: "https://en.wikipedia.org/w/api.php"
+    thumb_base_url: "https://thumb.wikimedia.org/"
+    max_search_radius_m: 5000
+
+pipeline:
+  max_search_regions: 8
+  max_candidates_per_region: 20
+  sift_min_inliers_for_t1: 15
+  skyline_rms_t2_threshold: 12.0
+  weights:
+    geo_prior: 0.35
+    biome_climate: 0.25
+    vlm_guess: 0.20
+    user_hint: 0.20
