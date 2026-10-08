@@ -327,6 +327,37 @@ textarea:focus, input[type="text"]:focus {
   gap: 0.5rem;
 }
 
+/* Leaflet Layer Control Dark Theme */
+.leaflet-control-layers {
+  background: rgba(15, 23, 42, 0.9) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  color: var(--text-main) !important;
+  box-shadow: var(--shadow-sm) !important;
+  font-family: inherit !important;
+  font-size: 0.8rem !important;
+}
+
+.leaflet-control-layers-expanded {
+  padding: 8px 12px !important;
+}
+
+.leaflet-control-layers-base label {
+  color: var(--text-main) !important;
+  font-size: 0.8rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  margin-bottom: 4px !important;
+}
+
+.leaflet-control-layers-base input {
+  accent-color: var(--accent-blue);
+  cursor: pointer;
+}
+
 /* Evidence Gallery (4 Mandatory Evidence Types) */
 .evidence-grid {
   display: grid;

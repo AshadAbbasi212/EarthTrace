@@ -76,12 +76,32 @@
       attributionControl: true
     });
 
-    // Dark-themed tiles with fallback to OSM standard
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
+    // 100% keyless basemap layers with zero watermarks
+    const esriDark = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '&copy; Esri, HERE, Garmin, OpenStreetMap contributors',
+      maxZoom: 16
+    });
+
+    const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '&copy; Esri, Maxar, Earthstar Geographics, CNES/Airbus, USGS',
       maxZoom: 19
-    }).addTo(map);
+    });
+
+    const osmStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    });
+
+    // Default to clean, unwatermarked Esri Dark Gray canvas
+    esriDark.addTo(map);
+
+    // Layer switcher for easy user toggling
+    const baseMaps = {
+      'Dark Canvas': esriDark,
+      'Satellite': satellite,
+      'OpenStreetMap': osmStandard
+    };
+    L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(map);
 
     mapLayers = L.layerGroup().addTo(map);
   }
