@@ -9,8 +9,8 @@
 | **M2** | Keyless Data Providers & Caching | **Completed** | 2026-10-08 | `1786615` |
 | **M3** | Stage 0 (Intake) & Stage 1 (Clues/VLM) | **Completed** | 2026-10-08 | `c4b9278` |
 | **M4** | Stage 2 (Global Prior & Biomes) | **Completed** | 2026-10-08 | `3863b20` |
-| **M5** | Stage 3a (Natural Terrain Branch & DEM Skylines) | **Completed** | 2026-10-08 | Pending |
-| **M6** | Stage 3b (Built/Rural & Coastal Branches) | Planned | - | - |
+| **M5** | Stage 3a (Natural Terrain Branch & DEM Skylines) | **Completed** | 2026-10-08 | `8c2aa29` |
+| **M6** | Stage 3b (Built/Rural & Coastal Branches) | **Completed** | 2026-10-08 | Pending |
 | **M7** | Stage 4 & 5 (Verification, Pose & Decision Report) | Planned | - | - |
 | **M8** | Backend API, Queue, SQLite & Retention | Planned | - | - |
 | **M9** | Frontend Web UI, Leaflet Map & Timeline | Planned | - | - |
@@ -114,3 +114,17 @@
   - **Synthetic terrain test passed**: successfully recovered camera viewpoint to $\le 5\text{ km}$ ($2.1\text{ km}$ error) and heading within $\pm 15^\circ$ from DEM skyline.
   - Validated full pipeline execution and CandidateBoard updates.
 - [x] Full test suite passing across all milestones (24/24 tests passing).
+- [x] Git commit: `8c2aa29`.
+
+### Milestone 6: Stage 3b (Built/Rural & Coastal Branches) (Completed)
+- [x] Implemented Stage 3b Built/Rural & Coastal matching (`src/geolocator/pipeline/stage3_built.py`):
+  - Polyline point sampling at fixed intervals along road, rail, river, and coastline corridors.
+  - Linear corridor crossing and structural feature matcher (bridges, waterways, level crossings, sharp bends).
+  - OpenStreetMap Overpass vector queries for linear infrastructure (`railway=rail`, `highway=*`, `bridge=yes`, `waterway=river`, `natural=coastline`).
+  - CandidateBoard integration with point/road candidates, calibrated error radii (T1: $\le 0.5\text{ km}$, T2: $\le 1.0\text{ km}$), and evidence likelihood ratios.
+  - Emits `osm_corridor_results.json` artifact for inspectable decision tracing.
+- [x] Added unit and synthetic integration tests (`tests/test_stage3_built.py`, 3/3 passing):
+  - Validated polyline sampling spacing and coordinates.
+  - **Synthetic corridor test passed**: successfully recovered exact point along a 20 km linear corridor to $\le 1\text{ km}$ ($0.0\text{ km}$ error matching bridge crossing).
+  - Validated pipeline execution and CandidateBoard updates.
+- [x] Full regression test suite passing across all milestones (27/27 tests passing).
