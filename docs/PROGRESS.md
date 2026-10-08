@@ -13,8 +13,9 @@
 | **M6** | Stage 3b (Built/Rural & Coastal Branches) | **Completed** | 2026-10-08 | `fc1f710` |
 | **M7** | Stage 4 & 5 (Verification, Pose & Decision Report) | **Completed** | 2026-10-08 | `b005d50` |
 | **M8** | Backend API, Queue, SQLite & Retention | **Completed** | 2026-10-08 | `de0589e` |
-| **M10** | Evaluation Set, Calibration & Tuning | **Completed** | 2026-10-08 | `pending` |
-| **M11** | Packaging, Windows Scripts & Verification | In Progress | - | - |
+| **M9** | Frontend Web UI, Leaflet Map & Timeline | **Completed** | 2026-10-08 | `9e52af1` |
+| **M10** | Evaluation Set, Calibration & Tuning | **Completed** | 2026-10-08 | `dc75ee9` |
+| **M11** | Packaging, Windows Scripts & Verification | **Completed** | 2026-10-08 | `pending` |
 
 ---
 
@@ -226,5 +227,38 @@
   - Manifest integrity and 66-item biome balance verification.
   - Metric math and distance band accuracy verification.
 - [x] Full regression test suite passing across all milestones (40/40 tests passing).
+
+### Milestone 11: Packaging, Windows Scripts & Verification (Completed)
+- [x] Created `scripts/setup_windows.ps1`:
+  - Fully idempotent PowerShell setup script.
+  - Verifies Python 3.10+ installation and NVIDIA GPU / CUDA drivers.
+  - Creates and manages `.venv` in the project root.
+  - Installs geolocator in editable development mode (`pip install -e .`).
+  - Verifies PyTorch GPU execution and memory deallocation via `scripts/check_gpu.py`.
+  - Automatically invokes `scripts/download_weights.py` to pre-cache offline weights.
+- [x] Created `scripts/run.ps1`:
+  - 1-click launch script for the FastAPI/Uvicorn server.
+  - Configurable parameters (`-HostAddress`, `-Port`, `-Reload`, `-OpenBrowser`).
+  - Displays prominent startup banner featuring the **Responsible Use Notice**, architecture summary, and VRAM budget reminder.
+- [x] Created `scripts/download_weights.py`:
+  - Pre-downloads and verifies GeoCLIP, CLIP ViT-L/14, and RapidOCR models for 100% offline air-gapped operation.
+- [x] Authored comprehensive `README.md`:
+  - Prominently placed mandatory **Responsible Use Notice** at the top of the documentation.
+  - Architectural highlights: zero keys, 4 evidence pillars, worldwide scope, honesty over precision.
+  - Clear 1-click Windows quickstart guide (`setup_windows.ps1`, `run.ps1`).
+  - Interactive Web UI documentation and REST API reference table.
+  - Pipeline architecture diagram (Mermaid) and multi-stage execution walkthrough.
+  - Confidence tier definitions (T1-T6) and calibrated radius guidelines.
+  - Evaluation benchmark reproduction instructions and verified performance numbers.
+  - Strict offline operation instructions (`OFFLINE_MODE=true`).
+- [x] Updated `docs/DECISIONS.md`:
+  - Recorded M10 terrain coarse-to-fine skyline optimization and non-flat relief thresholding.
+  - Recorded EXIF 3-element DMS rational standard format resolution.
+  - Recorded Wikimedia single-query generator API integration eliminating rate limits.
+  - Recorded calibrated uncertainty and honesty-over-bravado tier rules.
+- [x] Final end-to-end verification:
+  - All 40 unit and integration tests passing (`pytest`).
+  - Web UI, API, database, queue, and model manager validated on Windows host hardware with NVIDIA GPU.
+
 
 

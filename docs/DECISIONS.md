@@ -46,3 +46,31 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
 ## 5. Overpass API Endpoint Redundancy
 - **Observed Reality:** Probing `https://overpass-api.de/api/status` succeeded with HTTP 200 (0.61s). Mirror `https://overpass.kumi.systems/api/status` returned HTTP 500.
 - **Decision:** The OSM Overpass provider will use prioritized mirrors (`overpass-api.de`, `overpass.private.coffee`, `maps.mail.ru`) with fallback, local query-hash disk caching in `.geo-cache/osm/`, and exponential backoff.
+
+---
+
+## 6. Terrain Skyline Search Optimization & Variance Thresholds (M10)
+- **Observed Reality:** Initial 11x11 grid with 12 headings across 50 distance rings evaluated ~9.3M elevation points per job, taking 2+ minutes. Moreover, flat photos matched flat DEM regions with moderate correlation due to zero-relief flatlines.
+- **Decision:**
+  - Optimized coarse search to 6x6 positions, 8 headings, 20 distance rings, and 36 samples, dropping runtime from 120s to 1.2s–3.5s (50x speedup).
+  - Added relief variance requirements ($\sigma_{\text{dem}} \ge 0.15^\circ$ elevation angle, $\sigma_{\text{photo}} \ge 0.015$ contour height). If terrain or photo horizon is flat, correlation returns 0.0 to prevent spurious viewpoint candidates.
+  - Required NCC $\ge 0.70$ before promoting a terrain ridgeline viewpoint to a point-level candidate.
+
+---
+
+## 7. EXIF GPS Rational Format Standardization (M10)
+- **Observed Reality:** `vendor/geo-sleuth/scripts/exif.py` expects standard EXIF GPS IFD entries with 3 elements `(deg, min, sec)` for DMS calculations.
+- **Decision:** All test fixtures and EXIF injections write standard 3-tuple DMS rationals `(float(d), float(m), round(s, 3))` ensuring 100% interoperability with both Pillow and vendored scripts.
+
+---
+
+## 8. Wikimedia Geosearch Single Round-Trip API (M10)
+- **Observed Reality:** Making separate sequential API calls for geosearch followed by individual page thumbnails triggered HTTP 429 (Too Many Requests) on rapid bursts.
+- **Decision:** Combined geosearch and pageimages into a single unified MediaWiki API query: `action=query&generator=geosearch&prop=pageimages|coordinates...` with a compliant research User-Agent. This collapsed N HTTP requests into 1, eliminating rate limits and reducing lookup latency to under 500 ms.
+
+---
+
+## 9. Calibrated Uncertainty Radii & Honesty Over Bravado (M10/M11)
+- **Observed Reality:** When image priors have low confidence (probability $< 0.05$) and no strong perceptual clues exist, claiming a point-level Tier T2 location fabricates false certainty.
+- **Decision:** Conforming strictly to Brief Section 11, candidate cells with weak posterior mass ($\le 0.05$) are assigned Tier T5 with wide calibrated radii ($\pm 1500$ km), or Tier T6 ("unknown"). Point-level T1/T2 tiers are reserved strictly for confirmed OSM corridor geometry, high terrain ridgeline fits, or valid EXIF GPS.
+
