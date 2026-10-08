@@ -260,5 +260,18 @@
   - All 40 unit and integration tests passing (`pytest`).
   - Web UI, API, database, queue, and model manager validated on Windows host hardware with NVIDIA GPU.
 
+### Post-M11 Hardening & Production Refinements
+- [x] **Watermark Elimination & Keyless Basemaps**:
+  - Replaced CARTO basemap with 100% keyless, unwatermarked Esri Dark Gray Canvas, High-Resolution Satellite World Imagery, and Standard OpenStreetMap.
+  - Added interactive layer switcher (`L.control.layers`) allowing instant switching between Dark Canvas, Satellite, and Street maps.
+- [x] **Leaflet Asset Bundling**:
+  - Bundled standard high-DPI Leaflet image assets (`layers.png`, `layers-2x.png`, `marker-icon.png`, `marker-icon-2x.png`, `marker-shadow.png`) locally in `src/geolocator/web/static/vendor/leaflet/images/` to eliminate browser 404s.
+  - Added dark-theme styling and micro-hover animations for `.leaflet-control-layers-toggle` in `style.css`.
+  - Added automated test assertions in `tests/test_frontend.py` verifying offline asset serving.
+- [x] **Overpass Mirror Resilience & Bounding Box Clamping**:
+  - Clamped corridor query search windows in `Stage3Built` to $\le 10$ km to prevent Overpass Gateway Timeouts (504).
+  - Expanded Overpass endpoints list with fast international mirrors (`kumi.systems`, `private.coffee`, `openstreetmap.ru`).
+
+
 
 
