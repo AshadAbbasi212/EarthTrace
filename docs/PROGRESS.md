@@ -272,6 +272,23 @@
   - Clamped corridor query search windows in `Stage3Built` to $\le 10$ km to prevent Overpass Gateway Timeouts (504).
   - Expanded Overpass endpoints list with fast international mirrors (`kumi.systems`, `private.coffee`, `openstreetmap.ru`).
 
+### Accuracy & Geo-Intelligence Engine Upgrades
+- [x] **Autonomous OCR & Place-Name Geocoding**:
+  - Wired `RapidOCR` extracted text phrases directly into `NominatimProvider` with disk caching and rate limits.
+  - Automatically identifies town signs, street names, highway routes, and landmark labels, generating pinpoint `point`/`city` candidates with exact coordinates and bounding boxes.
+- [x] **Geoguessr Meta-Heuristics Engine**:
+  - Added non-Latin script detection (Cyrillic, Greek, Arabic, Hangul, Japanese Kana, Thai, Hebrew, Devanagari) in `clues_adapter.py`.
+  - Added ccTLD detection across 35+ country top-level domains (`.de`, `.uk`, `.br`, `.jp`, `.au`, `.ca`, `.nz`, `.za`, `.mx`, `.cl`, etc.).
+  - Added international telephone dialing prefix resolution (`+44`, `+33`, `+49`, etc.).
+  - Integrated log-likelihood adjustments into `Stage2Prior` to boost matching countries (+3.5 to +6.0 log-odds) and penalize conflicting regions.
+- [x] **Batched Multi-Crop GeoCLIP Spatial Pooling**:
+  - Implemented 4-crop spatial pooling (full image, 80% center crop, 65% left crop, 65% right crop) processed in a single batched tensor forward pass.
+  - Prevents aspect-ratio squashing distortion and captures fine foliage, architecture, and distant mountain skylines.
+- [x] **Fine-Grained Terrain Skyline Heading Sweep**:
+  - Refined coarse DEM skyline heading sweeps from 45° to 20° (18 cardinal/ordinal directions) and fine sweeps to 5.0°, recovering exact camera vantage points and headings.
+- [x] **Full Regression Verification**:
+  - 41/41 unit and integration tests passing (`pytest`).
+
 
 
 
