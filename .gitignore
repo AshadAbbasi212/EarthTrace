@@ -1,0 +1,27 @@
+# Python virtual environment
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Local data & models
+models/
+data/
+jobs/
+logs/
+eval/photos/
+eval/results/
+eval/eval_manifest.csv
+*.tmp
+*.cache
+
+# IDE / System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
