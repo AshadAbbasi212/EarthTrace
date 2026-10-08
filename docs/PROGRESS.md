@@ -6,8 +6,8 @@
 |-----------|-------|--------|-----------------|------------|
 | **M0** | Environment and Audit | **Completed** | 2026-10-08 | `a250c83` |
 | **M1** | Project Skeleton & ModelManager | **Completed** | 2026-10-08 | `dfe48fc` |
-| **M2** | Keyless Data Providers & Caching | **Completed** | 2026-10-08 | Pending |
-| **M3** | Stage 0 (Intake) & Stage 1 (Clues/VLM) | In Progress | 2026-10-08 | - |
+| **M2** | Keyless Data Providers & Caching | **Completed** | 2026-10-08 | `1786615` |
+| **M3** | Stage 0 (Intake) & Stage 1 (Clues/VLM) | **Completed** | 2026-10-08 | Pending |
 | **M4** | Stage 2 (Global Prior & Biomes) | Planned | - | - |
 | **M5** | Stage 3a (Natural Terrain Branch & DEM Skylines) | Planned | - | - |
 | **M6** | Stage 3b (Built/Rural & Coastal Branches) | Planned | - | - |
@@ -54,3 +54,23 @@
 - [x] Implemented `ClimateProvider` for Köppen-Geiger classifications (A, B, C, D, E) and visual compatibility scoring (aridity, vegetation, snow).
 - [x] Implemented `LandCoverProvider` supporting ESA WorldCover taxonomy and scene filtering.
 - [x] Added unit & integration tests `tests/test_providers.py` with recorded fixtures (all 12 tests passing).
+- [x] Git commit: `1786615`.
+
+### Milestone 3: Stage 0 (Intake) & Stage 1 (Clues/VLM) (Completed)
+- [x] Implemented Candidate Board (`src/geolocator/pipeline/board.py`) with hierarchical candidates (country, region, cell, point), log-likelihood scoring, hard negative exclusions, and audit rationale tracking.
+- [x] Implemented adapters wrapping vendored geo-sleuth modules (`src/geolocator/adapters/`):
+  - `exif_adapter.py`: EXIF extraction, sanitization, GPS parsing, camera info.
+  - `imgprep_adapter.py`: standard working copies (1024px long edge, 512px) and 8 edge/corner crops.
+  - `clues_adapter.py`: tabular lookups for Chinese plates (`cn_plates.json`), driving side (`driving_side.json`), dial codes (`calling_codes.json`), and sovereign territories (`territories.json`).
+  - `ocr_adapter.py`: RapidOCR ONNX integration with crop deduplication and quality filtering.
+- [x] Implemented Stage 0 Intake (`src/geolocator/pipeline/stage0_intake.py`):
+  - EXIF extraction, SHA-256 job ID, privacy-safe working copies.
+  - Fast-path GPS exit (reports calibrated radius ~15m, confidence T1).
+- [x] Implemented Stage 1 Clues (`src/geolocator/pipeline/stage1_clues.py`):
+  - User hint parser (`hint_parser.py`) for countries, continents, seasons, landmarks.
+  - Text & script OCR on base image and 8 edge crops.
+  - Tabular lookups matching observed scripts and country hints.
+  - Colorimetry & visual perception heuristics (sky, vegetation, ground ratios).
+  - Pydantic schema validation (`schema.py` - `ClueExtractionResult`).
+  - Candidate board initialized with country priors, clues, and log-likelihood ratios.
+- [x] Added unit and integration tests (`tests/test_stage0_stage1.py`, 4/4 passing).
