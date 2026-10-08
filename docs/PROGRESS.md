@@ -11,8 +11,8 @@
 | **M4** | Stage 2 (Global Prior & Biomes) | **Completed** | 2026-10-08 | `3863b20` |
 | **M5** | Stage 3a (Natural Terrain Branch & DEM Skylines) | **Completed** | 2026-10-08 | `8c2aa29` |
 | **M6** | Stage 3b (Built/Rural & Coastal Branches) | **Completed** | 2026-10-08 | `fc1f710` |
-| **M7** | Stage 4 & 5 (Verification, Pose & Decision Report) | **Completed** | 2026-10-08 | Pending |
-| **M8** | Backend API, Queue, SQLite & Retention | Planned | - | - |
+| **M7** | Stage 4 & 5 (Verification, Pose & Decision Report) | **Completed** | 2026-10-08 | `b005d50` |
+| **M8** | Backend API, Queue, SQLite & Retention | **Completed** | 2026-10-08 | Pending |
 | **M9** | Frontend Web UI, Leaflet Map & Timeline | Planned | - | - |
 | **M10** | Evaluation Set, Calibration & Tuning | Planned | - | - |
 | **M11** | Packaging, Windows Scripts & Verification | Planned | - | - |
@@ -154,3 +154,23 @@
   - Supports EXIF GPS fast-path routing directly to verification and report generation.
 - [x] Added unit and integration tests (`tests/test_stage4_stage5.py`, 4/4 passing).
 - [x] Full test suite passing across all milestones (31/31 tests passing).
+- [x] Git commit: `b005d50`.
+
+### Milestone 8: Backend API, Queue, SQLite & Retention (Completed)
+- [x] Implemented SQLite Job Database (`src/geolocator/app/database.py`):
+  - Job tracking (pending, running, complete, failed, cancelled) with progress percentage and current step.
+  - Automated 24-hour disk retention cleanup purging expired jobs and associated artifact directories.
+- [x] Implemented Sequential Queue Worker (`src/geolocator/app/queue.py`):
+  - Strict single-job execution concurrency respecting 4GB/8GB GPU VRAM constraints.
+  - Asynchronous SSE event broadcasting delivering real-time progress updates to connected clients.
+  - Job cancellation handling for queued and running jobs.
+- [x] Implemented FastAPI Application (`src/geolocator/app/api.py`):
+  - Endpoints: `POST /api/jobs`, `GET /api/jobs`, `GET /api/jobs/{id}`, `POST /api/jobs/{id}/cancel`, `GET /api/jobs/{id}/report`, `GET /api/jobs/{id}/report.html`, `GET /api/jobs/{id}/report.geojson`, `GET /api/jobs/{id}/events` (SSE), `GET /api/jobs/{id}/artifacts/{file}`.
+  - Passphrase gate protection via `X-Passphrase` header or query token.
+  - Path traversal security checks on artifact retrieval.
+  - Clean lifespan context manager for worker lifecycle.
+- [x] Added unit and integration tests (`tests/test_api_backend.py`, 3/3 passing):
+  - Validated SQLite job lifecycle and automated retention cleanup.
+  - Validated FastAPI endpoints and passphrase authentication.
+  - **Concurrency test passed**: verified rapid subsequent uploads queue politely and execute sequentially.
+- [x] Full regression test suite passing across all milestones (34/34 tests passing).
