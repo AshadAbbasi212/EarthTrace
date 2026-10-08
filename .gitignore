@@ -10,6 +10,7 @@ dist/
 build/
 
 # Local data & models
+.geo-cache/
 models/
 data/
 jobs/
