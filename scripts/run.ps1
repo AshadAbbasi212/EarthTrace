@@ -46,7 +46,7 @@ Write-Host "============================================================" -Foreg
 
 $AppUrl = "http://${HostAddress}:${Port}"
 Write-Host "`nServer URL: " -NoNewline -ForegroundColor Green
-Write-Host "$AppUrl" -ForegroundColor White -Underline
+Write-Host "$AppUrl" -ForegroundColor White
 Write-Host "Press Ctrl+C to gracefully stop the application.`n" -ForegroundColor DarkGray
 
 if ($OpenBrowser) {

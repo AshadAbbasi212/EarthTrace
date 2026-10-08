@@ -72,6 +72,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     # API Endpoints
     # -------------------------------------------------------------
 
+    @app.get("/health")
     @app.get("/api/health")
     async def health_check():
         return {
@@ -237,3 +238,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         app.mount("/", StaticFiles(directory=str(web_dir), html=True), name="static")
 
     return app
+
+
+# Default ASGI application instance
+app = create_app()
