@@ -13,7 +13,7 @@
 | **M6** | Stage 3b (Built/Rural & Coastal Branches) | **Completed** | 2026-10-08 | `fc1f710` |
 | **M7** | Stage 4 & 5 (Verification, Pose & Decision Report) | **Completed** | 2026-10-08 | `b005d50` |
 | **M8** | Backend API, Queue, SQLite & Retention | **Completed** | 2026-10-08 | `de0589e` |
-| **M9** | Frontend Web UI, Leaflet Map & Timeline | **Completed** | 2026-10-08 | `pending` |
+| **M9** | Frontend Web UI, Leaflet Map & Timeline | **Completed** | 2026-10-08 | `9e52af1` |
 | **M10** | Evaluation Set, Calibration & Tuning | Planned | - | - |
 | **M11** | Packaging, Windows Scripts & Verification | Planned | - | - |
 
