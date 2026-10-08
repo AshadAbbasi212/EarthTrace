@@ -14,7 +14,12 @@ from geolocator.adapters import (
     lookup_driving_side,
     lookup_calling_code,
     lookup_territory,
+    detect_script,
+    detect_tld,
+    detect_calling_code,
+    extract_candidate_place_phrases,
 )
+from geolocator.providers.nominatim import NominatimProvider
 from geolocator.pipeline.board import CandidateBoard
 from geolocator.pipeline.hint_parser import HintParser
 from geolocator.pipeline.schema import ClueExtractionResult, TextSignItem, RegionGuessItem
@@ -25,9 +30,10 @@ logger = logging.getLogger("geolocator.pipeline.stage1")
 class Stage1Clues:
     """Orchestrates Stage 1 clue extraction from images, OCR, lookup tables, and user hints."""
 
-    def __init__(self):
+    def __init__(self, nominatim: Optional[NominatimProvider] = None):
         self.ocr = get_ocr()
         self.hint_parser = HintParser()
+        self.nominatim = nominatim or NominatimProvider()
 
     def process(
         self,
@@ -73,8 +79,7 @@ class Stage1Clues:
                     file_ref=snip.get("file_ref", "working_1024.jpg"),
                 )
 
-                # Tabular checks against recognized text
-                # Plate lookup check (first 2 chars)
+                # 1a. Plate lookup check (first 2 chars)
                 if len(t) >= 2:
                     plate_hit = lookup_plate(t[:2])
                     if plate_hit:
@@ -88,6 +93,92 @@ class Stage1Clues:
                         cand_name = plate_hit.get("city") or plate_hit.get("province")
                         if cand_name:
                             board.add_candidate(cand_name, level="city", prior=5.0)
+
+                # 1b. Non-Latin writing script detection (Cyrillic, Greek, Arabic, Hangul, Kana, etc.)
+                script_hit = detect_script(t)
+                if script_hit:
+                    s_name = script_hit["script"]
+                    cands = script_hit["candidate_countries"]
+                    board.add_clue(
+                        text=f"Non-Latin script '{s_name}' detected in sign: '{t}'",
+                        kind="script",
+                        status="read",
+                        source="ocr_meta",
+                        confidence=0.90,
+                    )
+                    for c_country in cands[:3]:
+                        board.add_candidate(c_country, level="country", prior=4.5)
+
+                # 1c. Country-code Top Level Domain detection (.de, .fr, .co.uk, .com.br, etc.)
+                tld_hit = detect_tld(t)
+                if tld_hit:
+                    tld_country = tld_hit["country"]
+                    tld_token = tld_hit["matched_token"]
+                    board.add_clue(
+                        text=f"Web domain '{tld_token}' points to {tld_country}",
+                        kind="tld",
+                        status="read",
+                        source="ocr_meta",
+                        confidence=0.98,
+                    )
+                    board.add_candidate(tld_country, level="country", prior=8.0)
+
+                # 1d. International dialing code detection (+XX, 00XX)
+                calling_hit = detect_calling_code(t)
+                if calling_hit:
+                    code_country = calling_hit["country"]
+                    if code_country:
+                        board.add_clue(
+                            text=f"Phone dialing prefix +{calling_hit['code']} indicates {code_country}",
+                            kind="calling_code",
+                            status="read",
+                            source="ocr_meta",
+                            confidence=0.92,
+                        )
+                        board.add_candidate(code_country, level="country", prior=7.0)
+
+        # 1e. Autonomous Place-Name & Landmark Geocoding via Nominatim
+        # Collect candidate place phrases across all detected text
+        all_place_phrases = []
+        for snip in ocr_snippets:
+            all_place_phrases.extend(extract_candidate_place_phrases(snip["text"]))
+        unique_phrases = list(dict.fromkeys(all_place_phrases))[:3]  # Polite limit of 3 lookups
+
+        for phrase in unique_phrases:
+            try:
+                nom_results = self.nominatim.search(phrase, limit=1)
+                if nom_results:
+                    hit = nom_results[0]
+                    p_lat = float(hit["lat"])
+                    p_lon = float(hit["lon"])
+                    display_name = hit.get("display_name", phrase)
+                    raw_bbox = hit.get("boundingbox", [p_lat - 0.05, p_lat + 0.05, p_lon - 0.05, p_lon + 0.05])
+                    bbox = [float(raw_bbox[0]), float(raw_bbox[2]), float(raw_bbox[1]), float(raw_bbox[3])]
+
+                    p_clue_id = board.add_clue(
+                        text=f"Sign text '{phrase}' geocoded to {display_name}",
+                        kind="place_sign",
+                        status="observed",
+                        source="nominatim_geocoding",
+                        confidence=0.92,
+                    )
+                    cand_name = f"Geocoded Sign '{phrase}': {display_name[:40]}"
+                    board.add_candidate(
+                        name=cand_name,
+                        level="point",
+                        prior=9.0,
+                        bbox=bbox,
+                        lat=p_lat,
+                        lon=p_lon,
+                    )
+                    board.add_evidence(
+                        clue_id=p_clue_id,
+                        candidate_weights={cand_name: 50.0},
+                        rationale="Autonomous sign text geocoding via OpenStreetMap Nominatim",
+                    )
+                    logger.info("[stage1] Successfully geocoded sign '%s' -> (%f, %f) %s", phrase, p_lat, p_lon, display_name)
+            except Exception as e:
+                logger.debug("[stage1] Geocoding lookup skipped for '%s': %s", phrase, e)
 
         # 2. Parse User Hints
         if user_hint_text and user_hint_text.strip():

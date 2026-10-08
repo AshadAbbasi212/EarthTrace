@@ -95,11 +95,11 @@ class Stage3Terrain:
         lats = np.arange(center_lat - r_deg_lat, center_lat + r_deg_lat + 1e-5, coarse_step_lat)
         lons = np.arange(center_lon - r_deg_lon, center_lon + r_deg_lon + 1e-5, coarse_step_lon)
 
-        # Heading sweep (8 cardinal/ordinal directions)
+        # Heading sweep (18 directions every 20 degrees for thorough coverage)
         if heading_hint is not None:
-            headings = [heading_hint - 20.0, heading_hint, heading_hint + 20.0]
+            headings = [heading_hint - 20.0, heading_hint - 10.0, heading_hint, heading_hint + 10.0, heading_hint + 20.0]
         else:
-            headings = np.arange(0.0, 360.0, 45.0).tolist()
+            headings = np.arange(0.0, 360.0, 20.0).tolist()
 
         best_score = -2.0
         best_candidate: Optional[Dict[str, Any]] = None
@@ -149,7 +149,7 @@ class Stage3Terrain:
 
             fine_lats = np.arange(ref_lat - fine_step_lat * 2, ref_lat + fine_step_lat * 2 + 1e-5, fine_step_lat)
             fine_lons = np.arange(ref_lon - fine_step_lon * 2, ref_lon + fine_step_lon * 2 + 1e-5, fine_step_lon)
-            fine_headings = np.arange(ref_heading - 15.0, ref_heading + 15.0 + 1e-5, 7.5)
+            fine_headings = np.arange(ref_heading - 15.0, ref_heading + 15.0 + 1e-5, 5.0)
 
             for f_lat in fine_lats:
                 for f_lon in fine_lons:

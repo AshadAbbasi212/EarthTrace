@@ -35,6 +35,51 @@ def test_tabular_lookups():
     assert cc.get("country") == "France"
 
 
+def test_geoguessr_meta_lookups():
+    from geolocator.adapters import (
+        detect_script,
+        detect_tld,
+        detect_calling_code,
+        extract_candidate_place_phrases,
+    )
+
+    # 1. Scripts
+    cyr = detect_script("Улица Ленина 12")
+    assert cyr is not None
+    assert cyr["script"] == "cyrillic"
+    assert "Russia" in cyr["candidate_countries"]
+
+    kana = detect_script("ラーメン 新宿駅")
+    assert kana is not None
+    assert kana["script"] == "japanese_kana"
+    assert "Japan" in kana["candidate_countries"]
+
+    hangul = detect_script("서울특별시 강남구")
+    assert hangul is not None
+    assert hangul["script"] == "hangul"
+    assert "South Korea" in hangul["candidate_countries"]
+
+    # 2. TLDs
+    tld1 = detect_tld("visit www.hotel-alpine.at for details")
+    assert tld1 is not None
+    assert tld1["country"] == "Austria"
+    assert tld1["tld"] == "at"
+
+    tld2 = detect_tld("contato@empresa.com.br")
+    assert tld2 is not None
+    assert tld2["country"] == "Brazil"
+    assert tld2["tld"] == "com.br"
+
+    # 3. Calling codes
+    call1 = detect_calling_code("Call +43 1 234567")
+    assert call1 is not None
+    assert call1["country"] == "Austria"
+
+    # 4. Place phrases
+    phrases = extract_candidate_place_phrases("Welcome to San Pedro on Route 66")
+    assert any("San Pedro" in p for p in phrases) or any("Route" in p for p in phrases)
+
+
 def test_candidate_board_operations(tmp_path):
     board = CandidateBoard(photo_path=tmp_path / "test.jpg", board_path=tmp_path / "board.json")
     

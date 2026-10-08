@@ -23,7 +23,12 @@ from geolocator.pipeline.geo_utils import (
     cluster_points,
     COUNTRY_BBOXES,
 )
-from geolocator.adapters.clues_adapter import lookup_driving_side
+from geolocator.adapters.clues_adapter import (
+    lookup_driving_side,
+    detect_script,
+    detect_tld,
+    detect_calling_code,
+)
 
 logger = logging.getLogger("geolocator.pipeline.stage2_prior")
 
@@ -61,8 +66,9 @@ class Stage2Prior:
         image_path: Path,
         top_k: int = 50,
         mock_predictions: Optional[List[Dict[str, float]]] = None,
+        multi_crop: bool = True,
     ) -> List[Dict[str, float]]:
-        """Run GeoCLIP inference to get top candidate GPS locations and probabilities."""
+        """Run GeoCLIP inference with batched multi-crop spatial pooling."""
         if mock_predictions is not None:
             return mock_predictions
 
@@ -70,19 +76,35 @@ class Stage2Prior:
         predictions: List[Dict[str, float]] = []
 
         with self.model_manager.acquire("geoclip") as model:
-            coords, probs = model.predict(str(image_path), top_k=top_k)
-            # coords: tensor (top_k, 2) [lat, lon], probs: tensor (top_k,)
-            coords_np = coords.detach().cpu().numpy()
-            probs_np = probs.detach().cpu().numpy()
+            with Image.open(str(image_path)) as img:
+                im = img.convert("RGB")
+                w, h = im.size
+
+                if multi_crop and w >= 224 and h >= 224:
+                    # Multi-crop ensemble: full, center 80%, left 65%, right 65%
+                    crop_full = im
+                    crop_center = im.crop((int(w * 0.1), int(h * 0.1), int(w * 0.9), int(h * 0.9)))
+                    crop_left = im.crop((0, 0, int(w * 0.65), h))
+                    crop_right = im.crop((int(w * 0.35), 0, w, h))
+                    crops = [crop_full, crop_center, crop_left, crop_right]
+                else:
+                    crops = [im]
+
+                tensors = [model.image_encoder.preprocess_image(c) for c in crops]
+                batch = torch.cat(tensors, dim=0).to(model.logit_scale.device)
+
+                with torch.no_grad():
+                    logits = model.forward(batch, model.gps_gallery)
+                    probs = logits.softmax(dim=-1).mean(dim=0, keepdim=True)
+                    top_pred = torch.topk(probs, min(top_k, model.gps_gallery.shape[0]), dim=1)
+                    coords_np = model.gps_gallery.index_select(0, top_pred.indices[0]).cpu().numpy()
+                    probs_np = top_pred.values[0].cpu().numpy()
 
             for i in range(len(coords_np)):
-                lat = float(coords_np[i][0])
-                lon = float(coords_np[i][1])
-                prob = float(probs_np[i])
                 predictions.append({
-                    "lat": lat,
-                    "lon": lon,
-                    "prob": prob,
+                    "lat": float(coords_np[i][0]),
+                    "lon": float(coords_np[i][1]),
+                    "prob": float(probs_np[i]),
                 })
 
         return predictions
@@ -123,6 +145,9 @@ class Stage2Prior:
         snow_cue = False
         driving_cue: Optional[str] = None
         hint_countries: List[str] = []
+        script_countries: List[str] = []
+        tld_country: Optional[str] = None
+        phone_country: Optional[str] = None
 
         for cid, cinfo in observed_clues.items():
             kind = cinfo.get("kind")
@@ -141,6 +166,18 @@ class Stage2Prior:
                     driving_cue = "right"
             elif kind == "hint_country":
                 hint_countries.append(text)
+            elif kind == "script":
+                hit = detect_script(text)
+                if hit:
+                    script_countries.extend(hit["candidate_countries"])
+            elif kind == "tld":
+                hit = detect_tld(text)
+                if hit:
+                    tld_country = hit["country"]
+            elif kind == "calling_code":
+                hit = detect_calling_code(text)
+                if hit:
+                    phone_country = hit["country"]
 
         # Check intake colorimetry from disk if available
         clues_file = job_dir / "clues.json"
@@ -199,7 +236,27 @@ class Stage2Prior:
                 if country_side and country_side != driving_cue:
                     driving_lr = -4.5
 
-            combined_score = base_log_prior + climate_lr + hint_lr + driving_lr
+            # Geoguessr meta log-likelihood adjustment
+            meta_lr = 0.0
+            if script_countries and country:
+                if any(sc.lower() in country.lower() for sc in script_countries):
+                    meta_lr += 3.5
+                else:
+                    meta_lr -= 3.0
+
+            if tld_country and country:
+                if tld_country.lower() in country.lower():
+                    meta_lr += 6.0
+                else:
+                    meta_lr -= 4.0
+
+            if phone_country and country:
+                if phone_country.lower() in country.lower():
+                    meta_lr += 5.0
+                else:
+                    meta_lr -= 3.0
+
+            combined_score = base_log_prior + climate_lr + hint_lr + driving_lr + meta_lr
 
             scored_points.append({
                 "lat": lat,
@@ -211,6 +268,7 @@ class Stage2Prior:
                 "climate_lr": climate_lr,
                 "hint_lr": hint_lr,
                 "driving_lr": driving_lr,
+                "meta_lr": meta_lr,
                 "score": combined_score,
             })
 
