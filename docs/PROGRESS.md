@@ -10,8 +10,8 @@
 | **M3** | Stage 0 (Intake) & Stage 1 (Clues/VLM) | **Completed** | 2026-10-08 | `c4b9278` |
 | **M4** | Stage 2 (Global Prior & Biomes) | **Completed** | 2026-10-08 | `3863b20` |
 | **M5** | Stage 3a (Natural Terrain Branch & DEM Skylines) | **Completed** | 2026-10-08 | `8c2aa29` |
-| **M6** | Stage 3b (Built/Rural & Coastal Branches) | **Completed** | 2026-10-08 | Pending |
-| **M7** | Stage 4 & 5 (Verification, Pose & Decision Report) | Planned | - | - |
+| **M6** | Stage 3b (Built/Rural & Coastal Branches) | **Completed** | 2026-10-08 | `fc1f710` |
+| **M7** | Stage 4 & 5 (Verification, Pose & Decision Report) | **Completed** | 2026-10-08 | Pending |
 | **M8** | Backend API, Queue, SQLite & Retention | Planned | - | - |
 | **M9** | Frontend Web UI, Leaflet Map & Timeline | Planned | - | - |
 | **M10** | Evaluation Set, Calibration & Tuning | Planned | - | - |
@@ -128,3 +128,29 @@
   - **Synthetic corridor test passed**: successfully recovered exact point along a 20 km linear corridor to $\le 1\text{ km}$ ($0.0\text{ km}$ error matching bridge crossing).
   - Validated pipeline execution and CandidateBoard updates.
 - [x] Full regression test suite passing across all milestones (27/27 tests passing).
+- [x] Git commit: `fc1f710`.
+
+### Milestone 7: Stage 4 & 5 (Verification, Pose & Decision Report) (Completed)
+- [x] Implemented `CameraPoseSolver` (`src/geolocator/pipeline/pose_solver.py`):
+  - Solves camera exterior orientation (lat, lon, height, heading, pitch, roll, FOV).
+  - Forward azimuth / bearing solver between camera viewpoint and landmark targets.
+  - Least-squares camera resection from 2D pixel to 3D world correspondences.
+- [x] Implemented Stage 4 Verification (`src/geolocator/pipeline/stage4_verification.py`):
+  - Satellite tile fetching and SIFT/FLANN visual feature correspondence verification.
+  - Zero-token / keyless street-level imagery verification (Wikimedia Commons geosearch).
+  - **Honesty rule verified**: explicitly records `"status": "not available"` with reason when no street imagery coverage exists within candidate radius.
+  - Camera resection pose estimation.
+  - Emits `verification_results.json` and `satellite_evidence.png` artifacts.
+- [x] Implemented Stage 5 Report Generator (`src/geolocator/report/generator.py`):
+  - Fixed-rule decision engine selecting top hypothesis and calibrated confidence tier (T1 to T6).
+  - **Mandatory 4 evidence types verified**: renders OpenStreetMap geometry, elevation skylines, satellite imagery, and street-level imagery in every report.
+  - Generates multi-format report outputs:
+    - `report.json`: complete machine-readable audit trail.
+    - `report.html`: standalone rich UI report with dark mode, badges, evidence tables, and Responsible Use Notice.
+    - `report.md`: GitHub-flavored markdown summary.
+    - `report.geojson`: map-ready GeoJSON feature collection (Point, error circle Polygon, heading ray LineString).
+- [x] Implemented Master `PipelineOrchestrator` (`src/geolocator/pipeline/orchestrator.py`):
+  - Chains Stages 0 through 5 seamlessly with progress callback support.
+  - Supports EXIF GPS fast-path routing directly to verification and report generation.
+- [x] Added unit and integration tests (`tests/test_stage4_stage5.py`, 4/4 passing).
+- [x] Full test suite passing across all milestones (31/31 tests passing).
