@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("geolocator.pipeline.board")
 
-LEVELS = ["country", "admin1", "admin2", "city", "district", "area", "road", "point"]
+LEVELS = ["country", "region", "admin1", "admin2", "city", "district", "area", "cell", "road", "point"]
 STATUSES = ["observed", "read", "inferred", "computed"]
 
 # Likelihood ratio bounds per status type

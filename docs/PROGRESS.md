@@ -7,8 +7,8 @@
 | **M0** | Environment and Audit | **Completed** | 2026-10-08 | `a250c83` |
 | **M1** | Project Skeleton & ModelManager | **Completed** | 2026-10-08 | `dfe48fc` |
 | **M2** | Keyless Data Providers & Caching | **Completed** | 2026-10-08 | `1786615` |
-| **M3** | Stage 0 (Intake) & Stage 1 (Clues/VLM) | **Completed** | 2026-10-08 | Pending |
-| **M4** | Stage 2 (Global Prior & Biomes) | Planned | - | - |
+| **M3** | Stage 0 (Intake) & Stage 1 (Clues/VLM) | **Completed** | 2026-10-08 | `c4b9278` |
+| **M4** | Stage 2 (Global Prior & Biomes) | **Completed** | 2026-10-08 | Pending |
 | **M5** | Stage 3a (Natural Terrain Branch & DEM Skylines) | Planned | - | - |
 | **M6** | Stage 3b (Built/Rural & Coastal Branches) | Planned | - | - |
 | **M7** | Stage 4 & 5 (Verification, Pose & Decision Report) | Planned | - | - |
@@ -74,3 +74,23 @@
   - Pydantic schema validation (`schema.py` - `ClueExtractionResult`).
   - Candidate board initialized with country priors, clues, and log-likelihood ratios.
 - [x] Added unit and integration tests (`tests/test_stage0_stage1.py`, 4/4 passing).
+- [x] Git commit: `c4b9278`.
+
+### Milestone 4: Stage 2 (Global Prior & Biomes) (Completed)
+- [x] Resolved PyTorch 2.5 `torch.accelerator` compatibility shim across transformers packages.
+- [x] Implemented geographic utility library (`src/geolocator/pipeline/geo_utils.py`) with Haversine distance calculations, offline country bounding boxes, regional spatial zones (Scandinavia, Sahara, Middle East, Europe), and greedy nearest-neighbor coordinate clustering into candidate cells.
+- [x] Upgraded `ModelManager` lock to `threading.RLock` to eliminate re-entrant deadlocks across model swaps.
+- [x] Implemented Stage 2 Prior (`src/geolocator/pipeline/stage2_prior.py`):
+  - GeoCLIP global visual prior integration via `ModelManager` with automatic GPU execution and memory release.
+  - Multi-source evidence fusion integrating visual embeddings, Köppen-Geiger climate classifications, ESA WorldCover, user hints, and observed driving side.
+  - Strict biome and climate filtering with calibrated log-likelihood penalties (e.g. continental/polar group exclusions for arid scenes).
+  - Spatial clustering producing ranked search bounding boxes (`search_bboxes`) for Stage 3 refinement.
+  - Updates candidate board with cell candidates, clues, evidence weights, and rationale logs.
+  - Emits `prior_results.json` artifact for inspectable decision tracing.
+- [x] Added unit and synthetic integration tests (`tests/test_stage2_prior.py`, 5/5 passing):
+  - Validated Haversine distance and spatial region checks.
+  - Validated spatial clustering into candidate bounding boxes.
+  - **Synthetic test passed**: verified a photo of the Sahara places zero candidate mass in Scandinavia (probability mass < 0.0001).
+  - Validated user hint conditioning boosting target country candidates over raw prior leaders.
+  - Validated end-to-end GeoCLIP inference on GPU with clean VRAM deallocation.
+- [x] Full regression test suite passing (21/21 tests passing).
