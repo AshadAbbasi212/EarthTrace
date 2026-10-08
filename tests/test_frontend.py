@@ -67,6 +67,14 @@ def test_static_assets_and_vendor_leaflet(client):
     assert leaflet_js.status_code == 200
     assert len(leaflet_js.content) > 50000  # Full bundled Leaflet library
 
+    layers_png = client.get("/vendor/leaflet/images/layers.png")
+    assert layers_png.status_code == 200
+    assert len(layers_png.content) > 0
+
+    layers_2x_png = client.get("/vendor/leaflet/images/layers-2x.png")
+    assert layers_2x_png.status_code == 200
+    assert len(layers_2x_png.content) > 0
+
 
 def test_health_api(client):
     """Verify /api/health endpoint functions seamlessly alongside web UI."""

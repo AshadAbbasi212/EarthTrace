@@ -174,7 +174,17 @@ class Stage3Built:
             bboxes = board.data.get("search_bboxes", [])
             if bboxes:
                 s_b = bboxes[0]["bbox"]
-                search_bbox = (float(s_b[0]), float(s_b[1]), float(s_b[2]), float(s_b[3]))
+                s, w, n, e = float(s_b[0]), float(s_b[1]), float(s_b[2]), float(s_b[3])
+                # Clamp bbox window to at most ~10 km span to avoid Overpass Gateway Timeouts (504)
+                c_lat = (s + n) / 2.0
+                c_lon = (w + e) / 2.0
+                half_span = 0.045
+                search_bbox = (
+                    max(s, c_lat - half_span),
+                    max(w, c_lon - half_span),
+                    min(n, c_lat + half_span),
+                    min(e, c_lon + half_span),
+                )
             else:
                 search_bbox = (51.48, -0.15, 51.52, -0.08)  # London Thames corridor default
 

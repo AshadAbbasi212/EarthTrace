@@ -339,6 +339,15 @@ textarea:focus, input[type="text"]:focus {
   font-size: 0.8rem !important;
 }
 
+.leaflet-control-layers-toggle {
+  filter: invert(0.9) hue-rotate(180deg);
+  transition: transform var(--transition-fast);
+}
+
+.leaflet-control-layers:hover .leaflet-control-layers-toggle {
+  transform: scale(1.08);
+}
+
 .leaflet-control-layers-expanded {
   padding: 8px 12px !important;
 }

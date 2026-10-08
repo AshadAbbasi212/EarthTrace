@@ -28,10 +28,10 @@ class OSMProvider(BaseProvider):
         super().__init__(name="osm", cache_dir=cache_dir, offline_mode=offline_mode, timeout=timeout)
         self.endpoints = endpoints or [
             "https://overpass-api.de/api/interpreter",
-            "https://lz4.overpass-api.de/api/interpreter",
-            "https://z.overpass-api.de/api/interpreter",
             "https://overpass.kumi.systems/api/interpreter",
+            "https://lz4.overpass-api.de/api/interpreter",
             "https://overpass.private.coffee/api/interpreter",
+            "https://overpass.openstreetmap.ru/api/interpreter",
         ]
 
     def query_ql(self, ql: str, timeout_sec: Optional[int] = None) -> Dict[str, Any]:
