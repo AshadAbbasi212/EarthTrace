@@ -1,6 +1,7 @@
 """OpenStreetMap Overpass vector data provider with mirror failover and query caching."""
 from __future__ import annotations
 
+import json
 import logging
 import urllib.parse
 import urllib.request
@@ -27,8 +28,10 @@ class OSMProvider(BaseProvider):
         super().__init__(name="osm", cache_dir=cache_dir, offline_mode=offline_mode, timeout=timeout)
         self.endpoints = endpoints or [
             "https://overpass-api.de/api/interpreter",
+            "https://lz4.overpass-api.de/api/interpreter",
+            "https://z.overpass-api.de/api/interpreter",
+            "https://overpass.kumi.systems/api/interpreter",
             "https://overpass.private.coffee/api/interpreter",
-            "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
         ]
 
     def query_ql(self, ql: str, timeout_sec: Optional[int] = None) -> Dict[str, Any]:

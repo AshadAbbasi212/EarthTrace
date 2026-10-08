@@ -87,7 +87,7 @@ class ReportGenerator:
                 pass
 
         # 2. Fixed Rule Tier & Radius Assignment
-        if best_candidate is None or best_candidate["score"] <= 0.05:
+        if best_candidate is None:
             tier = "T6"
             calibrated_radius_km = None
             coordinates = None
@@ -112,15 +112,25 @@ class ReportGenerator:
             elif "fit_score" in meta and meta["fit_score"] >= 0.70:
                 tier = "T2"
                 calibrated_radius_km = float(meta.get("radius_km", 2.5))
+            elif meta.get("source") == "exif_gps":
+                tier = "T2"
+                calibrated_radius_km = 3.0
             elif best_candidate.get("level") == "point":
                 tier = "T2" if margin > 1.5 else "T3"
                 calibrated_radius_km = 3.0 if tier == "T2" else 15.0
             elif best_candidate.get("level") in ("cell", "area", "city"):
-                tier = "T3" if margin > 1.0 else "T4"
-                calibrated_radius_km = 25.0 if tier == "T3" else 150.0
+                if score < 0.05:
+                    tier = "T5"
+                    calibrated_radius_km = 1500.0
+                elif score < 0.15:
+                    tier = "T4"
+                    calibrated_radius_km = 450.0
+                else:
+                    tier = "T3" if margin > 1.0 else "T4"
+                    calibrated_radius_km = 25.0 if tier == "T3" else 150.0
             else:
-                tier = "T4" if margin > 0.5 else "T5"
-                calibrated_radius_km = 250.0 if tier == "T4" else 800.0
+                tier = "T5" if score >= 0.01 else "T6"
+                calibrated_radius_km = 2500.0 if tier == "T5" else 5000.0
 
             # Heading estimation from pose or terrain
             pose_heading = verif_data.get("camera_pose", {}).get("heading_deg")
@@ -233,6 +243,18 @@ class ReportGenerator:
             "version": "1.0.0",
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "photo_sha256": board.data.get("photo_sha256", "unknown"),
+            "location_name": top_name,
+            "top_hypothesis": {
+                "name": top_name,
+                "coordinates": {
+                    "latitude": coordinates[0] if coordinates else None,
+                    "longitude": coordinates[1] if coordinates else None,
+                },
+                "confidence_tier": tier,
+                "error_radius_m": (calibrated_radius_km * 1000.0) if calibrated_radius_km else 500000.0,
+                "heading_deg": heading_deg,
+                "rationale": f"Determined via multimodal evidence. Hypothesis: {top_name}",
+            },
             "best_location": {
                 "name": top_name,
                 "coordinates": coordinates,
@@ -250,6 +272,12 @@ class ReportGenerator:
                 }
                 for alt in alternatives[:4]
             ],
+            "evidence": {
+                "osm_geometry": osm_evidence,
+                "elevation_skyline": dem_evidence,
+                "satellite_imagery": sat_evidence,
+                "street_imagery": street_evidence,
+            },
             "reasoning_timeline": reasoning_timeline,
             "mandatory_evidence_summary": {
                 "osm_geometry": osm_evidence["status"],

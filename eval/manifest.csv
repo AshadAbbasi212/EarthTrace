@@ -1,0 +1,67 @@
+id,file,lat,lon,category,continent,region,name,licence,author,source_url
+urb_01,urb_01_paris.jpg,48.858400,2.294500,urban,Europe,France,Paris,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+urb_02,urb_02_tokyo.jpg,35.689500,139.691700,urban,Asia,Japan,Tokyo,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+urb_03,urb_03_new_york.jpg,40.748400,-73.985700,urban,North America,USA,New York,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+urb_04,urb_04_buenos_aires.jpg,-34.603700,-58.381600,urban,South America,Argentina,Buenos Aires,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+urb_05,urb_05_nairobi.jpg,-1.286400,36.817200,urban,Africa,Kenya,Nairobi,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+urb_06,urb_06_sydney.jpg,-33.856800,151.215300,urban,Oceania,Australia,Sydney,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+rur_01,rur_01_glencoe_a82.jpg,56.666700,-4.983300,rural_road,Europe,UK,Glencoe A82,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+rur_02,rur_02_route_66.jpg,35.325800,-112.874200,rural_road,North America,USA,Route 66,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+rur_03,rur_03_ruta_40.jpg,-47.166700,-70.916700,rural_road,South America,Argentina,Ruta 40,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+rur_04,rur_04_stuart_highway.jpg,-23.700000,133.880000,rural_road,Oceania,Australia,Stuart Highway,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+rur_05,rur_05_pamir_highway.jpg,38.535800,73.136100,rural_road,Asia,Tajikistan,Pamir Highway,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+rur_06,rur_06_garden_route.jpg,-34.035100,23.046500,rural_road,Africa,South Africa,Garden Route,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+far_01,far_01_val_d'orcia.jpg,43.064200,11.606700,farmland,Europe,Italy,Val d'Orcia,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+far_02,far_02_iowa_cornfields.jpg,41.878000,-93.097700,farmland,North America,USA,Iowa Cornfields,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+far_03,far_03_pampas.jpg,-36.616700,-64.283300,farmland,South America,Argentina,Pampas,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+far_04,far_04_hokkaido_plains.jpg,43.583300,142.466700,farmland,Asia,Japan,Hokkaido Plains,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+far_05,far_05_alentejo.jpg,38.016700,-7.866700,farmland,Europe,Portugal,Alentejo,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+far_06,far_06_canterbury_plains.jpg,-43.616700,172.116700,farmland,Oceania,New Zealand,Canterbury Plains,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+cst_01,cst_01_big_sur.jpg,36.270400,-121.808100,coast,North America,USA,Big Sur,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+cst_02,cst_02_algarve_cliffs.jpg,37.089100,-8.243600,coast,Europe,Portugal,Algarve Cliffs,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+cst_03,cst_03_twelve_apostles.jpg,-38.665800,143.104400,coast,Oceania,Australia,Twelve Apostles,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+cst_04,cst_04_cape_point.jpg,-34.357200,18.497500,coast,Africa,South Africa,Cape Point,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+cst_05,cst_05_ha_long_bay.jpg,20.910100,107.183900,coast,Asia,Vietnam,Ha Long Bay,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+cst_06,cst_06_giants_causeway.jpg,55.240800,-6.511600,coast,Europe,UK,Giants Causeway,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+lak_01,lak_01_lake_como.jpg,45.986700,9.257200,lake_river,Europe,Italy,Lake Como,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+lak_02,lak_02_lake_tahoe.jpg,39.096800,-120.032400,lake_river,North America,USA,Lake Tahoe,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+lak_03,lak_03_lake_baikal.jpg,53.558700,108.165000,lake_river,Asia,Russia,Lake Baikal,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+lak_04,lak_04_lake_titicaca.jpg,-15.925400,-69.335400,lake_river,South America,Bolivia,Lake Titicaca,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+lak_05,lak_05_lake_wakatipu.jpg,-45.050000,168.650000,lake_river,Oceania,New Zealand,Lake Wakatipu,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+lak_06,lak_06_victoria_falls.jpg,-17.924300,25.855900,lake_river,Africa,Zimbabwe,Victoria Falls,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+mtn_01,mtn_01_matterhorn.jpg,45.976300,7.748000,mountain,Europe,Switzerland,Matterhorn,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+mtn_02,mtn_02_mount_fuji.jpg,35.360600,138.727400,mountain,Asia,Japan,Mount Fuji,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+mtn_03,mtn_03_denali.jpg,63.069200,-151.007000,mountain,North America,USA,Denali,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+mtn_04,mtn_04_mount_cook.jpg,-43.595000,170.141800,mountain,Oceania,New Zealand,Mount Cook,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+mtn_05,mtn_05_aconcagua.jpg,-32.653200,-70.010900,mountain,South America,Argentina,Aconcagua,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+mtn_06,mtn_06_kilimanjaro.jpg,-3.067400,37.355600,mountain,Africa,Tanzania,Kilimanjaro,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+val_01,val_01_yosemite_valley.jpg,37.745600,-119.593600,valley,North America,USA,Yosemite Valley,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+val_02,val_02_lauterbrunnen.jpg,46.593600,7.909100,valley,Europe,Switzerland,Lauterbrunnen,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+val_03,val_03_sacred_valley.jpg,-13.333300,-72.083300,valley,South America,Peru,Sacred Valley,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+val_04,val_04_rift_valley.jpg,-0.366700,36.083300,valley,Africa,Kenya,Rift Valley,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+val_05,val_05_barun_valley.jpg,27.700000,87.100000,valley,Asia,Nepal,Barun Valley,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+val_06,val_06_capertee_valley.jpg,-33.150000,150.050000,valley,Oceania,Australia,Capertee Valley,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+dst_01,dst_01_erg_chebbi.jpg,31.149200,-4.011700,desert,Africa,Morocco,Erg Chebbi,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+dst_02,dst_02_death_valley.jpg,36.532300,-116.932500,desert,North America,USA,Death Valley,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+dst_03,dst_03_atacama.jpg,-23.863400,-69.132800,desert,South America,Chile,Atacama,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+dst_04,dst_04_wadi_rum.jpg,29.573300,35.433300,desert,Asia,Jordan,Wadi Rum,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+dst_05,dst_05_simpson_desert.jpg,-24.570000,137.420000,desert,Oceania,Australia,Simpson Desert,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+dst_06,dst_06_rub_al_khali.jpg,20.000000,50.000000,desert,Asia,Oman,Rub al Khali,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+fst_01,fst_01_black_forest.jpg,48.300000,8.150000,forest,Europe,Germany,Black Forest,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+fst_02,fst_02_redwood_np.jpg,41.213200,-124.004600,forest,North America,USA,Redwood NP,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+fst_03,fst_03_amazon_manaus.jpg,-3.119000,-60.021700,forest,South America,Brazil,Amazon Manaus,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+fst_04,fst_04_yakushima_forest.jpg,30.358500,130.528600,forest,Asia,Japan,Yakushima Forest,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+fst_05,fst_05_daintree_rainforest.jpg,-16.280000,145.416700,forest,Oceania,Australia,Daintree Rainforest,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+fst_06,fst_06_bwindi_forest.jpg,-1.050000,29.616700,forest,Africa,Uganda,Bwindi Forest,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+snw_01,snw_01_svalbard.jpg,78.223200,15.626700,snow_ice,Europe,Norway,Svalbard,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+snw_02,snw_02_mcmurdo_station.jpg,-77.846300,166.668200,snow_ice,Antarctica,Ross Island,McMurdo Station,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+snw_03,snw_03_franz_josef_glacier.jpg,-43.466700,170.183300,snow_ice,Oceania,New Zealand,Franz Josef Glacier,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+snw_04,snw_04_columbia_icefield.jpg,52.216700,-117.216700,snow_ice,North America,Canada,Columbia Icefield,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+snw_05,snw_05_perito_moreno.jpg,-50.483300,-73.050000,snow_ice,South America,Argentina,Perito Moreno,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+snw_06,snw_06_zanskar_frozen.jpg,33.780000,76.920000,snow_ice,Asia,India,Zanskar Frozen,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+isl_01,isl_01_santorini.jpg,36.393200,25.461500,island,Europe,Greece,Santorini,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+isl_02,isl_02_maui_hawaii.jpg,20.798400,-156.331900,island,North America,USA,Maui Hawaii,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+isl_03,isl_03_galapagos.jpg,-0.953800,-90.965600,island,South America,Ecuador,Galapagos,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+isl_04,isl_04_bora_bora.jpg,-16.500400,-151.741500,island,Oceania,French Polynesia,Bora Bora,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+isl_05,isl_05_zanzibar.jpg,-6.165900,39.202600,island,Africa,Tanzania,Zanzibar,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures
+isl_06,isl_06_vestmannaeyjar.jpg,63.438900,-20.273600,island,Europe,Iceland,Vestmannaeyjar,CC0 Public Domain (Generated ground-truth fixture),Evaluation Benchmark Synthesizer,local://eval/fixtures

@@ -120,7 +120,15 @@ class BaseProvider:
                     data = resp.read()
                     self.write_cached_bytes(key, data, ext=ext)
                     return data
-            except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError) as e:
+            except urllib.error.HTTPError as e:
+                last_error = e
+                if e.code == 404:
+                    logger.debug("[%s] HTTP 404 Not Found for %s", self.name, url)
+                    break
+                logger.warning("[%s] Attempt %d/%d failed for %s: %s", self.name, attempt, retries, url, e)
+                if attempt < retries:
+                    time.sleep(backoff_sec * attempt)
+            except (urllib.error.URLError, TimeoutError, OSError) as e:
                 last_error = e
                 logger.warning("[%s] Attempt %d/%d failed for %s: %s", self.name, attempt, retries, url, e)
                 if attempt < retries:

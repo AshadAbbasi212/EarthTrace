@@ -46,15 +46,24 @@ class Stage3Terrain:
 
         # Normalize DEM profile
         std_dem = float(np.std(dem_resampled))
-        if std_dem < 1e-4:
+        if std_dem < 0.15:  # Flat elevation angle profile across FOV
             return 0.0
         norm_dem = (dem_resampled - np.mean(dem_resampled)) / std_dem
 
-        # Photo profile is assumed to be mean 0, std 1
-        std_photo = float(np.std(photo_profile))
-        if std_photo < 1e-4:
+        # Normalize photo profile and DEM angles to same dimension
+        if len(photo_profile) != len(dem_resampled):
+            norm_photo_raw = np.interp(
+                np.linspace(0, 1, len(dem_resampled)),
+                np.linspace(0, 1, len(photo_profile)),
+                photo_profile
+            )
+        else:
+            norm_photo_raw = photo_profile
+
+        std_photo = float(np.std(norm_photo_raw))
+        if std_photo < 0.015:  # Flat photo horizon
             return 0.0
-        norm_photo = (photo_profile - np.mean(photo_profile)) / std_photo
+        norm_photo = (norm_photo_raw - np.mean(norm_photo_raw)) / std_photo
 
         ncc = float(np.mean(norm_photo * norm_dem))
         return float(np.clip(ncc, -1.0, 1.0))
@@ -65,8 +74,8 @@ class Stage3Terrain:
         center_lat: float,
         center_lon: float,
         radius_km: float = 15.0,
-        coarse_step_km: float = 3.0,
-        fine_step_km: float = 0.5,
+        coarse_step_km: float = 6.0,
+        fine_step_km: float = 1.0,
         heading_hint: Optional[float] = None,
         hfov: float = 60.0,
         range_m: float = 35000.0,
@@ -86,11 +95,11 @@ class Stage3Terrain:
         lats = np.arange(center_lat - r_deg_lat, center_lat + r_deg_lat + 1e-5, coarse_step_lat)
         lons = np.arange(center_lon - r_deg_lon, center_lon + r_deg_lon + 1e-5, coarse_step_lon)
 
-        # Heading sweep
+        # Heading sweep (8 cardinal/ordinal directions)
         if heading_hint is not None:
             headings = [heading_hint - 20.0, heading_hint, heading_hint + 20.0]
         else:
-            headings = np.arange(0.0, 360.0, 30.0).tolist()
+            headings = np.arange(0.0, 360.0, 45.0).tolist()
 
         best_score = -2.0
         best_candidate: Optional[Dict[str, Any]] = None
@@ -111,7 +120,7 @@ class Stage3Terrain:
                         heading=float(h),
                         hfov=hfov,
                         range_m=range_m,
-                        samples=len(photo_profile),
+                        samples=36,
                     )
                     dem_angles = np.array(profile_res["skyline_angles"], dtype=np.float32)
                     score = self._compute_profile_correlation(photo_profile, dem_angles)
@@ -138,9 +147,9 @@ class Stage3Terrain:
             fine_step_lat = fine_step_km / deg_lat_km
             fine_step_lon = fine_step_km / max(1.0, deg_lon_km)
 
-            fine_lats = np.arange(ref_lat - coarse_step_lat, ref_lat + coarse_step_lat + 1e-5, fine_step_lat)
-            fine_lons = np.arange(ref_lon - coarse_step_lon, ref_lon + coarse_step_lon + 1e-5, fine_step_lon)
-            fine_headings = np.arange(ref_heading - 15.0, ref_heading + 15.0 + 1e-5, 5.0)
+            fine_lats = np.arange(ref_lat - fine_step_lat * 2, ref_lat + fine_step_lat * 2 + 1e-5, fine_step_lat)
+            fine_lons = np.arange(ref_lon - fine_step_lon * 2, ref_lon + fine_step_lon * 2 + 1e-5, fine_step_lon)
+            fine_headings = np.arange(ref_heading - 15.0, ref_heading + 15.0 + 1e-5, 7.5)
 
             for f_lat in fine_lats:
                 for f_lon in fine_lons:
@@ -151,7 +160,7 @@ class Stage3Terrain:
                             heading=float(f_h),
                             hfov=hfov,
                             range_m=range_m,
-                            samples=len(photo_profile),
+                            samples=36,
                         )
                         dem_angles = np.array(profile_res["skyline_angles"], dtype=np.float32)
                         score = self._compute_profile_correlation(photo_profile, dem_angles)
@@ -248,11 +257,11 @@ class Stage3Terrain:
         )
 
         best_vp = fit_results["best_viewpoint"]
-        if best_vp:
+        score = fit_results["best_score"]
+        if best_vp and score >= 0.70:
             v_lat = best_vp["lat"]
             v_lon = best_vp["lon"]
             v_heading = best_vp["heading"]
-            score = fit_results["best_score"]
 
             cand_name = f"Terrain Ridgeline Viewpoint ({v_lat:.4f}, {v_lon:.4f})"
             board.add_candidate(

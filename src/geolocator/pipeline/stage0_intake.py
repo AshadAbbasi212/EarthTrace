@@ -116,6 +116,7 @@ class Stage0Intake:
             "size_mb": round(size_mb, 2),
             "has_exif": bool(exif_data.get("Make") or exif_data.get("DateTimeOriginal") or gps),
             "gps_wgs84": gps,
+            "exif_gps": gps,
             "focal_35mm": exif_data.get("focal_35mm"),
             "fov": exif_data.get("fov_4x3_long_short"),
             "working_1024": str(copy_1024),

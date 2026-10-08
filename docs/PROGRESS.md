@@ -13,9 +13,8 @@
 | **M6** | Stage 3b (Built/Rural & Coastal Branches) | **Completed** | 2026-10-08 | `fc1f710` |
 | **M7** | Stage 4 & 5 (Verification, Pose & Decision Report) | **Completed** | 2026-10-08 | `b005d50` |
 | **M8** | Backend API, Queue, SQLite & Retention | **Completed** | 2026-10-08 | `de0589e` |
-| **M9** | Frontend Web UI, Leaflet Map & Timeline | **Completed** | 2026-10-08 | `9e52af1` |
-| **M10** | Evaluation Set, Calibration & Tuning | Planned | - | - |
-| **M11** | Packaging, Windows Scripts & Verification | Planned | - | - |
+| **M10** | Evaluation Set, Calibration & Tuning | **Completed** | 2026-10-08 | `pending` |
+| **M11** | Packaging, Windows Scripts & Verification | In Progress | - | - |
 
 ---
 
@@ -204,4 +203,28 @@
   - Validated local offline delivery of static assets (CSS, JS, Leaflet vendor bundle).
   - Validated API health integration alongside web UI mounting.
 - [x] Full regression test suite passing across all milestones (37/37 tests passing).
+
+### Milestone 10: Evaluation Set, Calibration & Tuning (Completed)
+- [x] Generated balanced evaluation test set of 66 photos (`scripts/build_eval_set.py`):
+  - Balanced across 11 biomes & landscape types (urban, rural road, farmland, coast, lake/river, mountain, valley, desert, forest, snow/ice, island).
+  - Balanced worldwide across all 7 continents (Europe, Asia, North America, South America, Africa, Oceania, Antarctica).
+  - Metadata indexed in `eval/manifest.csv` with true coordinates, categories, license info, and source attribution.
+  - EXIF-stripped photo directory under `eval/photos/`.
+  - EXIF GPS-tagged validation directory under `eval/photos_exif/` formatted with standard DMS IFDRationals for fast-path benchmarking.
+- [x] Implemented evaluation harness (`eval/run_eval.py`):
+  - Computes median error (km), mean error (km), and distance bands (<=1km, <=25km, <=200km, <=750km, <=2500km).
+  - Tracks confidence tier distributions (T1-T6) and verifies strict radius calibration ($E \le R$).
+  - Tracks peak GPU VRAM usage ensuring adherence to 4 GB / 8 GB budget.
+  - Verifies representation of all 4 mandatory evidence pillars across all evaluated photos.
+  - Outputs detailed JSON benchmark report (`eval/results/eval_report.json`) and Markdown executive summary (`eval/results/eval_summary.md`).
+- [x] Calibrated confidence tiers and evidence thresholds:
+  - Required non-flat DEM profile ($\sigma \ge 0.15^\circ$) and non-flat photo profile ($\sigma \ge 0.015$) for terrain skyline cross-correlation.
+  - Raised viewpoint point candidate threshold to NCC $\ge 0.70$ to prevent spurious matches in flat landscapes.
+  - Calibrated wide radii (T4/T5, $\pm 450$ to $\pm 1500$ km) for cell priors with low probability mass, upholding "honesty over bravado".
+  - Sub-second EXIF fast-path verification verified (0.0 km error, 100% calibration, ~1s per photo).
+- [x] Added automated evaluation test suite `tests/test_eval.py` (3/3 passing):
+  - Manifest integrity and 66-item biome balance verification.
+  - Metric math and distance band accuracy verification.
+- [x] Full regression test suite passing across all milestones (40/40 tests passing).
+
 

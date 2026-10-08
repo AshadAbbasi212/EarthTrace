@@ -42,10 +42,13 @@ class StreetImageProvider(BaseProvider):
         """Search geotagged articles and extract lead images near coordinates."""
         params = {
             "action": "query",
-            "list": "geosearch",
-            "gscoord": f"{lat:.6f}|{lon:.6f}",
-            "gsradius": str(min(radius_m, 10000)),
-            "gslimit": str(limit),
+            "generator": "geosearch",
+            "ggscoord": f"{lat:.6f}|{lon:.6f}",
+            "ggsradius": str(min(radius_m, 10000)),
+            "ggslimit": str(limit),
+            "prop": "pageimages|coordinates",
+            "piprop": "thumbnail",
+            "pithumbsize": "640",
             "format": "json",
         }
         cache_key = self._hash_key(f"geosearch_{lat:.4f}_{lon:.4f}_{radius_m}")
@@ -59,28 +62,25 @@ class StreetImageProvider(BaseProvider):
         url = f"{self.api_endpoint}?{urllib.parse.urlencode(params)}"
         try:
             data = self.fetch_json(url, cache_key=cache_key)
-            items = data.get("query", {}).get("geosearch", [])
+            pages = data.get("query", {}).get("pages", {})
             results = []
 
-            for item in items:
-                page_id = item.get("pageid")
-                title = item.get("title")
-                dist = item.get("dist")
-                item_lat = item.get("lat")
-                item_lon = item.get("lon")
+            for page_id, p_info in pages.items():
+                title = p_info.get("title", "")
+                thumb = p_info.get("thumbnail")
+                coords = p_info.get("coordinates", [{}])[0]
+                item_lat = coords.get("lat", lat)
+                item_lon = coords.get("lon", lon)
 
-                # Fetch page image
-                image_info = self._fetch_page_image(title, page_id)
-                if image_info:
+                if thumb and thumb.get("source"):
                     results.append({
                         "id": str(page_id),
                         "title": title,
-                        "distance_m": dist,
                         "lat": item_lat,
                         "lon": item_lon,
-                        "image_url": image_info["source"],
-                        "width": image_info.get("width"),
-                        "height": image_info.get("height"),
+                        "image_url": thumb["source"],
+                        "width": thumb.get("width"),
+                        "height": thumb.get("height"),
                         "source": "Wikimedia/Wikipedia",
                     })
 
@@ -128,3 +128,7 @@ class StreetImageProvider(BaseProvider):
         except Exception as e:
             logger.warning("[street_image] Failed to download image %s: %s", image_url, e)
             return None
+
+    def find_nearby_images(self, lat: float, lon: float, radius_m: int = 3000, limit: int = 8) -> List[Dict[str, Any]]:
+        """Alias for search_nearby."""
+        return self.search_nearby(lat=lat, lon=lon, radius_m=radius_m, limit=limit)

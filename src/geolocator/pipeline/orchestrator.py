@@ -65,7 +65,7 @@ class PipelineOrchestrator:
         intake_summary, board = self.stage0.process(photo_path, job_dir)
 
         # Check for EXIF GPS fast-path
-        if intake_summary.get("exif_gps") is not None:
+        if intake_summary.get("exif_gps") or intake_summary.get("gps_wgs84") or board.data.get("fast_path_gps"):
             logger.info("EXIF GPS detected, executing fast-path verification...")
             report_progress("EXIF GPS fast-path: Verifying location", 80)
             self.stage4.process(job_dir, board)
@@ -91,7 +91,7 @@ class PipelineOrchestrator:
         scene_type = getattr(clues_res, "scene_type", "other")
         
         # Terrain branch runs if mountain, desert, hill, natural terrain or horizon is detected
-        if any(t in scene_type for t in ("mountain", "desert", "valley", "lake_river", "rural_road")) or board.data.get("search_bboxes"):
+        if any(t in scene_type for t in ("mountain", "desert", "valley", "lake_river", "snow_ice", "coast", "rural_road")):
             self.stage3_terrain.process(job_dir, board)
 
         # Built & infrastructure branch runs for roads, bridges, urban, or rural

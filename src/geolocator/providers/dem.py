@@ -56,6 +56,13 @@ class DEMProvider(BaseProvider):
         cache_filename = f"terrarium_{zoom}_{tile_x}_{tile_y}.png"
         url = self.tile_url.format(z=zoom, x=tile_x, y=tile_y)
 
+        if self.is_cached(cache_filename, ext=".png"):
+            raw_bytes = self.read_cached_bytes(cache_filename, ext=".png")
+            if not raw_bytes:  # Empty marker for missing/ocean tile
+                zeros = np.zeros((256, 256), dtype=np.float32)
+                self._tile_cache[key] = zeros
+                return zeros
+
         try:
             raw_bytes = self.fetch_bytes(url, cache_key=cache_filename, ext=".png")
             import io
@@ -69,6 +76,10 @@ class DEMProvider(BaseProvider):
             logger.warning("[dem] Failed to fetch DEM tile (%d, %d, %d): %s", zoom, tile_x, tile_y, e)
             zeros = np.zeros((256, 256), dtype=np.float32)
             self._tile_cache[key] = zeros
+            try:
+                self.write_cached_bytes(cache_filename, b"", ext=".png")
+            except Exception:
+                pass
             return zeros
 
     def get_elevation(self, lat: float, lon: float, zoom: int = 12) -> float:
@@ -86,7 +97,7 @@ class DEMProvider(BaseProvider):
         heading: float,
         hfov: float = 60.0,
         range_m: float = 25000.0,
-        samples: int = 120,
+        samples: int = 36,
         camera_height_m: float = 2.0,
         zoom: int = 12,
     ) -> Dict[str, Any]:
@@ -95,9 +106,10 @@ class DEMProvider(BaseProvider):
         Returns bearings, elevation angles (degrees), distances to skyline peaks,
         accounting for Earth curvature and refraction.
         """
+        samples = min(max(int(samples), 16), 48)
         cam_elev = self.get_elevation(lat, lon, zoom=zoom) + camera_height_m
         bearings = np.linspace(heading - hfov / 2.0, heading + hfov / 2.0, samples)
-        distances = np.linspace(500.0, range_m, 50)  # 50 radial distance rings
+        distances = np.linspace(800.0, range_m, 20)  # 20 radial distance rings
 
         skyline_elev_angles = np.full(samples, -90.0, dtype=np.float32)
         skyline_distances = np.zeros(samples, dtype=np.float32)

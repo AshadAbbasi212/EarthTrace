@@ -70,6 +70,11 @@ class SatelliteProvider(BaseProvider):
             logger.warning("[satellite] Tile fetch failed (%s, z=%d, x=%d, y=%d): %s", src, zoom, x, y, e)
             return Image.new("RGB", (256, 256), (40, 40, 40))
 
+    def fetch_satellite_image(self, lat: float, lon: float, zoom: int = 16) -> Image.Image:
+        """Fetch satellite tile centered at GPS coordinates."""
+        tx, ty = self.lat_lon_to_tile(lat, lon, zoom)
+        return self.get_tile(zoom, tx, ty)
+
     def fetch_mosaic(
         self,
         lat: float,
