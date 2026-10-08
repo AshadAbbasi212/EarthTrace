@@ -15,7 +15,7 @@
 | **M8** | Backend API, Queue, SQLite & Retention | **Completed** | 2026-10-08 | `de0589e` |
 | **M9** | Frontend Web UI, Leaflet Map & Timeline | **Completed** | 2026-10-08 | `9e52af1` |
 | **M10** | Evaluation Set, Calibration & Tuning | **Completed** | 2026-10-08 | `dc75ee9` |
-| **M11** | Packaging, Windows Scripts & Verification | **Completed** | 2026-10-08 | `pending` |
+| **M11** | Packaging, Windows Scripts & Verification | **Completed** | 2026-10-08 | `ae258f6` |
 
 ---
 
