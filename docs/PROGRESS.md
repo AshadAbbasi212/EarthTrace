@@ -12,8 +12,8 @@
 | **M5** | Stage 3a (Natural Terrain Branch & DEM Skylines) | **Completed** | 2026-10-08 | `8c2aa29` |
 | **M6** | Stage 3b (Built/Rural & Coastal Branches) | **Completed** | 2026-10-08 | `fc1f710` |
 | **M7** | Stage 4 & 5 (Verification, Pose & Decision Report) | **Completed** | 2026-10-08 | `b005d50` |
-| **M8** | Backend API, Queue, SQLite & Retention | **Completed** | 2026-10-08 | Pending |
-| **M9** | Frontend Web UI, Leaflet Map & Timeline | Planned | - | - |
+| **M8** | Backend API, Queue, SQLite & Retention | **Completed** | 2026-10-08 | `de0589e` |
+| **M9** | Frontend Web UI, Leaflet Map & Timeline | **Completed** | 2026-10-08 | `pending` |
 | **M10** | Evaluation Set, Calibration & Tuning | Planned | - | - |
 | **M11** | Packaging, Windows Scripts & Verification | Planned | - | - |
 
@@ -174,3 +174,34 @@
   - Validated FastAPI endpoints and passphrase authentication.
   - **Concurrency test passed**: verified rapid subsequent uploads queue politely and execute sequentially.
 - [x] Full regression test suite passing across all milestones (34/34 tests passing).
+
+### Milestone 9: Frontend Web UI, Leaflet Map & Timeline (Completed)
+- [x] Bundled 100% offline runtime static assets:
+  - Local Leaflet v1.9.4 CSS and JS under `src/geolocator/web/static/vendor/leaflet/` (no external CDNs needed at runtime).
+  - Designed ultra-premium dark theme stylesheet `src/geolocator/web/static/style.css` (custom variables, responsive layout, glassmorphic cards, animations).
+- [x] Implemented responsive HTML5 application layout `src/geolocator/web/static/index.html`:
+  - Mandatory **Responsible Use Notice** prominently displayed at the top of the interface.
+  - Interactive drag-and-drop file upload dropzone with real-time thumbnail preview and remove button.
+  - Contextual text hint input field for biomes, countries, landmarks, or seasons.
+  - Real-time pipeline status title, progress bar percentage, and live SSE event timeline.
+  - Leaflet map view container with dynamic status badge.
+  - Determined location results card displaying confidence tier badge (T1-T6), coordinates, calibrated radius, camera heading, and full audit rationale.
+  - Quick export action buttons: copy coordinates, open HTML report, download JSON report, download GeoJSON.
+  - **All 4 mandatory multimodal evidence pillars** displayed in dedicated cards:
+    1. OpenStreetMap Geometry
+    2. Elevation Skyline (DEM)
+    3. Satellite Imagery
+    4. Street-level Imagery (with honest "Not available" status reporting)
+- [x] Implemented vanilla JavaScript application logic `src/geolocator/web/static/app.js`:
+  - Zero heavy framework dependencies for clean, reliable execution.
+  - Drag-and-drop file ingestion and client-side image preview.
+  - Multipart photo submission to `/api/jobs` with optional passphrase support.
+  - Live Server-Sent Events (SSE) streaming from `/api/jobs/{id}/events` updating progress bar and appending timeline events with keepalive fallback.
+  - Leaflet map rendering: error circle (`L.circle`), custom pulsing viewpoint pin, directional heading ray (`L.polyline`), and alternative candidate markers.
+  - Multimodal evidence gallery population including direct artifact previews (`skyline_overlay.png`, `satellite_evidence.png`).
+- [x] Added unit and integration tests `tests/test_frontend.py` (3/3 passing):
+  - Validated `index.html` delivery, branding, and presence of the Responsible Use Notice.
+  - Validated local offline delivery of static assets (CSS, JS, Leaflet vendor bundle).
+  - Validated API health integration alongside web UI mounting.
+- [x] Full regression test suite passing across all milestones (37/37 tests passing).
+

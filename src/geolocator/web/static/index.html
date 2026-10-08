@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Photo Geolocator</title>
+  <meta name="description" content="Autonomous, keyless global photo geolocation engine powered by local models and open geospatial data.">
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <div class="logo-area">
+      <div class="logo-icon">🌐</div>
+      <div class="logo-title">GLOBAL PHOTO GEOLOCATOR</div>
+    </div>
+    <div class="system-status">
+      <div class="status-indicator">
+        <span class="pulse-dot" id="system-status-dot"></span>
+        <span id="system-status-text">System Ready</span>
+      </div>
+      <span id="gpu-info" style="font-size: 0.8rem; opacity: 0.7;">Local GPU</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Left Column: Controls & Upload -->
+    <div class="left-panel">
+      <!-- Responsible Use Banner -->
+      <div class="notice-banner">
+        <strong>Responsible Use Notice:</strong> This system is for open research and environmental navigation.
+        Do not use this system to locate or track non-consenting individuals.
+      </div>
+
+      <!-- Upload Card -->
+      <div class="card" id="upload-card">
+        <div class="card-title">
+          <span>📷</span> Target Photo Upload
+        </div>
+        
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="file-input" accept="image/*" style="display: none;">
+          <div class="dropzone-icon">📥</div>
+          <div style="font-weight: 600; margin-bottom: 0.25rem;">Drop image here or click to browse</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">JPEG, PNG, WebP up to 30 MB</div>
+        </div>
+
+        <div class="preview-container" id="preview-container">
+          <img id="preview-img" class="preview-img" alt="Preview">
+          <button type="button" class="remove-btn" id="remove-btn" title="Remove photo">&times;</button>
+        </div>
+
+        <div class="input-group">
+          <label for="hint-input" class="input-label">Context Hints (Optional)</label>
+          <textarea id="hint-input" rows="2" placeholder="e.g. Country, season, 'near a railway bridge', 'hiking in Alps'"></textarea>
+        </div>
+
+        <div class="input-group" id="passphrase-group" style="margin-top: 0.75rem;">
+          <label for="passphrase-input" class="input-label">Passphrase (if enabled)</label>
+          <input type="password" id="passphrase-input" placeholder="Access passphrase">
+        </div>
+
+        <button type="button" class="btn-primary" id="locate-btn" disabled>
+          🔍 Geolocate Photo
+        </button>
+      </div>
+
+      <!-- Live Progress & Timeline Card -->
+      <div class="card progress-card" id="progress-card">
+        <div class="card-title" style="display: flex; justify-content: space-between;">
+          <span style="display: flex; align-items: center; gap: 0.5rem;">
+            <span>⚡</span> <span id="pipeline-status-title">Pipeline Active</span>
+          </span>
+          <span id="progress-pct" style="font-size: 0.85rem; color: var(--accent-blue);">0%</span>
+        </div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progress-bar-fill"></div>
+        </div>
+
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;" id="progress-step-label">
+          Awaiting initialization...
+        </div>
+
+        <div class="timeline" id="timeline-list">
+          <!-- Timeline events dynamically added here -->
+        </div>
+
+        <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+          <button type="button" class="btn-secondary" id="cancel-btn" style="color: var(--accent-red); border-color: rgba(239, 68, 68, 0.3);">
+            Cancel Job
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Visualization, Evidence & Reports -->
+    <div class="right-panel">
+      <!-- Leaflet Map Card -->
+      <div class="card map-card">
+        <div id="map"></div>
+        <div class="map-badge" id="map-badge">
+          <span>📍</span>
+          <span id="map-badge-text">Worldwide Coverage Ready</span>
+        </div>
+      </div>
+
+      <!-- Results Card (Revealed on Completion) -->
+      <div class="card results-card" id="results-card">
+        <div class="result-header">
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Determined Location</div>
+            <div class="result-location" id="result-location">Analyzing...</div>
+          </div>
+          <div class="tier-badge" id="tier-badge" style="background: #3b82f6;">Tier T-</div>
+        </div>
+
+        <div class="result-stats">
+          <div>
+            <div class="stat-item-label">Latitude</div>
+            <div class="stat-item-val" id="stat-lat">--</div>
+          </div>
+          <div>
+            <div class="stat-item-label">Longitude</div>
+            <div class="stat-item-val" id="stat-lon">--</div>
+          </div>
+          <div>
+            <div class="stat-item-label">Calibrated Radius</div>
+            <div class="stat-item-val" id="stat-radius">--</div>
+          </div>
+          <div>
+            <div class="stat-item-label">Camera Heading</div>
+            <div class="stat-item-val" id="stat-heading">--</div>
+          </div>
+        </div>
+
+        <div style="font-size: 0.85rem; line-height: 1.5; color: var(--text-muted); margin-bottom: 1rem;" id="result-rationale">
+          <!-- Full reasoning trail -->
+        </div>
+
+        <div class="action-bar">
+          <button type="button" class="btn-secondary" id="copy-coords-btn">
+            📋 Copy Coords
+          </button>
+          <a href="#" target="_blank" class="btn-secondary" id="open-report-html-btn">
+            📄 Full HTML Report
+          </a>
+          <a href="#" target="_blank" class="btn-secondary" id="download-json-btn">
+            💾 JSON Report
+          </a>
+          <a href="#" target="_blank" class="btn-secondary" id="download-geojson-btn">
+            🗺️ GeoJSON
+          </a>
+        </div>
+      </div>
+
+      <!-- 4 Mandatory Evidence Cards -->
+      <div class="card" id="evidence-section">
+        <div class="card-title">
+          <span>🔬</span> Multimodal Verification Evidence (4 Pillars)
+        </div>
+        <div class="evidence-grid">
+          <!-- 1. OpenStreetMap Geometry -->
+          <div class="evidence-box" id="evidence-box-osm">
+            <div class="evidence-header">
+              <span class="evidence-name">1. OSM Geometry</span>
+              <span class="badge-tag tag-not-applicable" id="badge-osm">Standby</span>
+            </div>
+            <div class="evidence-desc" id="desc-osm">
+              Linear corridor matching, road networks, waterways, bridges, and infrastructure intersections.
+            </div>
+            <div id="thumb-container-osm" style="display: none;"></div>
+          </div>
+
+          <!-- 2. Elevation Skylines -->
+          <div class="evidence-box" id="evidence-box-dem">
+            <div class="evidence-header">
+              <span class="evidence-name">2. Elevation Skyline</span>
+              <span class="badge-tag tag-not-applicable" id="badge-dem">Standby</span>
+            </div>
+            <div class="evidence-desc" id="desc-dem">
+              Horizon profile extracted from photograph matched against Terrarium DEM terrain curvature.
+            </div>
+            <div id="thumb-container-dem" style="display: none;"></div>
+          </div>
+
+          <!-- 3. Satellite Imagery -->
+          <div class="evidence-box" id="evidence-box-sat">
+            <div class="evidence-header">
+              <span class="evidence-name">3. Satellite Imagery</span>
+              <span class="badge-tag tag-not-applicable" id="badge-sat">Standby</span>
+            </div>
+            <div class="evidence-desc" id="desc-sat">
+              High-resolution overhead satellite visual verification and spatial footprint matching.
+            </div>
+            <div id="thumb-container-sat" style="display: none;"></div>
+          </div>
+
+          <!-- 4. Street-level Imagery -->
+          <div class="evidence-box" id="evidence-box-street">
+            <div class="evidence-header">
+              <span class="evidence-name">4. Street Imagery</span>
+              <span class="badge-tag tag-not-applicable" id="badge-street">Standby</span>
+            </div>
+            <div class="evidence-desc" id="desc-street">
+              Keyless ground-level imagery check (Wikimedia / KartaView). Honest "not available" when unmapped.
+            </div>
+            <div id="thumb-container-street" style="display: none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div>Global Photo Geolocator &bull; 100% Keyless Open Data &amp; Local Offline Inference &bull; NVIDIA GPU Accelerated</div>
+    <div style="margin-top: 0.35rem; font-size: 0.75rem; opacity: 0.6;">
+      Built in compliance with the Zero-Input Rule, Local Transformers, and Multi-Evidence Verification.
+    </div>
+  </footer>
+
+  <script src="/vendor/leaflet/leaflet.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -49,7 +49,15 @@ def test_sqlite_job_database_lifecycle_and_retention(tmp_path):
     assert not job_dir.exists()
 
 
-def test_fastapi_endpoints_and_passphrase(tmp_path):
+def test_fastapi_endpoints_and_passphrase(tmp_path, monkeypatch):
+    def slow_mock(*args, **kwargs):
+        time.sleep(0.5)
+        return {"best_location": {"name": "Mocked Location"}}
+
+    monkeypatch.setattr(
+        "geolocator.pipeline.orchestrator.PipelineOrchestrator.run",
+        slow_mock,
+    )
     cfg = AppConfig()
     cfg.storage.jobs_dir = str(tmp_path / "jobs")
     cfg.storage.data_dir = str(tmp_path / "data")
