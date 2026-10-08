@@ -8,8 +8,8 @@
 | **M1** | Project Skeleton & ModelManager | **Completed** | 2026-10-08 | `dfe48fc` |
 | **M2** | Keyless Data Providers & Caching | **Completed** | 2026-10-08 | `1786615` |
 | **M3** | Stage 0 (Intake) & Stage 1 (Clues/VLM) | **Completed** | 2026-10-08 | `c4b9278` |
-| **M4** | Stage 2 (Global Prior & Biomes) | **Completed** | 2026-10-08 | Pending |
-| **M5** | Stage 3a (Natural Terrain Branch & DEM Skylines) | Planned | - | - |
+| **M4** | Stage 2 (Global Prior & Biomes) | **Completed** | 2026-10-08 | `3863b20` |
+| **M5** | Stage 3a (Natural Terrain Branch & DEM Skylines) | **Completed** | 2026-10-08 | Pending |
 | **M6** | Stage 3b (Built/Rural & Coastal Branches) | Planned | - | - |
 | **M7** | Stage 4 & 5 (Verification, Pose & Decision Report) | Planned | - | - |
 | **M8** | Backend API, Queue, SQLite & Retention | Planned | - | - |
@@ -94,3 +94,23 @@
   - Validated user hint conditioning boosting target country candidates over raw prior leaders.
   - Validated end-to-end GeoCLIP inference on GPU with clean VRAM deallocation.
 - [x] Full regression test suite passing (21/21 tests passing).
+- [x] Git commit: `3863b20`.
+
+### Milestone 5: Stage 3a (Natural Terrain Branch & DEM Skylines) (Completed)
+- [x] Implemented `SkylineExtractor` (`src/geolocator/pipeline/skyline_extractor.py`):
+  - 1D mountain/ridge boundary extraction using vertical luminance and contrast gradients.
+  - Multi-stage median and moving average noise smoothing.
+  - Generates debug visual overlay (`skyline_overlay.png`) drawing the extracted horizon line directly over the photo.
+- [x] Implemented Stage 3a Natural Terrain Branch (`src/geolocator/pipeline/stage3_terrain.py`):
+  - Fetches and decodes worldwide elevation from AWS Terrarium DEM tiles (~30m keyless).
+  - Horizon profile renderer accounting for Earth curvature ($R=6371\text{ km}$) and atmospheric refraction ($k=0.13$).
+  - Two-tier coarse-to-fine spatial grid search (coarse step 2-3 km, fine step 400-500m) with 360° heading sweep.
+  - Normalized Cross-Correlation (NCC) scoring against photographic skyline profiles.
+  - Calibrated error radius and confidence tier assignment (T2: $\le 1.5-4.5\text{ km}$, T3: $\le 15\text{ km}$, T4: $\le 45\text{ km}$).
+  - Updates CandidateBoard with point candidate, computed likelihood ratio, and full rationale trail.
+  - Emits `skyline_extracted.json`, `skyline_overlay.png`, and `terrain_results.json` artifacts.
+- [x] Added unit and synthetic integration tests (`tests/test_stage3_terrain.py`, 3/3 passing):
+  - Validated `SkylineExtractor` on synthetic mountain silhouette.
+  - **Synthetic terrain test passed**: successfully recovered camera viewpoint to $\le 5\text{ km}$ ($2.1\text{ km}$ error) and heading within $\pm 15^\circ$ from DEM skyline.
+  - Validated full pipeline execution and CandidateBoard updates.
+- [x] Full test suite passing across all milestones (24/24 tests passing).
