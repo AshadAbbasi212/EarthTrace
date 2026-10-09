@@ -50,7 +50,7 @@
   const systemStatusText = document.getElementById('system-status-text');
   const gpuInfo = document.getElementById('gpu-info');
 
-  // Evidence elements
+  // Overview Evidence elements
   const badgeOsm = document.getElementById('badge-osm');
   const descOsm = document.getElementById('desc-osm');
   const thumbOsm = document.getElementById('thumb-container-osm');
@@ -66,6 +66,49 @@
   const badgeStreet = document.getElementById('badge-street');
   const descStreet = document.getElementById('desc-street');
   const thumbStreet = document.getElementById('thumb-container-street');
+
+  // Detail Panel elements
+  const detailBadgeOsm = document.getElementById('detail-badge-osm');
+  const detailFindingsOsm = document.getElementById('detail-findings-osm');
+  const detailCrossingsOsm = document.getElementById('detail-crossings-osm');
+  const detailScoreOsm = document.getElementById('detail-score-osm');
+  const btnOsmFocusMap = document.getElementById('btn-osm-focus-map');
+  const btnOsmOpenExternal = document.getElementById('btn-osm-open-external');
+
+  const detailBadgeDem = document.getElementById('detail-badge-dem');
+  const detailFindingsDem = document.getElementById('detail-findings-dem');
+  const detailDemImg = document.getElementById('detail-dem-img');
+  const detailDemEmptyNote = document.getElementById('detail-dem-empty-note');
+  const detailScoreDem = document.getElementById('detail-score-dem');
+  const detailStatusDem = document.getElementById('detail-status-dem');
+  const btnDemLightbox = document.getElementById('btn-dem-lightbox');
+  const btnDemFocusMap = document.getElementById('btn-dem-focus-map');
+
+  const detailBadgeSat = document.getElementById('detail-badge-sat');
+  const detailFindingsSat = document.getElementById('detail-findings-sat');
+  const detailSatImg = document.getElementById('detail-sat-img');
+  const detailSatEmptyNote = document.getElementById('detail-sat-empty-note');
+  const detailScoreSat = document.getElementById('detail-score-sat');
+  const btnSatSwitchMap = document.getElementById('btn-sat-switch-map');
+  const btnSatLightbox = document.getElementById('btn-sat-lightbox');
+
+  const detailBadgeStreet = document.getElementById('detail-badge-street');
+  const detailFindingsStreet = document.getElementById('detail-findings-street');
+  const detailStreetImg = document.getElementById('detail-street-img');
+  const detailStreetEmptyNote = document.getElementById('detail-street-empty-note');
+  const btnStreetSearchWikimedia = document.getElementById('btn-street-search-wikimedia');
+
+  // Lightbox elements
+  const lightboxModal = document.getElementById('lightbox-modal');
+  const lightboxBackdrop = document.getElementById('lightbox-backdrop');
+  const lightboxClose = document.getElementById('lightbox-close');
+  const lightboxImg = document.getElementById('lightbox-img');
+  const lightboxTitle = document.getElementById('lightbox-title');
+  const lightboxDesc = document.getElementById('lightbox-desc');
+  const lightboxDownloadBtn = document.getElementById('lightbox-download-btn');
+
+  let currentReportData = null;
+  let baseLayers = {};
 
   // --- Initialize Map ---
   function initMap() {
@@ -96,14 +139,22 @@
     esriDark.addTo(map);
 
     // Layer switcher for easy user toggling
-    const baseMaps = {
+    baseLayers = {
       'Dark Canvas': esriDark,
       'Satellite': satellite,
       'OpenStreetMap': osmStandard
     };
-    L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(map);
+    L.control.layers(baseMaps = baseLayers, null, { position: 'bottomleft' }).addTo(map);
 
     mapLayers = L.layerGroup().addTo(map);
+  }
+
+  function switchBasemap(name) {
+    if (!map || !baseLayers[name]) return;
+    Object.values(baseLayers).forEach(layer => {
+      if (map.hasLayer(layer)) map.removeLayer(layer);
+    });
+    baseLayers[name].addTo(map);
   }
 
   // --- Auth Helpers ---
@@ -381,6 +432,7 @@
   }
 
   function displayReport(report, jobId) {
+    currentReportData = report;
     resultsCard.style.display = 'block';
 
     const top = report.top_hypothesis || {};
@@ -509,7 +561,13 @@
   }
 
   function populateEvidenceCards(evidence = {}, jobId) {
-    // 1. OSM Geometry
+    const report = currentReportData || {};
+    const top = report.top_hypothesis || {};
+    const coords = top.coordinates || {};
+    const lat = coords.latitude !== undefined ? coords.latitude : null;
+    const lon = coords.longitude !== undefined ? coords.longitude : null;
+
+    // --- 1. Populate Overview Grid Cards ---
     applyEvidence(
       badgeOsm,
       descOsm,
@@ -518,7 +576,6 @@
       'OSM geometry corridor analysis complete.'
     );
 
-    // 2. Elevation Skyline
     applyEvidence(
       badgeDem,
       descDem,
@@ -529,7 +586,6 @@
       'skyline_overlay.png'
     );
 
-    // 3. Satellite Imagery
     applyEvidence(
       badgeSat,
       descSat,
@@ -540,7 +596,6 @@
       'satellite_evidence.png'
     );
 
-    // 4. Street-level Imagery
     applyEvidence(
       badgeStreet,
       descStreet,
@@ -548,6 +603,71 @@
       evidence.street_imagery,
       'Ground-level imagery checked via open repositories.'
     );
+
+    // --- 2. Populate Dedicated Tab 1: OSM Geometry ---
+    const osm = evidence.osm_geometry || {};
+    applyBadge(detailBadgeOsm, osm.status);
+    detailFindingsOsm.textContent = osm.findings || 'Linear corridor & infrastructure matching evaluated via Overpass API.';
+    detailCrossingsOsm.textContent = osm.findings && osm.findings.includes('crossings') ? osm.findings.split('(')[1].split(' ')[0] : (osm.status === 'used' ? 'Verified Corridors' : '0 crossings');
+    detailScoreOsm.textContent = osm.status === 'used' ? 'Verified Corridor Pattern' : (osm.status === 'not_applicable' ? 'Not Applicable (0 crossings)' : 'Evaluation completed');
+    if (lat !== null && lon !== null) {
+      btnOsmOpenExternal.href = `https://www.openstreetmap.org/#map=16/${lat.toFixed(5)}/${lon.toFixed(5)}`;
+    }
+
+    // --- 3. Populate Dedicated Tab 2: Elevation Skyline ---
+    const dem = evidence.elevation_skyline || {};
+    applyBadge(detailBadgeDem, dem.status);
+    detailFindingsDem.textContent = dem.findings || 'Terrarium DEM horizon profile correlated with photo ridgeline curvature.';
+    detailStatusDem.textContent = dem.status === 'used' ? 'Horizon Profile Aligned' : 'Natural flat / urban terrain (not used)';
+    const demArtifactUrl = appendPassphraseParam(`/api/jobs/${jobId}/artifacts/skyline_overlay.png`);
+    detailDemImg.src = demArtifactUrl;
+    detailDemImg.onload = () => {
+      detailDemImg.style.display = 'block';
+      detailDemEmptyNote.style.display = 'none';
+    };
+    detailDemImg.onerror = () => {
+      detailDemImg.style.display = 'none';
+      detailDemEmptyNote.style.display = 'block';
+    };
+
+    // --- 4. Populate Dedicated Tab 3: Satellite Imagery ---
+    const sat = evidence.satellite_imagery || {};
+    applyBadge(detailBadgeSat, sat.status);
+    detailFindingsSat.textContent = sat.findings || 'High-resolution overhead satellite visual verification and spatial footprint matching.';
+    detailScoreSat.textContent = sat.status === 'used' ? 'Tile Verified' : 'Standard Optical Resolution';
+    const satArtifactUrl = appendPassphraseParam(`/api/jobs/${jobId}/artifacts/satellite_evidence.png`);
+    detailSatImg.src = satArtifactUrl;
+    detailSatImg.onload = () => {
+      detailSatImg.style.display = 'block';
+      detailSatEmptyNote.style.display = 'none';
+    };
+    detailSatImg.onerror = () => {
+      detailSatImg.style.display = 'none';
+      detailSatEmptyNote.style.display = 'block';
+    };
+
+    // --- 5. Populate Dedicated Tab 4: Street-Level Imagery ---
+    const street = evidence.street_imagery || {};
+    applyBadge(detailBadgeStreet, street.status);
+    detailFindingsStreet.textContent = street.findings || 'Keyless ground-level imagery check (Wikimedia Commons / KartaView). Honest "not available" when unmapped.';
+    if (lat !== null && lon !== null) {
+      btnStreetSearchWikimedia.href = `https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent(lat.toFixed(4) + ' ' + lon.toFixed(4))}`;
+    }
+  }
+
+  function applyBadge(el, status) {
+    if (!el) return;
+    const st = (status || 'not_applicable').toLowerCase();
+    if (st === 'used') {
+      el.className = 'badge-tag tag-used';
+      el.textContent = 'USED';
+    } else if (st === 'not_available' || st === 'unavailable') {
+      el.className = 'badge-tag tag-not-available';
+      el.textContent = 'NOT AVAILABLE';
+    } else {
+      el.className = 'badge-tag tag-not-applicable';
+      el.textContent = 'NOT APPLICABLE';
+    }
   }
 
   function applyEvidence(badgeEl, descEl, thumbEl, item, fallbackDesc, jobId = null, artifactName = null) {
@@ -559,28 +679,157 @@
       return;
     }
 
-    const st = (item.status || 'not_applicable').toLowerCase();
-    if (st === 'used') {
-      badgeEl.className = 'badge-tag tag-used';
-      badgeEl.textContent = 'USED';
-    } else if (st === 'not_available' || st === 'unavailable') {
-      badgeEl.className = 'badge-tag tag-not-available';
-      badgeEl.textContent = 'NOT AVAILABLE';
-    } else {
-      badgeEl.className = 'badge-tag tag-not-applicable';
-      badgeEl.textContent = 'NOT APPLICABLE';
-    }
-
+    applyBadge(badgeEl, item.status);
     descEl.textContent = item.findings || item.reason || fallbackDesc;
 
+    const st = (item.status || 'not_applicable').toLowerCase();
     if (thumbEl && jobId && artifactName && (item.artifact_file || st === 'used')) {
       const artUrl = appendPassphraseParam(`/api/jobs/${jobId}/artifacts/${artifactName}`);
       thumbEl.innerHTML = `<img src="${artUrl}" class="evidence-thumb" alt="Evidence thumbnail" onerror="this.parentElement.style.display='none'">`;
       thumbEl.style.display = 'block';
+      const img = thumbEl.querySelector('img');
+      if (img) {
+        img.addEventListener('click', (e) => {
+          e.stopPropagation(); // prevent opening the tab
+          openLightbox(artUrl, `${artifactName}`, descEl.textContent);
+        });
+      }
     } else if (thumbEl) {
       thumbEl.style.display = 'none';
     }
   }
+
+  // --- Interactive Tabs Switching Logic ---
+  function switchEvidenceTab(tabKey) {
+    const tabButtons = document.querySelectorAll('.evidence-tab-btn');
+    const tabPanels = document.querySelectorAll('.evidence-tab-panel');
+
+    tabButtons.forEach(btn => {
+      if (btn.getAttribute('data-tab') === tabKey) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    tabPanels.forEach(panel => {
+      if (panel.id === `panel-${tabKey}`) {
+        panel.classList.add('active');
+      } else {
+        panel.classList.remove('active');
+      }
+    });
+  }
+
+  // Tab button click listeners
+  document.querySelectorAll('.evidence-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabKey = btn.getAttribute('data-tab');
+      if (tabKey) switchEvidenceTab(tabKey);
+    });
+  });
+
+  // Overview card click listeners (open specific tab)
+  document.querySelectorAll('.clickable-evidence-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const target = card.getAttribute('data-target-tab');
+      if (target) switchEvidenceTab(target);
+    });
+  });
+
+  // Back button click listeners
+  document.querySelectorAll('.tab-back-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      switchEvidenceTab('overview');
+    });
+  });
+
+  // --- Lightbox Modal Logic ---
+  function openLightbox(src, title = 'Evidence Preview', desc = '') {
+    if (!src) return;
+    lightboxImg.src = src;
+    lightboxTitle.textContent = title;
+    lightboxDesc.textContent = desc;
+    lightboxDownloadBtn.href = src;
+    lightboxModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lightboxModal.style.display = 'none';
+    lightboxImg.src = '';
+    document.body.style.overflow = '';
+  }
+
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightboxBackdrop.addEventListener('click', closeLightbox);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightboxModal.style.display !== 'none') {
+      closeLightbox();
+    }
+  });
+
+  // Target photo click opens in lightbox
+  previewImg.addEventListener('click', () => {
+    if (previewImg.src) {
+      openLightbox(previewImg.src, 'Target Photo (Uploaded)', 'Input photo submitted for autonomous global geolocation');
+    }
+  });
+
+  // Evidence tab action buttons
+  detailDemImg.addEventListener('click', () => {
+    if (detailDemImg.src && detailDemImg.style.display !== 'none') {
+      openLightbox(detailDemImg.src, 'Pillar 2: Synthetic vs Photo Ridgeline Alignment', detailFindingsDem.textContent);
+    }
+  });
+
+  btnDemLightbox.addEventListener('click', () => {
+    if (detailDemImg.src && detailDemImg.style.display !== 'none') {
+      openLightbox(detailDemImg.src, 'Pillar 2: Synthetic vs Photo Ridgeline Alignment', detailFindingsDem.textContent);
+    }
+  });
+
+  detailSatImg.addEventListener('click', () => {
+    if (detailSatImg.src && detailSatImg.style.display !== 'none') {
+      openLightbox(detailSatImg.src, 'Pillar 3: High-Resolution Overhead Satellite Footprint', detailFindingsSat.textContent);
+    }
+  });
+
+  btnSatLightbox.addEventListener('click', () => {
+    if (detailSatImg.src && detailSatImg.style.display !== 'none') {
+      openLightbox(detailSatImg.src, 'Pillar 3: High-Resolution Overhead Satellite Footprint', detailFindingsSat.textContent);
+    }
+  });
+
+  btnSatSwitchMap.addEventListener('click', () => {
+    switchBasemap('Satellite');
+    const mapEl = document.getElementById('map');
+    if (mapEl) mapEl.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  btnOsmFocusMap.addEventListener('click', () => {
+    if (currentReportData) {
+      const top = currentReportData.top_hypothesis || {};
+      const coords = top.coordinates || {};
+      if (coords.latitude !== undefined && coords.longitude !== undefined) {
+        map.setView([coords.latitude, coords.longitude], 16);
+        const mapEl = document.getElementById('map');
+        if (mapEl) mapEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  });
+
+  btnDemFocusMap.addEventListener('click', () => {
+    if (currentReportData) {
+      const top = currentReportData.top_hypothesis || {};
+      const coords = top.coordinates || {};
+      if (coords.latitude !== undefined && coords.longitude !== undefined) {
+        map.setView([coords.latitude, coords.longitude], 14);
+        const mapEl = document.getElementById('map');
+        if (mapEl) mapEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  });
 
   // --- Initial Launch ---
   window.addEventListener('DOMContentLoaded', () => {

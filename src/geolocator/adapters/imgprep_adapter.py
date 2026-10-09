@@ -23,14 +23,14 @@ def generate_edge_crops(image_path: str | Path, out_dir: str | Path) -> Dict[str
     W, H = im.size
     
     crops = {
-        "top": (0, 0, W, int(H * 0.25)),
-        "bottom": (0, int(H * 0.75), W, H),
-        "left": (0, 0, int(W * 0.25), H),
-        "right": (int(W * 0.75), 0, W, H),
-        "top_left": (0, 0, int(W * 0.35), int(H * 0.35)),
-        "top_right": (int(W * 0.65), 0, W, int(H * 0.35)),
-        "bottom_left": (0, int(H * 0.65), int(W * 0.35), H),
-        "bottom_right": (int(W * 0.65), int(H * 0.65), W, H),
+        "top": (0, 0, W, int(H * 0.35)),
+        "bottom": (0, int(H * 0.50), W, H),
+        "left": (0, 0, int(W * 0.35), H),
+        "right": (int(W * 0.65), 0, W, H),
+        "top_left": (0, 0, int(W * 0.45), int(H * 0.45)),
+        "top_right": (int(W * 0.55), 0, W, int(H * 0.45)),
+        "bottom_left": (0, int(H * 0.50), int(W * 0.50), H),
+        "bottom_right": (int(W * 0.50), int(H * 0.50), W, H),
     }
 
     result = {}

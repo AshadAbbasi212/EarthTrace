@@ -106,7 +106,10 @@ class ReportGenerator:
             margin = score - runner_up_score
 
             # Check if verified by high-precision branches
-            if "corridor_score" in meta and meta["corridor_score"] >= 3.0:
+            if "sign_text" in meta or "Geocoded Sign" in top_name:
+                tier = meta.get("tier", "T1")
+                calibrated_radius_km = float(meta.get("radius_km", 1.5))
+            elif "corridor_score" in meta and meta["corridor_score"] >= 3.0:
                 tier = "T1"
                 calibrated_radius_km = 0.5
             elif "fit_score" in meta and meta["fit_score"] >= 0.70:
@@ -143,12 +146,20 @@ class ReportGenerator:
         # Evidence 1: OpenStreetMap Geometry
         if "stage3_built" in stages_run or osm_data:
             crossings = osm_data.get("crossings_found", 0)
-            osm_evidence = {
-                "name": "OpenStreetMap Geometry",
-                "status": "used",
-                "findings": f"Linear corridor & infrastructure matching evaluated ({crossings} crossings analyzed)",
-                "artifact": "osm_corridor_results.json",
-            }
+            if crossings > 0:
+                osm_evidence = {
+                    "name": "OpenStreetMap Geometry",
+                    "status": "used",
+                    "findings": f"Linear corridor & infrastructure matching evaluated ({crossings} crossings analyzed)",
+                    "artifact": "osm_corridor_results.json",
+                }
+            else:
+                osm_evidence = {
+                    "name": "OpenStreetMap Geometry",
+                    "status": "not applicable",
+                    "findings": "Linear corridor query completed: 0 matching structural corridor intersections found in candidate region",
+                    "artifact": "osm_corridor_results.json",
+                }
         else:
             osm_evidence = {
                 "name": "OpenStreetMap Geometry",

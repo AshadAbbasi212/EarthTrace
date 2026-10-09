@@ -289,6 +289,28 @@
 - [x] **Full Regression Verification**:
   - 41/41 unit and integration tests passing (`pytest`).
 
+### Prediction Accuracy Fix & Interactive Frontend Tabs Upgrades
+- [x] **Bug Fix: Fabricated Corridor Points in Stage 3b**:
+  - Identified and eliminated bug where `Stage3Built` constructed a dummy diagonal corridor across candidate bounding boxes when Overpass returned 0 crossings, generating a fabricated point with baseline score 0.5 that overrode true regional hypotheses.
+  - Updated `Stage3Built.match_corridor_point` to strictly require `crossings > 0` and `score >= 1.0`, returning `None` and honest `"not applicable"` when no linear structural crossings exist.
+- [x] **Multilingual Arabic & Urdu OCR Support**:
+  - Downloaded ungated offline EasyOCR weights (`craft_mlt_25k.pth`, `arabic.pth`, `english_g2.pth`) to `~/.EasyOCR/model/`.
+  - Implemented hybrid OCR in `LocalOCR` combining RapidOCR with offline EasyOCR.
+  - Isolated EasyOCR execution to CPU with canvas size optimization (1024px) to preserve 100% GPU VRAM for GeoCLIP and eliminate Windows WDDM TDR timeouts.
+  - Implemented `normalize_arabic_urdu` in `clues_adapter.py` mapping Unicode variants (`ي` vs `ی`, `ك` vs `ک`, `ة`/`ه` vs `ہ`, diacritics removal), enabling robust recognition of Urdu/Arabic signage.
+  - Expanded gazetteer synonyms with phonetic variants (`Pir Chinasi`, `Azad Kashmir`, `Muzaffarabad`, etc.) and prioritized recognized place names in Nominatim geocoding.
+- [x] **Frontend Interactivity & Multimodal Evidence Tabs**:
+  - Replaced static 4 evidence boxes with an interactive tab navigation bar (`[🗂️ Overview]`, `[🛣️ 1. OSM Geometry]`, `[🏔️ 2. Elevation Skyline]`, `[🛰️ 3. Satellite Imagery]`, `[📸 4. Street Imagery]`).
+  - Enabled click-to-open on all 4 overview cards so users can directly inspect any pillar.
+  - Built dedicated detail views for each evidence type with query parameters, status badges, and actionable controls:
+    - 🎯 **Focus on Map**: Pans and zooms Leaflet map to evidence coordinates.
+    - 🛰️ **Switch Map to Satellite View**: Instantly activates high-resolution Esri satellite imagery on Leaflet.
+    - 🌐 **Open in OpenStreetMap**: External link to OpenStreetMap at exact coordinates.
+    - 🔍 **Lightbox Modal**: Fullscreen high-resolution inspection modal for skyline overlays, satellite evidence, and uploaded target photos with download option and ESC dismiss.
+- [x] **Regression & End-to-End Verification**:
+  - Tested on user's photo (`IMG_20230107_141448_630.jpg`): successfully geocodes to `Geocoded Sign 'Pir Chinasi': Pir Chinasi Rd, Upper Botha, Domail` (`34.372738, 73.523538`), Tier T1, calibrated radius $\pm 1.0$ km!
+  - All 41 unit and integration tests passing (`pytest tests/`).
+
 
 
 

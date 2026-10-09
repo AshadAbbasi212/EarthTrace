@@ -70,13 +70,22 @@ class Stage3Built:
         max_deviation_km: float = 1.0,
     ) -> Dict[str, Any]:
         """Find the exact point along a linear corridor matching observed structural features (bridge, crossing)."""
+        if not crossings:
+            return {
+                "best_point": None,
+                "score": 0.0,
+                "calibrated_radius_km": 15.0,
+                "confidence_tier": "T5",
+                "status": "not_applicable",
+            }
+
         sampled = self.sample_points_along_polyline(corridor_polyline, step_m=200.0)
         best_candidate: Optional[Dict[str, Any]] = None
         best_score = -1.0
 
         for pt in sampled:
             pt_lat, pt_lon = pt["lat"], pt["lon"]
-            score = 0.5  # Baseline corridor membership
+            score = 0.0
 
             # Check proximity to known crossing features along the line
             for crossing in crossings:
@@ -101,11 +110,15 @@ class Stage3Built:
                     "match_score": score,
                 }
 
+        if best_score < 1.0:
+            best_candidate = None
+
         return {
             "best_point": best_candidate,
-            "score": best_score,
+            "score": best_score if best_candidate else 0.0,
             "calibrated_radius_km": 0.5 if best_score >= 3.0 else 1.0,
             "confidence_tier": "T1" if best_score >= 3.5 else "T2",
+            "status": "used" if best_candidate else "not_applicable",
         }
 
     def query_crossings_in_bbox(

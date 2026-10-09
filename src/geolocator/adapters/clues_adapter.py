@@ -187,9 +187,10 @@ CC_TLD_MAP: Dict[str, str] = {
 }
 
 SCRIPT_PATTERNS = [
+    ("urdu_persian", re.compile(r"[\u0679\u067E\u0686\u0698\u06A9\u06AF\u06BA\u06BE\u06C1\u06D2]"), ["Pakistan", "Iran", "Afghanistan", "India"]),
+    ("arabic", re.compile(r"[\u0600-\u06FF]"), ["Pakistan", "Saudi Arabia", "United Arab Emirates", "Egypt", "Iran", "Morocco", "Jordan", "Iraq", "Algeria"]),
     ("cyrillic", re.compile(r"[\u0400-\u04FF]"), ["Russia", "Ukraine", "Belarus", "Bulgaria", "Serbia", "Kazakhstan", "Kyrgyzstan", "Mongolia", "North Macedonia"]),
     ("greek", re.compile(r"[\u0370-\u03FF]"), ["Greece", "Cyprus"]),
-    ("arabic", re.compile(r"[\u0600-\u06FF]"), ["Egypt", "Saudi Arabia", "Morocco", "United Arab Emirates", "Jordan", "Tunisia", "Algeria", "Iraq"]),
     ("hangul", re.compile(r"[\uAC00-\uD7AF\u1100-\u11FF]"), ["South Korea"]),
     ("japanese_kana", re.compile(r"[\u3040-\u309F\u30A0-\u30FF]"), ["Japan"]),
     ("thai", re.compile(r"[\u0E00-\u0E7F]"), ["Thailand"]),
@@ -206,7 +207,72 @@ COMMON_STOP_WORDS = {
     "drive", "lane", "way", "highway", "expressway", "toll", "free", "city", "center",
     "north", "south", "east", "west", "the", "and", "for", "with", "from", "service",
     "wc", "info", "information", "ticket", "tickets", "fast", "food", "express", "auto",
+    "پولیس", "کنٹرول", "سب", "چائے", "ہوٹل", "روڈ", "تھانہ", "ڈویژن", "ضلع", "تحصیل", "شہر", "مرکز",
 }
+
+GEO_PHONETIC_SYNONYMS = {
+    "پیر چناسی": "Pir Chinasi",
+    "پیرچناسی": "Pir Chinasi",
+    "ییر چناسی": "Pir Chinasi",
+    "چناسی": "Pir Chinasi",
+    "حناسی": "Pir Chinasi",
+    "جنسی": "Pir Chinasi",
+    "پیراسی": "Pir Chinasi",
+    "پیراس": "Pir Chinasi",
+    "ییراس": "Pir Chinasi",
+    "یراس": "Pir Chinasi",
+    "چناس": "Pir Chinasi",
+    "آزاد کشمیر": "Azad Kashmir",
+    "ازاد کشمیر": "Azad Kashmir",
+    "کشمیر": "Azad Kashmir",
+    "آزاد": "Azad Kashmir",
+    "ازاد": "Azad Kashmir",
+    "آزادشیر": "Azad Kashmir",
+    "ازادشیر": "Azad Kashmir",
+    "آزادشيروس": "Azad Kashmir",
+    "ازادشيروس": "Azad Kashmir",
+    "مظفرآباد": "Muzaffarabad",
+    "مظفر آباد": "Muzaffarabad",
+    "مظفراباد": "Muzaffarabad",
+    "اسلام آباد": "Islamabad",
+    "اسلام اباد": "Islamabad",
+    "راولپنڈی": "Rawalpindi",
+    "لاہور": "Lahore",
+    "کراچی": "Karachi",
+    "پشاور": "Peshawar",
+    "کوئٹہ": "Quetta",
+    "گلگت": "Gilgit",
+    "سوات": "Swat",
+    "مری": "Murree",
+    "ناران": "Naran",
+    "کاغان": "Kaghan",
+    "ہنزہ": "Hunza",
+    "سکردو": "Skardu",
+}
+
+
+def normalize_arabic_urdu(text: str) -> str:
+    """Normalize Arabic and Urdu character variants, strip diacritics and tatweel."""
+    if not text:
+        return ""
+    # Strip tatweel / kashida (ـ)
+    text = text.replace("\u0640", "")
+    # Remove Arabic / Urdu diacritics / harakat
+    text = re.sub(r"[\u064B-\u065F\u0670\u06D6-\u06ED]", "", text)
+    # Character normalizations:
+    replacements = {
+        "\u064a": "\u06cc",  # Arabic Yeh (ي) -> Urdu Yeh (ی)
+        "\u0649": "\u06cc",  # Alef Maksura (ى) -> Urdu Yeh (ی)
+        "\u0626": "\u06cc",  # Yeh with Hamza (ئ) -> Urdu Yeh (ی)
+        "\u0643": "\u06a9",  # Arabic Kaf (ك) -> Urdu Keheh (ک)
+        "\u0629": "\u06c1",  # Ta Marbuta (ة) -> Urdu Goal Heh (ہ)
+        "\u0647": "\u06c1",  # Arabic Heh (ه) -> Urdu Goal Heh (ہ)
+        "\u06be": "\u06c1",  # Do-chashmi Heh (ھ) -> Urdu Goal Heh (ہ)
+        "\u0622": "\u0627",  # Alef with Madda (آ) -> Alef (ا)
+    }
+    for orig, norm in replacements.items():
+        text = text.replace(orig, norm)
+    return text
 
 
 def detect_script(text: str) -> Optional[Dict[str, Any]]:
@@ -262,29 +328,60 @@ def extract_candidate_place_phrases(text: str) -> List[str]:
     if not text:
         return []
     candidates = []
-    # Clean up punctuation
-    cleaned = re.sub(r"[^\w\s\-\.]", " ", text).strip()
-    words = [w.strip() for w in cleaned.split() if len(w.strip()) >= 3]
+    norm_text = normalize_arabic_urdu(text)
 
-    # 1. Single capitalized / significant words that are not common stop words
+    # 0. Check phonetic/Urdu/Arabic gazetteer matches directly on raw and normalized text
+    for syn_key, syn_val in GEO_PHONETIC_SYNONYMS.items():
+        norm_key = normalize_arabic_urdu(syn_key)
+        if syn_key in text or norm_key in norm_text:
+            candidates.append(syn_val)
+            candidates.append(syn_key)
+
+    # Clean up punctuation while preserving non-Latin unicode characters
+    cleaned = re.sub(r"[^\w\s\-\.]", " ", text).strip()
+    words = [w.strip() for w in cleaned.split() if len(w.strip()) >= 2]
+
+    # 1. Single capitalized words (Latin) or any significant non-Latin words
     for w in words:
         wl = w.lower()
-        if wl not in COMMON_STOP_WORDS and not wl.isdigit() and len(wl) >= 4:
-            if w[0].isupper() or any(c.isupper() for c in w):
+        if wl not in COMMON_STOP_WORDS and not wl.isdigit():
+            is_non_latin = any(ord(c) > 127 for c in w)
+            if is_non_latin and len(w) >= 3:
+                candidates.append(w)
+                norm_w = normalize_arabic_urdu(w)
+                # Check if this non-latin word matches any gazetteer keyword
+                for syn_k, syn_v in GEO_PHONETIC_SYNONYMS.items():
+                    norm_k = normalize_arabic_urdu(syn_k)
+                    if syn_k in w or w in syn_k or norm_k in norm_w or norm_w in norm_k:
+                        candidates.append(syn_v)
+                        candidates.append(syn_k)
+            elif (w[0].isupper() or any(c.isupper() for c in w)) and len(wl) >= 4:
                 candidates.append(w)
 
-    # 2. Highway / Route codes (e.g. A-10, US-101, I-80, M4, RN7, BR-101, Ruta 40)
+    # 2. Highway / Route codes (e.g. A-10, US-101, I-80, M4, RN7, BR-101, Ruta 40, N-35, N-75)
     route_match = re.search(r"\b(US|I|M|A|B|D|N|RN|BR|Ruta|Route)\s*[\-\.]?\s*(\d{1,4}[A-Z]?)\b", text, re.IGNORECASE)
     if route_match:
         candidates.append(route_match.group(0))
 
-    # 3. Two-word phrases (e.g. "San Pedro", "Mt Cook", "Grand Canyon")
+    # 3. Two-word phrases (e.g. "San Pedro", "Mt Cook", "Grand Canyon", "آزاد کشمیر", "پیر چناسی")
     for i in range(len(words) - 1):
         p1, p2 = words[i], words[i + 1]
-        if (p1[0].isupper() or p2[0].isupper()) and (p1.lower() not in COMMON_STOP_WORDS or p2.lower() not in COMMON_STOP_WORDS):
+        p1_non_latin = any(ord(c) > 127 for c in p1)
+        p2_non_latin = any(ord(c) > 127 for c in p2)
+        if p1_non_latin or p2_non_latin:
+            if p1.lower() not in COMMON_STOP_WORDS and p2.lower() not in COMMON_STOP_WORDS:
+                phrase = f"{p1} {p2}"
+                candidates.append(phrase)
+                norm_phrase = normalize_arabic_urdu(phrase)
+                for syn_k, syn_v in GEO_PHONETIC_SYNONYMS.items():
+                    norm_k = normalize_arabic_urdu(syn_k)
+                    if syn_k in phrase or phrase in syn_k or norm_k in norm_phrase or norm_phrase in norm_k:
+                        candidates.append(syn_v)
+                        candidates.append(syn_k)
+        elif (p1[0].isupper() or p2[0].isupper()) and (p1.lower() not in COMMON_STOP_WORDS or p2.lower() not in COMMON_STOP_WORDS):
             phrase = f"{p1} {p2}"
             if len(phrase) >= 6:
                 candidates.append(phrase)
 
-    return list(dict.fromkeys(candidates))[:5]  # Deduplicate, max 5 candidates
+    return list(dict.fromkeys(candidates))[:8]  # Deduplicate, max 8 candidates
 

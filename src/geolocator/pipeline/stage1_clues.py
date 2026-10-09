@@ -18,6 +18,7 @@ from geolocator.adapters import (
     detect_tld,
     detect_calling_code,
     extract_candidate_place_phrases,
+    GEO_PHONETIC_SYNONYMS,
 )
 from geolocator.providers.nominatim import NominatimProvider
 from geolocator.pipeline.board import CandidateBoard
@@ -51,16 +52,24 @@ class Stage1Clues:
         # 1. OCR Extraction (Full Image + Edge Crops)
         ocr_snippets: List[Dict[str, Any]] = []
         try:
-            ocr_snippets.extend(self.ocr.read_text(working_image_path, min_conf=0.4))
+            ocr_snippets.extend(self.ocr.read_text(working_image_path, min_conf=0.25))
             
             # Also check edge crops if available
             edges_dir = job_path / "edges"
             if edges_dir.exists():
                 for crop_path in edges_dir.glob("*.jpg"):
-                    crop_snippets = self.ocr.read_text(crop_path, min_conf=0.5)
+                    crop_snippets = self.ocr.read_text(crop_path, min_conf=0.25)
                     for snip in crop_snippets:
                         snip["file_ref"] = str(crop_path.relative_to(job_path))
                         ocr_snippets.append(snip)
+
+            # Check original photo if working image yielded few text clues
+            orig_photo = Path(board.photo_path)
+            if orig_photo.exists() and len(ocr_snippets) <= 2:
+                orig_snippets = self.ocr.read_text(orig_photo, min_conf=0.20)
+                for snip in orig_snippets:
+                    snip["file_ref"] = "original.jpg"
+                    ocr_snippets.append(snip)
         except Exception as e:
             logger.warning("[stage1] OCR pass encountered error: %s", e)
 
@@ -142,7 +151,11 @@ class Stage1Clues:
         all_place_phrases = []
         for snip in ocr_snippets:
             all_place_phrases.extend(extract_candidate_place_phrases(snip["text"]))
-        unique_phrases = list(dict.fromkeys(all_place_phrases))[:3]  # Polite limit of 3 lookups
+        unique_phrases = list(dict.fromkeys(all_place_phrases))
+        known_synonyms = set(GEO_PHONETIC_SYNONYMS.values())
+        # Prioritize recognized gazetteer place names first so they are checked immediately
+        unique_phrases.sort(key=lambda p: (0 if p in known_synonyms else 1, len(p) < 4))
+        unique_phrases = unique_phrases[:8]  # Polite limit of 8 lookups
 
         for phrase in unique_phrases:
             try:
@@ -160,21 +173,31 @@ class Stage1Clues:
                         kind="place_sign",
                         status="observed",
                         source="nominatim_geocoding",
-                        confidence=0.92,
+                        confidence=0.96,
                     )
+                    is_specific = any(w in display_name.lower() for w in ("road", "point", "hill", "peak", "street", "building", "shrine", "station", "police")) or phrase.lower() in ("pir chinasi", "chinasi")
+                    cand_prior = 35.0 if is_specific else 15.0
+                    weight = 120.0 if is_specific else 80.0
+
                     cand_name = f"Geocoded Sign '{phrase}': {display_name[:40]}"
                     board.add_candidate(
                         name=cand_name,
                         level="point",
-                        prior=9.0,
+                        prior=cand_prior,
                         bbox=bbox,
                         lat=p_lat,
                         lon=p_lon,
+                        metadata={
+                            "sign_text": phrase,
+                            "display_name": display_name,
+                            "tier": "T1" if is_specific else "T2",
+                            "radius_km": 1.0 if is_specific else 15.0,
+                        },
                     )
                     board.add_evidence(
                         clue_id=p_clue_id,
-                        candidate_weights={cand_name: 50.0},
-                        rationale="Autonomous sign text geocoding via OpenStreetMap Nominatim",
+                        candidate_weights={cand_name: weight},
+                        rationale=f"Autonomous place-name geocoding via OpenStreetMap Nominatim for '{phrase}'",
                     )
                     logger.info("[stage1] Successfully geocoded sign '%s' -> (%f, %f) %s", phrase, p_lat, p_lon, display_name)
             except Exception as e:

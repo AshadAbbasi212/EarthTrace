@@ -57,7 +57,11 @@ class Stage2Prior:
                 dev_setting = getattr(getattr(self.config, "hardware", None), "device", "cuda")
                 device = "cuda" if (torch.cuda.is_available() and dev_setting == "cuda") else "cpu"
                 logger.info("Initializing GeoCLIP on device '%s'...", device)
-                return GeoCLIP().to(device)
+                try:
+                    return GeoCLIP().to(device)
+                except Exception as e:
+                    logger.warning("GeoCLIP failed to load on %s (%s), falling back to cpu", device, e)
+                    return GeoCLIP().to("cpu")
 
             self.model_manager.register_loader("geoclip", _loader)
 
@@ -75,37 +79,43 @@ class Stage2Prior:
         self._ensure_geoclip_registered()
         predictions: List[Dict[str, float]] = []
 
-        with self.model_manager.acquire("geoclip") as model:
-            with Image.open(str(image_path)) as img:
-                im = img.convert("RGB")
-                w, h = im.size
+        try:
+            with self.model_manager.acquire("geoclip") as model:
+                with Image.open(str(image_path)) as img:
+                    im = img.convert("RGB")
+                    w, h = im.size
 
-                if multi_crop and w >= 224 and h >= 224:
-                    # Multi-crop ensemble: full, center 80%, left 65%, right 65%
-                    crop_full = im
-                    crop_center = im.crop((int(w * 0.1), int(h * 0.1), int(w * 0.9), int(h * 0.9)))
-                    crop_left = im.crop((0, 0, int(w * 0.65), h))
-                    crop_right = im.crop((int(w * 0.35), 0, w, h))
-                    crops = [crop_full, crop_center, crop_left, crop_right]
-                else:
-                    crops = [im]
+                    if multi_crop and w >= 224 and h >= 224:
+                        # Multi-crop ensemble: full, center 80%, left 65%, right 65%
+                        crop_full = im
+                        crop_center = im.crop((int(w * 0.1), int(h * 0.1), int(w * 0.9), int(h * 0.9)))
+                        crop_left = im.crop((0, 0, int(w * 0.65), h))
+                        crop_right = im.crop((int(w * 0.35), 0, w, h))
+                        crops = [crop_full, crop_center, crop_left, crop_right]
+                    else:
+                        crops = [im]
 
-                tensors = [model.image_encoder.preprocess_image(c) for c in crops]
-                batch = torch.cat(tensors, dim=0).to(model.logit_scale.device)
+                    # Ensure model device
+                    m_dev = next(model.parameters()).device
+                    tensors = [model.image_encoder.preprocess_image(c) for c in crops]
+                    batch = torch.cat(tensors, dim=0).to(m_dev)
+                    gps_gal = model.gps_gallery.to(m_dev)
 
-                with torch.no_grad():
-                    logits = model.forward(batch, model.gps_gallery)
-                    probs = logits.softmax(dim=-1).mean(dim=0, keepdim=True)
-                    top_pred = torch.topk(probs, min(top_k, model.gps_gallery.shape[0]), dim=1)
-                    coords_np = model.gps_gallery.index_select(0, top_pred.indices[0]).cpu().numpy()
-                    probs_np = top_pred.values[0].cpu().numpy()
+                    with torch.no_grad():
+                        logits = model.forward(batch, gps_gal)
+                        probs = logits.softmax(dim=-1).mean(dim=0, keepdim=True)
+                        top_pred = torch.topk(probs, min(top_k, gps_gal.shape[0]), dim=1)
+                        coords_np = gps_gal.index_select(0, top_pred.indices[0]).cpu().numpy()
+                        probs_np = top_pred.values[0].cpu().numpy()
 
-            for i in range(len(coords_np)):
-                predictions.append({
-                    "lat": float(coords_np[i][0]),
-                    "lon": float(coords_np[i][1]),
-                    "prob": float(probs_np[i]),
-                })
+                for i in range(len(coords_np)):
+                    predictions.append({
+                        "lat": float(coords_np[i][0]),
+                        "lon": float(coords_np[i][1]),
+                        "prob": float(probs_np[i]),
+                    })
+        except Exception as e:
+            logger.warning("[stage2] GeoCLIP inference failed or timed out: %s. Continuing with clue priors.", e)
 
         return predictions
 
@@ -327,7 +337,26 @@ class Stage2Prior:
                 "probability": c.get("cluster_prob", 0.0),
             })
 
-        board.data["search_bboxes"] = search_bboxes
+        # Check if high-confidence geocoded sign candidates exist from Stage 1
+        geocoded_bboxes = []
+        raw_cands = board.data.get("candidates", {})
+        cand_list = list(raw_cands.values()) if isinstance(raw_cands, dict) else list(raw_cands)
+        for cand in cand_list:
+            if isinstance(cand, dict) and cand.get("level") in ("point", "city") and cand.get("lat") is not None and "sign" in cand.get("name", "").lower():
+                p_lat = cand["lat"]
+                p_lon = cand["lon"]
+                g_bbox = cand.get("bbox") or [p_lat - 0.05, p_lon - 0.05, p_lat + 0.05, p_lon + 0.05]
+                geocoded_bboxes.append({
+                    "cluster_id": "geocoded_sign",
+                    "candidate_name": cand["name"],
+                    "country": cand.get("metadata", {}).get("country"),
+                    "bbox": g_bbox,
+                    "center": [p_lat, p_lon],
+                    "score": 10.0,
+                    "probability": 0.95,
+                })
+
+        board.data["search_bboxes"] = geocoded_bboxes + search_bboxes
         board.data["stages_run"].append("stage2_prior")
         board.save()
 

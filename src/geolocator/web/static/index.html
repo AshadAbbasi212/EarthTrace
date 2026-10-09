@@ -154,63 +154,312 @@
         </div>
       </div>
 
-      <!-- 4 Mandatory Evidence Cards -->
+      <!-- 4 Mandatory Evidence Tabs Section -->
       <div class="card" id="evidence-section">
-        <div class="card-title">
-          <span>🔬</span> Multimodal Verification Evidence (4 Pillars)
-        </div>
-        <div class="evidence-grid">
-          <!-- 1. OpenStreetMap Geometry -->
-          <div class="evidence-box" id="evidence-box-osm">
-            <div class="evidence-header">
-              <span class="evidence-name">1. OSM Geometry</span>
-              <span class="badge-tag tag-not-applicable" id="badge-osm">Standby</span>
-            </div>
-            <div class="evidence-desc" id="desc-osm">
-              Linear corridor matching, road networks, waterways, bridges, and infrastructure intersections.
-            </div>
-            <div id="thumb-container-osm" style="display: none;"></div>
+        <div class="evidence-section-header">
+          <div class="card-title" style="margin-bottom: 0;">
+            <span>🔬</span> Multimodal Verification Evidence (4 Pillars)
           </div>
-
-          <!-- 2. Elevation Skylines -->
-          <div class="evidence-box" id="evidence-box-dem">
-            <div class="evidence-header">
-              <span class="evidence-name">2. Elevation Skyline</span>
-              <span class="badge-tag tag-not-applicable" id="badge-dem">Standby</span>
-            </div>
-            <div class="evidence-desc" id="desc-dem">
-              Horizon profile extracted from photograph matched against Terrarium DEM terrain curvature.
-            </div>
-            <div id="thumb-container-dem" style="display: none;"></div>
-          </div>
-
-          <!-- 3. Satellite Imagery -->
-          <div class="evidence-box" id="evidence-box-sat">
-            <div class="evidence-header">
-              <span class="evidence-name">3. Satellite Imagery</span>
-              <span class="badge-tag tag-not-applicable" id="badge-sat">Standby</span>
-            </div>
-            <div class="evidence-desc" id="desc-sat">
-              High-resolution overhead satellite visual verification and spatial footprint matching.
-            </div>
-            <div id="thumb-container-sat" style="display: none;"></div>
-          </div>
-
-          <!-- 4. Street-level Imagery -->
-          <div class="evidence-box" id="evidence-box-street">
-            <div class="evidence-header">
-              <span class="evidence-name">4. Street Imagery</span>
-              <span class="badge-tag tag-not-applicable" id="badge-street">Standby</span>
-            </div>
-            <div class="evidence-desc" id="desc-street">
-              Keyless ground-level imagery check (Wikimedia / KartaView). Honest "not available" when unmapped.
-            </div>
-            <div id="thumb-container-street" style="display: none;"></div>
+          <!-- Navigation Tabs Bar -->
+          <div class="evidence-tabs-bar" role="tablist">
+            <button type="button" class="evidence-tab-btn active" id="tab-btn-overview" data-tab="overview">
+              <span>🗂️</span> Overview
+            </button>
+            <button type="button" class="evidence-tab-btn" id="tab-btn-osm" data-tab="osm">
+              <span>🛣️</span> 1. OSM Geometry
+            </button>
+            <button type="button" class="evidence-tab-btn" id="tab-btn-dem" data-tab="dem">
+              <span>🏔️</span> 2. Elevation Skyline
+            </button>
+            <button type="button" class="evidence-tab-btn" id="tab-btn-sat" data-tab="sat">
+              <span>🛰️</span> 3. Satellite Imagery
+            </button>
+            <button type="button" class="evidence-tab-btn" id="tab-btn-street" data-tab="street">
+              <span>📸</span> 4. Street Imagery
+            </button>
           </div>
         </div>
+
+        <!-- Tab 0: Overview Grid (Clickable cards that open specific tabs) -->
+        <div class="evidence-tab-panel active" id="panel-overview">
+          <div class="evidence-grid">
+            <!-- 1. OpenStreetMap Geometry -->
+            <div class="evidence-box clickable-evidence-card" id="evidence-box-osm" data-target-tab="osm" title="Click to open detailed OSM Geometry tab">
+              <div class="evidence-header">
+                <span class="evidence-name">1. OSM Geometry</span>
+                <span class="badge-tag tag-not-applicable" id="badge-osm">Standby</span>
+              </div>
+              <div class="evidence-desc" id="desc-osm">
+                Linear corridor matching, road networks, waterways, bridges, and infrastructure intersections.
+              </div>
+              <div id="thumb-container-osm" style="display: none;"></div>
+              <div class="card-expand-hint">Click to inspect details ↗</div>
+            </div>
+
+            <!-- 2. Elevation Skylines -->
+            <div class="evidence-box clickable-evidence-card" id="evidence-box-dem" data-target-tab="dem" title="Click to open detailed Elevation Skyline tab">
+              <div class="evidence-header">
+                <span class="evidence-name">2. Elevation Skyline</span>
+                <span class="badge-tag tag-not-applicable" id="badge-dem">Standby</span>
+              </div>
+              <div class="evidence-desc" id="desc-dem">
+                Horizon profile extracted from photograph matched against Terrarium DEM terrain curvature.
+              </div>
+              <div id="thumb-container-dem" style="display: none;"></div>
+              <div class="card-expand-hint">Click to inspect details ↗</div>
+            </div>
+
+            <!-- 3. Satellite Imagery -->
+            <div class="evidence-box clickable-evidence-card" id="evidence-box-sat" data-target-tab="sat" title="Click to open detailed Satellite Imagery tab">
+              <div class="evidence-header">
+                <span class="evidence-name">3. Satellite Imagery</span>
+                <span class="badge-tag tag-not-applicable" id="badge-sat">Standby</span>
+              </div>
+              <div class="evidence-desc" id="desc-sat">
+                High-resolution overhead satellite visual verification and spatial footprint matching.
+              </div>
+              <div id="thumb-container-sat" style="display: none;"></div>
+              <div class="card-expand-hint">Click to inspect details ↗</div>
+            </div>
+
+            <!-- 4. Street-level Imagery -->
+            <div class="evidence-box clickable-evidence-card" id="evidence-box-street" data-target-tab="street" title="Click to open detailed Street Imagery tab">
+              <div class="evidence-header">
+                <span class="evidence-name">4. Street Imagery</span>
+                <span class="badge-tag tag-not-applicable" id="badge-street">Standby</span>
+              </div>
+              <div class="evidence-desc" id="desc-street">
+                Keyless ground-level imagery check (Wikimedia / KartaView). Honest "not available" when unmapped.
+              </div>
+              <div id="thumb-container-street" style="display: none;"></div>
+              <div class="card-expand-hint">Click to inspect details ↗</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 1: OSM Geometry Detail Panel -->
+        <div class="evidence-tab-panel" id="panel-osm">
+          <div class="tab-detail-container">
+            <div class="tab-detail-header">
+              <div class="tab-detail-title-group">
+                <div class="tab-detail-icon">🛣️</div>
+                <div>
+                  <h3 class="tab-detail-title">Pillar 1: OpenStreetMap Geometry</h3>
+                  <div class="tab-detail-subtitle">Linear Infrastructure, Road Networks & Geometric Corridors</div>
+                </div>
+              </div>
+              <div class="tab-detail-status">
+                <span class="badge-tag tag-not-applicable" id="detail-badge-osm">Standby</span>
+              </div>
+            </div>
+            <div class="tab-detail-body">
+              <div class="tab-detail-info-card">
+                <div class="info-metric-label">Status & Findings</div>
+                <div class="tab-detail-findings" id="detail-findings-osm">Awaiting geolocation run...</div>
+              </div>
+              <div class="tab-detail-grid">
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Query Method</span>
+                  <span class="spec-value" id="detail-method-osm">Overpass API (Keyless)</span>
+                </div>
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Corridors Analyzed</span>
+                  <span class="spec-value" id="detail-crossings-osm">0</span>
+                </div>
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Corridor Status</span>
+                  <span class="spec-value" id="detail-score-osm">--</span>
+                </div>
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Artifact</span>
+                  <span class="spec-value" id="detail-artifact-osm">osm_corridor_results.json</span>
+                </div>
+              </div>
+              <div class="tab-detail-actions">
+                <button type="button" class="btn-secondary" id="btn-osm-focus-map">🎯 Focus On Map</button>
+                <a href="#" target="_blank" class="btn-secondary" id="btn-osm-open-external">🌐 Open in OpenStreetMap</a>
+                <button type="button" class="btn-secondary tab-back-btn" data-back="overview">⬅ Back to Overview</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Elevation Skyline Detail Panel -->
+        <div class="evidence-tab-panel" id="panel-dem">
+          <div class="tab-detail-container">
+            <div class="tab-detail-header">
+              <div class="tab-detail-title-group">
+                <div class="tab-detail-icon">🏔️</div>
+                <div>
+                  <h3 class="tab-detail-title">Pillar 2: Elevation Skylines</h3>
+                  <div class="tab-detail-subtitle">Terrarium DEM Topographic Profiling & Horizon Ridgeline Matching</div>
+                </div>
+              </div>
+              <div class="tab-detail-status">
+                <span class="badge-tag tag-not-applicable" id="detail-badge-dem">Standby</span>
+              </div>
+            </div>
+            <div class="tab-detail-body">
+              <div class="tab-detail-info-card">
+                <div class="info-metric-label">Horizon Profile Evaluation</div>
+                <div class="tab-detail-findings" id="detail-findings-dem">Awaiting geolocation run...</div>
+              </div>
+              <div class="tab-visual-preview-wrapper" id="detail-dem-preview-wrapper">
+                <div class="preview-title">Synthetic vs Photo Ridgeline Alignment:</div>
+                <img id="detail-dem-img" class="zoomable-preview-img" alt="Elevation Skyline Overlay" style="display: none;">
+                <div class="preview-empty-note" id="detail-dem-empty-note">No skyline overlay generated for flat or urban scene.</div>
+              </div>
+              <div class="tab-detail-grid">
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Elevation Model</span>
+                  <span class="spec-value">AWS Terrarium DEM (Keyless)</span>
+                </div>
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Correlation Score</span>
+                  <span class="spec-value" id="detail-score-dem">--</span>
+                </div>
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Terrain Horizon Status</span>
+                  <span class="spec-value" id="detail-status-dem">--</span>
+                </div>
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Artifact</span>
+                  <span class="spec-value">terrain_results.json</span>
+                </div>
+              </div>
+              <div class="tab-detail-actions">
+                <button type="button" class="btn-secondary" id="btn-dem-lightbox">🔍 Fullscreen Skyline</button>
+                <button type="button" class="btn-secondary" id="btn-dem-focus-map">🎯 Focus On Point</button>
+                <button type="button" class="btn-secondary tab-back-btn" data-back="overview">⬅ Back to Overview</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Satellite Imagery Detail Panel -->
+        <div class="evidence-tab-panel" id="panel-sat">
+          <div class="tab-detail-container">
+            <div class="tab-detail-header">
+              <div class="tab-detail-title-group">
+                <div class="tab-detail-icon">🛰️</div>
+                <div>
+                  <h3 class="tab-detail-title">Pillar 3: Satellite Imagery</h3>
+                  <div class="tab-detail-subtitle">High-Resolution Overhead Verification & Spatial Footprint</div>
+                </div>
+              </div>
+              <div class="tab-detail-status">
+                <span class="badge-tag tag-not-applicable" id="detail-badge-sat">Standby</span>
+              </div>
+            </div>
+            <div class="tab-detail-body">
+              <div class="tab-detail-info-card">
+                <div class="info-metric-label">Satellite Visual Verification</div>
+                <div class="tab-detail-findings" id="detail-findings-sat">Awaiting geolocation run...</div>
+              </div>
+              <div class="tab-visual-preview-wrapper" id="detail-sat-preview-wrapper">
+                <div class="preview-title">Overhead Satellite Verification Snapshot:</div>
+                <img id="detail-sat-img" class="zoomable-preview-img" alt="Satellite Verification" style="display: none;">
+                <div class="preview-empty-note" id="detail-sat-empty-note">Awaiting satellite tile rendering...</div>
+              </div>
+              <div class="tab-detail-grid">
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Tile Source</span>
+                  <span class="spec-value">Esri World Imagery / USGS</span>
+                </div>
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Visual Verification Score</span>
+                  <span class="spec-value" id="detail-score-sat">--</span>
+                </div>
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Spatial Resolution</span>
+                  <span class="spec-value" id="detail-res-sat">Zoom 17 (Sub-meter)</span>
+                </div>
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Verification Mode</span>
+                  <span class="spec-value">Keyless Tile Pyramid</span>
+                </div>
+              </div>
+              <div class="tab-detail-actions">
+                <button type="button" class="btn-secondary" id="btn-sat-switch-map">🛰️ Switch Leaflet Map to Satellite</button>
+                <button type="button" class="btn-secondary" id="btn-sat-lightbox">🔍 Fullscreen Satellite</button>
+                <button type="button" class="btn-secondary tab-back-btn" data-back="overview">⬅ Back to Overview</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 4: Street-level Imagery Detail Panel -->
+        <div class="evidence-tab-panel" id="panel-street">
+          <div class="tab-detail-container">
+            <div class="tab-detail-header">
+              <div class="tab-detail-title-group">
+                <div class="tab-detail-icon">📸</div>
+                <div>
+                  <h3 class="tab-detail-title">Pillar 4: Street-Level Imagery</h3>
+                  <div class="tab-detail-subtitle">Ground-Level Keyless Visual Matching (Wikimedia & OpenStreetCam)</div>
+                </div>
+              </div>
+              <div class="tab-detail-status">
+                <span class="badge-tag tag-not-applicable" id="detail-badge-street">Standby</span>
+              </div>
+            </div>
+            <div class="tab-detail-body">
+              <div class="tab-detail-info-card">
+                <div class="info-metric-label">Ground-Level Coverage Status</div>
+                <div class="tab-detail-findings" id="detail-findings-street">Awaiting geolocation run...</div>
+              </div>
+              <div class="tab-visual-preview-wrapper" id="detail-street-preview-wrapper">
+                <div class="preview-title">Ground-Level Match:</div>
+                <img id="detail-street-img" class="zoomable-preview-img" alt="Street Level Imagery" style="display: none;">
+                <div class="preview-empty-note" id="detail-street-empty-note">Keyless ground coverage: honestly reported as unmapped in wilderness/rural areas.</div>
+              </div>
+              <div class="tab-detail-grid">
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Keyless Provider</span>
+                  <span class="spec-value">Wikimedia Commons / KartaView</span>
+                </div>
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Coverage Status</span>
+                  <span class="spec-value" id="detail-node-street">Unmapped / Wilderness</span>
+                </div>
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Policy Compliance</span>
+                  <span class="spec-value">Zero Paid API Keys / Open Only</span>
+                </div>
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Honesty Over Precision</span>
+                  <span class="spec-value">Never fabricate absent street view</span>
+                </div>
+              </div>
+              <div class="tab-detail-actions">
+                <a href="#" target="_blank" class="btn-secondary" id="btn-street-search-wikimedia">🌐 Search Nearby Photos on Wikimedia</a>
+                <button type="button" class="btn-secondary tab-back-btn" data-back="overview">⬅ Back to Overview</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </main>
+
+  <!-- Lightbox Modal for Fullscreen Evidence Inspection -->
+  <div class="lightbox-modal" id="lightbox-modal" style="display: none;">
+    <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
+    <div class="lightbox-content">
+      <div class="lightbox-header">
+        <div class="lightbox-title" id="lightbox-title">Evidence Artifact Preview</div>
+        <button type="button" class="lightbox-close" id="lightbox-close" title="Close Lightbox">&times;</button>
+      </div>
+      <div class="lightbox-body">
+        <img id="lightbox-img" src="" alt="Fullscreen Evidence Preview">
+      </div>
+      <div class="lightbox-footer">
+        <span class="lightbox-desc" id="lightbox-desc"></span>
+        <a href="#" download class="btn-secondary" id="lightbox-download-btn">⬇ Download High-Res</a>
+      </div>
+    </div>
+  </div>
 
   <footer>
     <div>Global Photo Geolocator &bull; 100% Keyless Open Data &amp; Local Offline Inference &bull; NVIDIA GPU Accelerated</div>

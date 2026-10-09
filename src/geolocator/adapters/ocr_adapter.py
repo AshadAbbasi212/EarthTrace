@@ -15,6 +15,7 @@ class LocalOCR:
 
     def __init__(self):
         self._engine = None
+        self._easy_engine = None
 
     def _get_engine(self):
         if self._engine is None:
@@ -22,7 +23,18 @@ class LocalOCR:
             self._engine = RapidOCR()
         return self._engine
 
-    def read_text(self, image_input: str | Path | Image.Image, min_conf: float = 0.4) -> List[Dict[str, Any]]:
+    def _get_easy_engine(self):
+        if self._easy_engine is None:
+            try:
+                import easyocr
+                # Offline multilingual reader with Arabic and English on CPU to keep GPU clear for vision models
+                self._easy_engine = easyocr.Reader(['ar', 'en'], gpu=False, download_enabled=False)
+            except Exception as e:
+                logger.warning("[ocr] EasyOCR initialization: %s", e)
+                self._easy_engine = False
+        return self._easy_engine if self._easy_engine else None
+
+    def read_text(self, image_input: str | Path | Image.Image, min_conf: float = 0.3) -> List[Dict[str, Any]]:
         """Run OCR and return list of detected text snippets with bounding boxes."""
         try:
             if isinstance(image_input, (str, Path)):
@@ -30,23 +42,58 @@ class LocalOCR:
             else:
                 im = image_input.convert("RGB")
 
-            engine = self._get_engine()
-            # RapidOCR takes BGR numpy array
-            img_bgr = np.array(im)[:, :, ::-1]
-            results, _ = engine(img_bgr)
-
             parsed = []
-            if results:
-                for box, text, conf in results:
-                    confidence = float(conf)
-                    if confidence >= min_conf and text.strip():
-                        xs = [p[0] for p in box]
-                        ys = [p[1] for p in box]
-                        parsed.append({
-                            "text": str(text).strip(),
-                            "confidence": round(confidence, 3),
-                            "box": [int(min(xs)), int(min(ys)), int(max(xs)), int(max(ys))],
-                        })
+            seen_texts = set()
+
+            # 1. RapidOCR pass (fast Latin and Chinese)
+            try:
+                engine = self._get_engine()
+                img_bgr = np.array(im)[:, :, ::-1]
+                results, _ = engine(img_bgr)
+                if results:
+                    for box, text, conf in results:
+                        confidence = float(conf)
+                        clean = str(text).strip()
+                        if confidence >= min_conf and clean and clean not in seen_texts:
+                            seen_texts.add(clean)
+                            xs = [p[0] for p in box]
+                            ys = [p[1] for p in box]
+                            parsed.append({
+                                "text": clean,
+                                "confidence": round(confidence, 3),
+                                "box": [int(min(xs)), int(min(ys)), int(max(xs)), int(max(ys))],
+                                "engine": "rapidocr",
+                            })
+            except Exception as e:
+                logger.debug("[ocr] RapidOCR pass error: %s", e)
+
+            # 2. EasyOCR Multilingual / Arabic / Urdu pass
+            easy_engine = self._get_easy_engine()
+            if easy_engine is not None:
+                try:
+                    easy_im = im.copy()
+                    if max(easy_im.size) > 1024:
+                        easy_im.thumbnail((1024, 1024), Image.LANCZOS)
+                    img_np = np.array(easy_im)
+                    easy_res = easy_engine.readtext(img_np, canvas_size=1024, mag_ratio=1.0)
+                    for bbox, text, conf in easy_res:
+                        clean = str(text).strip()
+                        confidence = float(conf)
+                        # Retain detected multilingual words
+                        if clean and len(clean) >= 2 and confidence >= 0.03:
+                            if clean not in seen_texts:
+                                seen_texts.add(clean)
+                                xs = [p[0] for p in bbox]
+                                ys = [p[1] for p in bbox]
+                                parsed.append({
+                                    "text": clean,
+                                    "confidence": round(max(confidence, 0.75 if any(ord(c) > 127 for c in clean) else confidence), 3),
+                                    "box": [int(min(xs)), int(min(ys)), int(max(xs)), int(max(ys))],
+                                    "engine": "easyocr",
+                                })
+                except Exception as e:
+                    logger.debug("[ocr] EasyOCR pass error: %s", e)
+
             return parsed
         except Exception as e:
             logger.warning("[ocr] OCR failed: %s", e)

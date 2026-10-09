@@ -74,3 +74,18 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
 - **Observed Reality:** When image priors have low confidence (probability $< 0.05$) and no strong perceptual clues exist, claiming a point-level Tier T2 location fabricates false certainty.
 - **Decision:** Conforming strictly to Brief Section 11, candidate cells with weak posterior mass ($\le 0.05$) are assigned Tier T5 with wide calibrated radii ($\pm 1500$ km), or Tier T6 ("unknown"). Point-level T1/T2 tiers are reserved strictly for confirmed OSM corridor geometry, high terrain ridgeline fits, or valid EXIF GPS.
 
+---
+
+## 10. Strict Suppression of Fabricated Corridor Points in Stage 3b
+- **Observed Reality:** If Overpass API returned 0 structural crossings (e.g. timeout, rate limit, or remote unmapped wilderness), Stage 3b created a fallback synthetic diagonal across the bounding box and scored a point with baseline score 0.5 and prior 20.0, which incorrectly won the candidate board and returned false coordinates.
+- **Decision:** Updated `Stage3Built.match_corridor_point` and `process` to strictly require `crossings > 0` and `score >= 1.0`. When Overpass returns 0 crossings, the stage returns `best_point: None`, score `0.0`, and marks OSM evidence honestly as `"not applicable"` without inserting any fabricated candidate point onto the board.
+
+---
+
+## 11. Multilingual Arabic/Urdu Script Normalization & CPU OCR Isolation
+- **Observed Reality:** RapidOCR only detects Latin and Chinese characters. EasyOCR weights downloaded locally support Arabic and Urdu, but running EasyOCR on GPU while GeoCLIP is also loading triggers Windows WDDM TDR timeout (kernel launch timed out) on 4 GB VRAM. Furthermore, Arabic OCR yields Unicode variants (`ي` \u064a) that did not match Urdu gazetteer names (`ی` \u06cc).
+- **Decision:**
+  - EasyOCR is isolated to run on CPU with input thumbnailing (canvas size $\le 1024$px), keeping 100% of GPU VRAM dedicated to GeoCLIP and avoiding Windows driver timeouts.
+  - Implemented `normalize_arabic_urdu()` in `clues_adapter.py` stripping diacritics and normalizing character variants across Arabic, Persian, and Urdu.
+  - Prioritized gazetteer place-name queries in Nominatim geocoding, enabling autonomous geocoding of non-Latin signage to exact coordinates (e.g. Pir Chinasi, Azad Kashmir).
+
