@@ -144,10 +144,21 @@
       'Satellite': satellite,
       'OpenStreetMap': osmStandard
     };
-    L.control.layers(baseMaps = baseLayers, null, { position: 'bottomleft' }).addTo(map);
+    L.control.layers(baseLayers, null, { position: 'bottomleft' }).addTo(map);
 
     mapLayers = L.layerGroup().addTo(map);
   }
+
+  function ensureMap() {
+    if (!map) {
+      initMap();
+    }
+    if (map && !mapLayers) {
+      mapLayers = L.layerGroup().addTo(map);
+    }
+    return map && mapLayers;
+  }
+
 
   function switchBasemap(name) {
     if (!map || !baseLayers[name]) return;
@@ -435,16 +446,33 @@
     currentReportData = report;
     resultsCard.style.display = 'block';
 
-    const top = report.top_hypothesis || {};
-    const coords = top.coordinates || {};
-    const lat = coords.latitude !== undefined ? coords.latitude : null;
-    const lon = coords.longitude !== undefined ? coords.longitude : null;
-    const tier = top.confidence_tier || 'T6';
-    const radiusM = top.error_radius_m || 500000;
-    const heading = top.heading_deg !== undefined ? top.heading_deg : null;
+    const top = report.top_hypothesis || report.best_location || {};
+    let lat = null;
+    let lon = null;
+    if (top.coordinates) {
+      if (Array.isArray(top.coordinates) && top.coordinates.length >= 2) {
+        lat = Number(top.coordinates[0]);
+        lon = Number(top.coordinates[1]);
+      } else if (top.coordinates.latitude !== undefined) {
+        lat = Number(top.coordinates.latitude);
+        lon = Number(top.coordinates.longitude);
+      }
+    } else if (report.best_location && Array.isArray(report.best_location.coordinates)) {
+      lat = Number(report.best_location.coordinates[0]);
+      lon = Number(report.best_location.coordinates[1]);
+    }
+
+    const tier = top.confidence_tier || (report.best_location && report.best_location.confidence_tier) || 'T6';
+    const radiusM = top.error_radius_m || 
+      (top.calibrated_radius_km ? top.calibrated_radius_km * 1000 : null) || 
+      (report.best_location && report.best_location.calibrated_radius_km ? report.best_location.calibrated_radius_km * 1000 : null) || 
+      500000;
+    const heading = top.heading_deg !== undefined ? top.heading_deg : 
+      (top.camera_heading_deg !== undefined ? top.camera_heading_deg : 
+      (report.best_location && report.best_location.camera_heading_deg !== undefined ? report.best_location.camera_heading_deg : null));
 
     // Location name
-    resultLocation.textContent = report.location_name || (lat !== null ? `${lat.toFixed(5)}, ${lon.toFixed(5)}` : 'Unknown Region');
+    resultLocation.textContent = report.location_name || top.name || (lat !== null ? `${lat.toFixed(5)}, ${lon.toFixed(5)}` : 'Unknown Region');
 
     // Tier badge color
     tierBadge.textContent = `Tier ${tier}`;
@@ -458,10 +486,10 @@
     };
     tierBadge.style.backgroundColor = tierColors[tier] || '#3b82f6';
 
-    statLat.textContent = lat !== null ? lat.toFixed(5) : '--';
-    statLon.textContent = lon !== null ? lon.toFixed(5) : '--';
+    statLat.textContent = (lat !== null && !isNaN(lat)) ? lat.toFixed(5) : '--';
+    statLon.textContent = (lon !== null && !isNaN(lon)) ? lon.toFixed(5) : '--';
     statRadius.textContent = radiusM < 1000 ? `±${radiusM.toFixed(0)} m` : `±${(radiusM / 1000).toFixed(1)} km`;
-    statHeading.textContent = heading !== null ? `${heading.toFixed(0)}°` : 'N/A';
+    statHeading.textContent = (heading !== null && !isNaN(heading)) ? `${heading.toFixed(0)}°` : 'N/A';
 
     resultRationale.textContent = top.rationale || report.summary || 'Reasoning completed with multimodal evidence.';
 
@@ -471,23 +499,35 @@
     downloadGeojsonBtn.href = appendPassphraseParam(`/api/jobs/${jobId}/report.geojson`);
 
     copyCoordsBtn.onclick = () => {
-      if (lat !== null && lon !== null) {
+      if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
         navigator.clipboard.writeText(`${lat.toFixed(6)}, ${lon.toFixed(6)}`);
         copyCoordsBtn.textContent = '✅ Copied!';
         setTimeout(() => copyCoordsBtn.textContent = '📋 Copy Coords', 2000);
       }
     };
 
+    const alternatives = report.top_alternatives || report.alternatives || [];
+
     // Render Map
-    if (lat !== null && lon !== null) {
-      renderMapSolution(lat, lon, radiusM, heading, tier, report.alternatives);
+    try {
+      if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
+        renderMapSolution(lat, lon, radiusM, heading, tier, alternatives);
+      }
+    } catch (err) {
+      console.error('Failed to render map solution:', err);
     }
 
     // Populate 4 Evidence Cards
-    populateEvidenceCards(report.evidence, jobId);
+    try {
+      populateEvidenceCards(report.evidence || {}, jobId);
+    } catch (err) {
+      console.error('Failed to populate evidence cards:', err);
+    }
   }
 
   function renderMapSolution(lat, lon, radiusM, heading, tier, alternatives) {
+    ensureMap();
+    if (!mapLayers || !map) return;
     mapLayers.clearLayers();
 
     // 1. Error Circle
@@ -521,7 +561,7 @@
     marker.bindPopup(`<b>Estimated Position</b><br>Lat: ${lat.toFixed(5)}<br>Lon: ${lon.toFixed(5)}<br>Tier: ${tier}<br>Radius: ±${(radiusM/1000).toFixed(1)} km`);
 
     // 3. Camera Heading Ray if available
-    if (heading !== null && heading !== undefined) {
+    if (heading !== null && heading !== undefined && !isNaN(heading)) {
       const rayLengthKm = Math.min(Math.max(radiusM / 1000, 2.0), 30.0);
       const rad = heading * (Math.PI / 180.0);
       const dLat = (rayLengthKm / 111.0) * Math.cos(rad);
@@ -540,9 +580,20 @@
     // 4. Alternative hypotheses markers
     if (Array.isArray(alternatives)) {
       alternatives.slice(0, 5).forEach((alt, idx) => {
-        if (alt.coordinates && alt.coordinates.latitude !== undefined) {
-          const altLat = alt.coordinates.latitude;
-          const altLon = alt.coordinates.longitude;
+        let altLat = null;
+        let altLon = null;
+        if (Array.isArray(alt.coordinates) && alt.coordinates.length >= 2) {
+          altLat = Number(alt.coordinates[0]);
+          altLon = Number(alt.coordinates[1]);
+        } else if (alt.coordinates && alt.coordinates.latitude !== undefined) {
+          altLat = Number(alt.coordinates.latitude);
+          altLon = Number(alt.coordinates.longitude);
+        } else if (alt.lat !== undefined && alt.lon !== undefined) {
+          altLat = Number(alt.lat);
+          altLon = Number(alt.lon);
+        }
+
+        if (altLat !== null && altLon !== null && !isNaN(altLat) && !isNaN(altLon)) {
           const altMarker = L.circleMarker([altLat, altLon], {
             radius: 6,
             color: '#94a3b8',
@@ -550,7 +601,7 @@
             fillOpacity: 0.6,
             weight: 1
           }).addTo(mapLayers);
-          altMarker.bindPopup(`<b>Alternative #${idx + 1}</b><br>Score: ${alt.score ? alt.score.toFixed(2) : 'N/A'}`);
+          altMarker.bindPopup(`<b>Alternative #${idx + 1}: ${alt.name || 'Candidate'}</b><br>Score: ${alt.score ? alt.score.toFixed(2) : 'N/A'}`);
         }
       });
     }
@@ -562,10 +613,21 @@
 
   function populateEvidenceCards(evidence = {}, jobId) {
     const report = currentReportData || {};
-    const top = report.top_hypothesis || {};
-    const coords = top.coordinates || {};
-    const lat = coords.latitude !== undefined ? coords.latitude : null;
-    const lon = coords.longitude !== undefined ? coords.longitude : null;
+    const top = report.top_hypothesis || report.best_location || {};
+    let lat = null;
+    let lon = null;
+    if (top.coordinates) {
+      if (Array.isArray(top.coordinates) && top.coordinates.length >= 2) {
+        lat = Number(top.coordinates[0]);
+        lon = Number(top.coordinates[1]);
+      } else if (top.coordinates.latitude !== undefined) {
+        lat = Number(top.coordinates.latitude);
+        lon = Number(top.coordinates.longitude);
+      }
+    } else if (report.best_location && Array.isArray(report.best_location.coordinates)) {
+      lat = Number(report.best_location.coordinates[0]);
+      lon = Number(report.best_location.coordinates[1]);
+    }
 
     // --- 1. Populate Overview Grid Cards ---
     applyEvidence(
@@ -608,9 +670,20 @@
     const osm = evidence.osm_geometry || {};
     applyBadge(detailBadgeOsm, osm.status);
     detailFindingsOsm.textContent = osm.findings || 'Linear corridor & infrastructure matching evaluated via Overpass API.';
-    detailCrossingsOsm.textContent = osm.findings && osm.findings.includes('crossings') ? osm.findings.split('(')[1].split(' ')[0] : (osm.status === 'used' ? 'Verified Corridors' : '0 crossings');
+    
+    let crossingDisplay = (osm.status === 'used' ? 'Verified Corridors' : '0 crossings');
+    if (osm.findings) {
+      const matchParen = osm.findings.match(/\((\d+)\s+crossing/i);
+      const matchWord = osm.findings.match(/(\d+)\s+crossings?/i);
+      if (matchParen) {
+        crossingDisplay = `${matchParen[1]} crossings`;
+      } else if (matchWord) {
+        crossingDisplay = `${matchWord[1]} crossings`;
+      }
+    }
+    detailCrossingsOsm.textContent = crossingDisplay;
     detailScoreOsm.textContent = osm.status === 'used' ? 'Verified Corridor Pattern' : (osm.status === 'not_applicable' ? 'Not Applicable (0 crossings)' : 'Evaluation completed');
-    if (lat !== null && lon !== null) {
+    if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
       btnOsmOpenExternal.href = `https://www.openstreetmap.org/#map=16/${lat.toFixed(5)}/${lon.toFixed(5)}`;
     }
 
@@ -650,7 +723,7 @@
     const street = evidence.street_imagery || {};
     applyBadge(detailBadgeStreet, street.status);
     detailFindingsStreet.textContent = street.findings || 'Keyless ground-level imagery check (Wikimedia Commons / KartaView). Honest "not available" when unmapped.';
-    if (lat !== null && lon !== null) {
+    if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
       btnStreetSearchWikimedia.href = `https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent(lat.toFixed(4) + ' ' + lon.toFixed(4))}`;
     }
   }
@@ -809,10 +882,15 @@
 
   btnOsmFocusMap.addEventListener('click', () => {
     if (currentReportData) {
-      const top = currentReportData.top_hypothesis || {};
-      const coords = top.coordinates || {};
-      if (coords.latitude !== undefined && coords.longitude !== undefined) {
-        map.setView([coords.latitude, coords.longitude], 16);
+      const top = currentReportData.top_hypothesis || currentReportData.best_location || {};
+      let lat = null, lon = null;
+      if (Array.isArray(top.coordinates) && top.coordinates.length >= 2) {
+        lat = Number(top.coordinates[0]); lon = Number(top.coordinates[1]);
+      } else if (top.coordinates && top.coordinates.latitude !== undefined) {
+        lat = Number(top.coordinates.latitude); lon = Number(top.coordinates.longitude);
+      }
+      if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon) && map) {
+        map.setView([lat, lon], 16);
         const mapEl = document.getElementById('map');
         if (mapEl) mapEl.scrollIntoView({ behavior: 'smooth' });
       }
@@ -821,10 +899,15 @@
 
   btnDemFocusMap.addEventListener('click', () => {
     if (currentReportData) {
-      const top = currentReportData.top_hypothesis || {};
-      const coords = top.coordinates || {};
-      if (coords.latitude !== undefined && coords.longitude !== undefined) {
-        map.setView([coords.latitude, coords.longitude], 14);
+      const top = currentReportData.top_hypothesis || currentReportData.best_location || {};
+      let lat = null, lon = null;
+      if (Array.isArray(top.coordinates) && top.coordinates.length >= 2) {
+        lat = Number(top.coordinates[0]); lon = Number(top.coordinates[1]);
+      } else if (top.coordinates && top.coordinates.latitude !== undefined) {
+        lat = Number(top.coordinates.latitude); lon = Number(top.coordinates.longitude);
+      }
+      if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon) && map) {
+        map.setView([lat, lon], 14);
         const mapEl = document.getElementById('map');
         if (mapEl) mapEl.scrollIntoView({ behavior: 'smooth' });
       }
