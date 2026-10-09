@@ -217,14 +217,15 @@ class LandmarkMatcher:
         image: Image.Image,
         clip_model: Any,
         clip_proc: Any,
-        device: str = "cuda",
+        device: Optional[str] = None,
         min_confidence: float = 0.35,
     ) -> Optional[Dict[str, Any]]:
         """Run batched zero-shot classification against landmark database.
         
         Returns exact candidate metadata ONLY if confident and clearly exceeding negative background prompts.
         """
-        inputs = clip_proc(text=self._prompts, images=image, return_tensors="pt", padding=True).to(device)
+        model_device = getattr(clip_model, "device", None) or (device or ("cuda" if torch.cuda.is_available() else "cpu"))
+        inputs = clip_proc(text=self._prompts, images=image, return_tensors="pt", padding=True).to(model_device)
         with torch.no_grad():
             out = clip_model(**inputs)
             probs = out.logits_per_image.softmax(dim=-1).cpu().numpy()[0]
