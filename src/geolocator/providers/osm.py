@@ -23,15 +23,13 @@ class OSMProvider(BaseProvider):
         endpoints: Optional[List[str]] = None,
         cache_dir: str | Path = ".geo-cache",
         offline_mode: bool = False,
-        timeout: float = 45.0,
+        timeout: float = 6.0,
     ):
         super().__init__(name="osm", cache_dir=cache_dir, offline_mode=offline_mode, timeout=timeout)
         self.endpoints = endpoints or [
             "https://overpass-api.de/api/interpreter",
-            "https://overpass.kumi.systems/api/interpreter",
             "https://lz4.overpass-api.de/api/interpreter",
-            "https://overpass.private.coffee/api/interpreter",
-            "https://overpass.openstreetmap.ru/api/interpreter",
+            "https://overpass.kumi.systems/api/interpreter",
         ]
 
     def query_ql(self, ql: str, timeout_sec: Optional[int] = None) -> Dict[str, Any]:
@@ -56,11 +54,11 @@ class OSMProvider(BaseProvider):
         }
 
         last_error = None
-        for endpoint in self.endpoints:
+        for endpoint in self.endpoints[:2]:
             try:
                 logger.info("[osm] Querying %s (timeout: %ds)...", endpoint, to)
                 req = urllib.request.Request(endpoint, data=encoded_data, headers=headers)
-                with urllib.request.urlopen(req, timeout=to + 10) as resp:
+                with urllib.request.urlopen(req, timeout=to) as resp:
                     raw = resp.read().decode("utf-8")
                     data = json.loads(raw)
                     if data.get("remark"):
@@ -70,9 +68,8 @@ class OSMProvider(BaseProvider):
             except Exception as e:
                 last_error = e
                 logger.warning("[osm] Mirror %s failed: %s", endpoint, e)
-                time.sleep(1.0)
 
-        raise RuntimeError(f"[osm] All Overpass mirrors failed: {last_error}")
+        raise RuntimeError(f"[osm] Overpass mirrors failed: {last_error}")
 
     def find_features(self, south: float, west: float, north: float, east: float, tag_filter: str) -> List[Dict[str, Any]]:
         """Query elements within bounding box matching tag filter."""

@@ -17,6 +17,10 @@ jobs/
 logs/
 eval/photos/
 eval/results/
+!eval/results/real_50_benchmark/
+eval/results/real_50_benchmark/*
+!eval/results/real_50_benchmark/real_50_report.json
+!eval/results/real_50_benchmark/real_50_summary.md
 eval/eval_manifest.csv
 *.tmp
 *.cache

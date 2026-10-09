@@ -116,7 +116,7 @@ class ReportGenerator:
                 tier = "T2"
                 calibrated_radius_km = float(meta.get("radius_km", 2.5))
             elif "landmark" in meta or "Landmark:" in top_name or meta.get("source") == "landmark_exact_mark" or meta.get("tier") == "T1":
-                tier = "T1"
+                tier = meta.get("tier", "T1")
                 calibrated_radius_km = float(meta.get("radius_km", 0.05))
             elif meta.get("source") == "exif_gps":
                 tier = "T2"

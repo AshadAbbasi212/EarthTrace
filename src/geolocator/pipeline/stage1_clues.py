@@ -50,27 +50,19 @@ class Stage1Clues:
         if not working_image_path.exists():
             working_image_path = Path(board.photo_path)
 
-        # 1. OCR Extraction (Full Image + Edge Crops)
+        # 1. OCR Extraction (Full 1024px Image)
         ocr_snippets: List[Dict[str, Any]] = []
         try:
             ocr_snippets.extend(self.ocr.read_text(working_image_path, min_conf=0.25))
             
-            # Also check edge crops if available
+            # If text is detected, also check bottom crops where signs and plates reside
             edges_dir = job_path / "edges"
-            if edges_dir.exists():
-                for crop_path in edges_dir.glob("*.jpg"):
+            if edges_dir.exists() and ocr_snippets:
+                for crop_path in list(edges_dir.glob("*bottom*.jpg"))[:2]:
                     crop_snippets = self.ocr.read_text(crop_path, min_conf=0.25)
                     for snip in crop_snippets:
                         snip["file_ref"] = str(crop_path.relative_to(job_path))
                         ocr_snippets.append(snip)
-
-            # Check original photo if working image yielded few text clues
-            orig_photo = Path(board.photo_path)
-            if orig_photo.exists() and len(ocr_snippets) <= 2:
-                orig_snippets = self.ocr.read_text(orig_photo, min_conf=0.20)
-                for snip in orig_snippets:
-                    snip["file_ref"] = "original.jpg"
-                    ocr_snippets.append(snip)
         except Exception as e:
             logger.warning("[stage1] OCR pass encountered error: %s", e)
 
@@ -332,9 +324,13 @@ class Stage1Clues:
             import torch
             from transformers import CLIPProcessor, CLIPModel
 
+            if not hasattr(self, "_cached_clip_model") or self._cached_clip_model is None:
+                self._cached_clip_model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14", local_files_only=True)
+                self._cached_clip_proc = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14", local_files_only=True)
+
             device = "cuda" if torch.cuda.is_available() else "cpu"
-            clip_model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14", local_files_only=True).to(device)
-            clip_proc = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14", local_files_only=True)
+            clip_model = self._cached_clip_model.to(device)
+            clip_proc = self._cached_clip_proc
 
             categories = [
                 ("urban", "an urban brick institutional building or university campus or hospital block", "flat", False, "institutional_brick"),
@@ -364,64 +360,66 @@ class Stage1Clues:
                 horizon_visible = top_cat[3]
                 architecture = top_cat[4]
 
-            # If building, monument or urban scene detected, run specialized landmark & institution check
-            if scene_type == "urban" or "building" in top_cat[1] or "monument" in top_cat[1]:
-                relief = "flat"
-                horizon_visible = False
-                
-                lm_matcher = LandmarkMatcher()
-                lm_res = lm_matcher.match(im, clip_model, clip_proc, device=device)
-                if lm_res:
-                    l_name = lm_res["name"]
-                    l_lat = lm_res["latitude"]
-                    l_lon = lm_res["longitude"]
-                    l_conf = lm_res["confidence"]
-                    l_radius = lm_res["radius_km"]
+            # Universal High-Accuracy Landmark & Heritage Perception
+            lm_matcher = LandmarkMatcher()
+            lm_res = lm_matcher.match(im, clip_model, clip_proc, device=device)
+            if lm_res:
+                l_name = lm_res["name"]
+                l_lat = lm_res["latitude"]
+                l_lon = lm_res["longitude"]
+                l_conf = lm_res["confidence"]
+                l_radius = lm_res["radius_km"]
+                l_cat = lm_res.get("category", "landmark")
 
-                    # Attempt high-precision Nominatim geocoding to lock exact building footprint center
-                    try:
-                        nom_hits = self.nominatim.search(l_name, limit=1)
-                        if nom_hits:
-                            hit = nom_hits[0]
-                            l_lat = float(hit["lat"])
-                            l_lon = float(hit["lon"])
-                            logger.info("[stage1_landmark] Exact OSM coordinate locked: (%f, %f) for %s", l_lat, l_lon, hit.get("display_name"))
-                    except Exception as e:
-                        logger.debug("[stage1_landmark] Nominatim refinement skipped: %s", e)
+                # If building, architectural, or urban monument, ensure flat relief and suppressed horizon
+                if l_cat in ("fortress", "university_campus", "hospital_complex", "civic_building", "civic_market", "cathedral", "government_building", "national_mosque", "historical_mosque", "world_landmark", "landmark_building", "unesco_world_heritage") or scene_type == "urban":
+                    relief = "flat"
+                    horizon_visible = False
 
-                    region_guesses.append(RegionGuessItem(place=l_name, confidence=min(0.98, l_conf * 1.5), reason="Zero-shot landmark perception"))
-                    if board is not None:
-                        cand_name = f"Landmark: {l_name}"
-                        board.add_candidate(
-                            name=cand_name,
-                            level="point",
-                            lat=l_lat,
-                            lon=l_lon,
-                            prior=50.0,
-                            metadata={
-                                "landmark": l_name,
-                                "tier": "T1",
-                                "radius_km": l_radius,
-                                "category": lm_res.get("category", "landmark"),
-                                "source": "landmark_exact_mark",
-                            }
-                        )
-                        cid_lm = board.add_clue(
-                            text=f"Visual perception identified exact landmark: {l_name} (conf={l_conf:.2f}, precision=±{int(l_radius*1000)}m)",
-                            kind="landmark",
-                            status="observed",
-                            source="clip_zero_shot",
-                            confidence=round(l_conf, 2),
-                        )
-                        board.add_evidence(
-                            clue_id=cid_lm,
-                            candidate_weights={cand_name: 250.0},
-                            rationale=lm_res["rationale"],
-                        )
+                # Attempt high-precision Nominatim geocoding to lock exact building footprint center
+                try:
+                    nom_hits = self.nominatim.search(l_name, limit=1)
+                    if nom_hits:
+                        hit = nom_hits[0]
+                        l_lat = float(hit["lat"])
+                        l_lon = float(hit["lon"])
+                        logger.info("[stage1_landmark] Exact OSM coordinate locked: (%f, %f) for %s", l_lat, l_lon, hit.get("display_name"))
+                except Exception as e:
+                    logger.debug("[stage1_landmark] Nominatim refinement skipped: %s", e)
 
-            # Unload model and free GPU VRAM
-            del clip_model
-            del clip_proc
+                region_guesses.append(RegionGuessItem(place=l_name, confidence=min(0.98, l_conf * 1.5), reason="Zero-shot landmark perception"))
+                if board is not None:
+                    cand_name = f"Landmark: {l_name}"
+                    board.add_candidate(
+                        name=cand_name,
+                        level="point",
+                        lat=l_lat,
+                        lon=l_lon,
+                        prior=50.0,
+                        metadata={
+                            "landmark": l_name,
+                            "tier": "T1",
+                            "radius_km": l_radius,
+                            "category": l_cat,
+                            "source": "landmark_exact_mark",
+                        }
+                    )
+                    cid_lm = board.add_clue(
+                        text=f"Visual perception identified exact landmark: {l_name} (conf={l_conf:.2f}, precision=±{int(l_radius*1000)}m)",
+                        kind="landmark",
+                        status="observed",
+                        source="clip_zero_shot",
+                        confidence=round(l_conf, 2),
+                    )
+                    board.add_evidence(
+                        clue_id=cid_lm,
+                        candidate_weights={cand_name: 250.0},
+                        rationale=lm_res["rationale"],
+                    )
+
+            # Offload CLIP model to CPU and purge VRAM for subsequent stages
+            if clip_model is not None:
+                clip_model.to("cpu")
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
 

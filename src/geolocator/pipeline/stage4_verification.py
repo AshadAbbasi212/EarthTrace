@@ -52,7 +52,18 @@ class Stage4Verification:
                 processor = AutoImageProcessor.from_pretrained(model_id)
                 model = AutoModel.from_pretrained(model_id).to(device)
                 model.eval()
-                return (processor, model)
+
+                class DinoWrapper:
+                    def __init__(self, p, m):
+                        self.processor = p
+                        self.model = m
+                    def to(self, d):
+                        self.model.to(d)
+                        return self
+                    def __iter__(self):
+                        return iter((self.processor, self.model))
+
+                return DinoWrapper(processor, model)
 
             self.model_manager.register_loader("dinov2", _loader)
 

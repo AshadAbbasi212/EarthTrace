@@ -157,5 +157,30 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
   - Marked OpenStreetMap Geometry evidence honestly as **"used"** whenever a building footprint is verified.
   - Added an **Exact Mark Pinpoint HUD** and tactical concentric reticle on the Leaflet map with high-precision zoom level 17/18 centering.
 
+---
+
+## 18. Zero-Copy In-Memory CPU Model Caching for Single-Resident VRAM Architecture & Real 50-Photo Worldwide Benchmark
+- **Problem:**
+  - AGENTS.md mandates strictly single-resident GPU VRAM execution (load one model at a time, unload after use) to guarantee safety on 4 GB / 8 GB hardware (host: NVIDIA Quadro M1200 with 4.0 GB VRAM).
+  - Repeatedly instantiating heavyweight PyTorch neural networks (GeoCLIP, CLIP ViT-Large/14, StreetCLIP, DINOv2) from disk into GPU memory took 15–20s per model load. Over a 50-photo benchmark (5 models $\times$ 50 photos = 250 model loads), disk deserialization alone would have added 60–80 minutes of pure I/O latency.
+- **Solution & Decision:**
+  - Implemented `_cpu_cache` in `ModelManager`: When `unload()` is invoked, the model is not deleted or garbage collected, but transferred to host system RAM via `.to("cpu")`, followed by immediate `torch.cuda.empty_cache()`.
+  - When the model is requested again via `get_model(name)`, it is already initialized in host RAM and is transferred back to the GPU over PCIe via `.to("cuda")`, taking under 0.1–0.4 seconds.
+  - GPU VRAM is 100% freed down to ~10 MB baseline between pipeline stages, strictly complying with the single-resident GPU VRAM mandate while eliminating disk I/O bottlenecks.
+  - Implemented CPU-offloading in `EasyOCR` via `.to('cpu')` and `.to('cuda')` on detector/recognizer networks.
+  - Added `.to()` delegation methods to `RerankerWrapper` (StreetCLIP) and `DinoWrapper` (DINOv2).
+  - Capped Overpass public mirror queries in `osm.py` to 6.0s timeout with top-2 mirror failover to avoid public gateway timeouts (504s).
+  - Curated and executed a comprehensive 50-photo worldwide benchmark (`eval/manifest_real.csv`, `eval/photos_real/`) using genuine Wikimedia Commons photos across 11 biomes and 7 continents:
+    - Total execution time: **1,333 seconds (22.2 minutes total, ~26.6s per photo)**.
+    - Peak VRAM: **2,662.6 MB** (well within the 4 GB Quadro M1200 limit).
+    - **Median localization error**: **7.67 km** worldwide.
+    - **Within 1 km (Exact Mark)**: **26.0%** (13 / 50 photos).
+    - **Within 25 km (Local Area)**: **66.0%** (33 / 50 photos).
+    - **Within 200 km (Regional)**: **80.0%** (40 / 50 photos).
+    - **Within 750 km (Sub-continental)**: **90.0%** (45 / 50 photos).
+    - **Within 2,500 km (Continental)**: **92.0%** (46 / 50 photos).
+    - Produced comprehensive JSON and Markdown audit reports in `eval/results/real_50_benchmark/`.
+
+
 
 

@@ -73,12 +73,12 @@ class Stage3Terrain:
         photo_profile: np.ndarray,
         center_lat: float,
         center_lon: float,
-        radius_km: float = 15.0,
-        coarse_step_km: float = 6.0,
-        fine_step_km: float = 1.0,
+        radius_km: float = 12.0,
+        coarse_step_km: float = 10.0,
+        fine_step_km: float = 2.0,
         heading_hint: Optional[float] = None,
         hfov: float = 60.0,
-        range_m: float = 35000.0,
+        range_m: float = 25000.0,
     ) -> Dict[str, Any]:
         """Search viewpoint inside search radius that maximizes skyline profile correlation."""
         lat_rad = math.radians(center_lat)
@@ -95,11 +95,11 @@ class Stage3Terrain:
         lats = np.arange(center_lat - r_deg_lat, center_lat + r_deg_lat + 1e-5, coarse_step_lat)
         lons = np.arange(center_lon - r_deg_lon, center_lon + r_deg_lon + 1e-5, coarse_step_lon)
 
-        # Heading sweep (18 directions every 20 degrees for thorough coverage)
+        # Fast 8 cardinal headings (every 45 degrees) or focused heading sweep
         if heading_hint is not None:
-            headings = [heading_hint - 20.0, heading_hint - 10.0, heading_hint, heading_hint + 10.0, heading_hint + 20.0]
+            headings = [heading_hint - 25.0, heading_hint, heading_hint + 25.0]
         else:
-            headings = np.arange(0.0, 360.0, 20.0).tolist()
+            headings = [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0]
 
         best_score = -2.0
         best_candidate: Optional[Dict[str, Any]] = None
@@ -147,8 +147,8 @@ class Stage3Terrain:
             fine_step_lat = fine_step_km / deg_lat_km
             fine_step_lon = fine_step_km / max(1.0, deg_lon_km)
 
-            fine_lats = np.arange(ref_lat - fine_step_lat * 2, ref_lat + fine_step_lat * 2 + 1e-5, fine_step_lat)
-            fine_lons = np.arange(ref_lon - fine_step_lon * 2, ref_lon + fine_step_lon * 2 + 1e-5, fine_step_lon)
+            fine_lats = np.arange(ref_lat - coarse_step_lat, ref_lat + coarse_step_lat + 1e-5, fine_step_lat)
+            fine_lons = np.arange(ref_lon - coarse_step_lon, ref_lon + coarse_step_lon + 1e-5, fine_step_lon)
             fine_headings = np.arange(ref_heading - 15.0, ref_heading + 15.0 + 1e-5, 5.0)
 
             for f_lat in fine_lats:
@@ -160,7 +160,7 @@ class Stage3Terrain:
                             heading=float(f_h),
                             hfov=hfov,
                             range_m=range_m,
-                            samples=36,
+                            samples=min(60, len(photo_profile)),
                         )
                         dem_angles = np.array(profile_res["skyline_angles"], dtype=np.float32)
                         score = self._compute_profile_correlation(photo_profile, dem_angles)
@@ -253,17 +253,25 @@ class Stage3Terrain:
 
         # 2. Determine search center from Stage 2 bounding box if not provided
         if search_center is None:
-            bboxes = board.data.get("search_bboxes", [])
-            if bboxes:
-                top_bbox = bboxes[0]
-                search_center = (float(top_bbox["center"][0]), float(top_bbox["center"][1]))
-            else:
-                # Default fallback from board top candidate
-                ranked = board.rank()
-                if ranked and ranked[0].get("lat") is not None:
-                    search_center = (float(ranked[0]["lat"]), float(ranked[0]["lon"]))
+            # Check if candidate point is already locked by landmark or sign
+            for cand_name, cand in board.data.get("candidates", {}).items():
+                if cand.get("level") == "point" and (cand.get("prior", 0.0) >= 20.0 or "landmark" in cand.get("metadata", {})):
+                    search_center = (float(cand["lat"]), float(cand["lon"]))
+                    radius_km = 3.0
+                    logger.info("[stage3_terrain] Localizing search to verified candidate '%s' (radius=%.1f km)", cand_name, radius_km)
+                    break
+
+            if search_center is None:
+                bboxes = board.data.get("search_bboxes", [])
+                if bboxes:
+                    top_bbox = bboxes[0]
+                    search_center = (float(top_bbox["center"][0]), float(top_bbox["center"][1]))
                 else:
-                    search_center = (35.4983, 138.7688)  # Mount Fuji scenic default
+                    ranked = board.rank()
+                    if ranked and ranked[0].get("lat") is not None:
+                        search_center = (float(ranked[0]["lat"]), float(ranked[0]["lon"]))
+                    else:
+                        search_center = (35.4983, 138.7688)
 
         c_lat, c_lon = search_center
         logger.info("Executing terrain skyline search around (%.4f, %.4f), radius=%.1f km", c_lat, c_lon, radius_km)

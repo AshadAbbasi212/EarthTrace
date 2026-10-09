@@ -87,7 +87,18 @@ class Stage2Prior:
                 processor = CLIPProcessor.from_pretrained(model_id, local_files_only=True)
                 model = CLIPModel.from_pretrained(model_id, local_files_only=True).to(device)
                 model.eval()
-                return (processor, model)
+
+                class RerankerWrapper:
+                    def __init__(self, p, m):
+                        self.processor = p
+                        self.model = m
+                    def to(self, d):
+                        self.model.to(d)
+                        return self
+                    def __iter__(self):
+                        return iter((self.processor, self.model))
+
+                return RerankerWrapper(processor, model)
 
             self.model_manager.register_loader("geo_reranker", _loader)
 
@@ -456,23 +467,29 @@ class Stage2Prior:
                 "probability": c.get("cluster_prob", 0.0),
             })
 
-        # Check if high-confidence geocoded sign candidates exist from Stage 1
+        # Check if high-confidence geocoded sign or landmark candidates exist from Stage 1
         geocoded_bboxes = []
         raw_cands = board.data.get("candidates", {})
         cand_list = list(raw_cands.values()) if isinstance(raw_cands, dict) else list(raw_cands)
         for cand in cand_list:
-            if isinstance(cand, dict) and cand.get("level") in ("point", "city") and cand.get("lat") is not None and "sign" in cand.get("name", "").lower():
-                p_lat = cand["lat"]
-                p_lon = cand["lon"]
+            if isinstance(cand, dict) and cand.get("lat") is not None and (
+                cand.get("level") == "point"
+                or "sign" in cand.get("name", "").lower()
+                or cand.get("metadata", {}).get("landmark")
+                or "landmark" in cand.get("name", "").lower()
+            ):
+                p_lat = float(cand["lat"])
+                p_lon = float(cand["lon"])
                 g_bbox = cand.get("bbox") or [p_lat - 0.05, p_lon - 0.05, p_lat + 0.05, p_lon + 0.05]
+                is_lm = bool(cand.get("metadata", {}).get("landmark") or "landmark" in cand.get("name", "").lower())
                 geocoded_bboxes.append({
-                    "cluster_id": "geocoded_sign",
+                    "cluster_id": "landmark" if is_lm else "geocoded_sign",
                     "candidate_name": cand["name"],
                     "country": cand.get("metadata", {}).get("country"),
                     "bbox": g_bbox,
                     "center": [p_lat, p_lon],
-                    "score": 10.0,
-                    "probability": 0.95,
+                    "score": 35.0 if is_lm else 10.0,
+                    "probability": 0.99 if is_lm else 0.95,
                 })
 
         board.data["search_bboxes"] = geocoded_bboxes + search_bboxes

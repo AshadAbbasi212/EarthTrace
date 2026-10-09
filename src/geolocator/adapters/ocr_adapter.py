@@ -34,17 +34,28 @@ class LocalOCR:
             except Exception as e:
                 logger.warning("[ocr] EasyOCR initialization: %s", e)
                 self._easy_engine = False
+        elif self._easy_engine is not False:
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    if hasattr(self._easy_engine, "detector") and hasattr(self._easy_engine.detector, "to"):
+                        self._easy_engine.detector.to("cuda")
+                    if hasattr(self._easy_engine, "recognizer") and hasattr(self._easy_engine.recognizer, "to"):
+                        self._easy_engine.recognizer.to("cuda")
+            except Exception:
+                pass
         return self._easy_engine if self._easy_engine else None
 
     def unload(self) -> None:
-        """Unload EasyOCR from GPU and free memory for subsequent pipeline stages."""
+        """Offload EasyOCR from GPU to CPU to free VRAM for subsequent pipeline stages."""
         if self._easy_engine is not None and self._easy_engine is not False:
             try:
-                logger.info("[ocr] Unloading EasyOCR engine from memory/GPU...")
-                del self._easy_engine
+                if hasattr(self._easy_engine, "detector") and hasattr(self._easy_engine.detector, "to"):
+                    self._easy_engine.detector.to("cpu")
+                if hasattr(self._easy_engine, "recognizer") and hasattr(self._easy_engine.recognizer, "to"):
+                    self._easy_engine.recognizer.to("cpu")
             except Exception:
                 pass
-            self._easy_engine = None
             import gc
             import torch
             gc.collect()

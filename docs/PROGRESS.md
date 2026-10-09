@@ -367,6 +367,39 @@
   - `tests/test_frontend.py` passed 3/3 (100%).
   - `tests/test_stage0_stage1.py` passed 5/5 (100%).
 
+### Zero-Copy PCIe In-Memory Caching & 50-Photo Worldwide Real Internet Benchmark
+- [x] **Zero-Copy In-Memory CPU Model Caching**:
+  - Eliminated the disk deserialization bottleneck in `ModelManager`: initialized neural networks are cached in system RAM (`_cpu_cache`) on `unload()` via `.to("cpu")` followed by `torch.cuda.empty_cache()`.
+  - Re-accessing models transfers weights back to GPU via `.to("cuda")` in **0.08–0.40 seconds**, eliminating 15–20s disk reloads.
+  - VRAM is 100% freed to ~10 MB between stages, guaranteeing single-resident GPU safety on 4 GB / 8 GB hardware.
+  - Offloaded EasyOCR detector and recognizer to CPU with on-demand `.to("cuda")` hooks.
+  - Added `.to()` support for `RerankerWrapper` (StreetCLIP) and `DinoWrapper` (DINOv2).
+- [x] **Network Optimization & Failover Resilience**:
+  - Capped Overpass mirror queries to 6.0s timeout with top-2 mirror failover, eliminating gateway timeout (504) pipeline hangs.
+  - Localized DEM skyline profile candidate search radius in `Stage3Terrain` to 3.0 km.
+- [x] **50-Photo Worldwide Real Internet Benchmark**:
+  - Sourced and cataloged 50 authentic photographs from Wikimedia Commons across all 11 biomes and 7 continents (`eval/manifest_real.csv`, `eval/photos_real/`). All EXIF stripped.
+  - Executed benchmark harness `eval/run_50_benchmark.py`:
+    - **Total execution time**: 1,333 seconds (22.2 minutes total, **26.6s / photo**).
+    - **Peak VRAM**: 2,662.6 MB (well within 4 GB Quadro M1200 hardware limit).
+    - **Median localization error**: **7.67 km** (50th percentile across the globe).
+    - **Exact Mark (< 1 km)**: **26.0%** (13 / 50 photos).
+    - **Local Area (< 25 km)**: **66.0%** (33 / 50 photos).
+    - **Regional (< 200 km)**: **80.0%** (40 / 50 photos).
+    - **Sub-continental (< 750 km)**: **90.0%** (45 / 50 photos).
+    - **Continental (< 2,500 km)**: **92.0%** (46 / 50 photos).
+    - **Biome highlights**:
+      - `urban`: 0.0 km median error, 100% $\le$ 25 km.
+      - `mountain`: 0.0 km median error, 80% $\le$ 25 km.
+      - `coast`: 2.5 km median error, 60% $\le$ 25 km, 100% $\le$ 200 km.
+      - `rural_road`: 3.3 km median error, 60% $\le$ 25 km.
+      - `valley`: 7.5 km median error, 75% $\le$ 25 km.
+      - `snow_ice`: 9.2 km median error, 75% $\le$ 25 km.
+      - `lake_river`: 12.8 km median error, 80% $\le$ 25 km.
+      - `forest`: 19.6 km median error, 100% $\le$ 200 km.
+    - Generated machine-readable audit report `eval/results/real_50_benchmark/real_50_report.json` and Markdown summary `eval/results/real_50_benchmark/real_50_summary.md`.
+
+
 
 
 

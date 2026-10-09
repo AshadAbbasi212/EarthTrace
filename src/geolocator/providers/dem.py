@@ -97,7 +97,7 @@ class DEMProvider(BaseProvider):
         heading: float,
         hfov: float = 60.0,
         range_m: float = 25000.0,
-        samples: int = 36,
+        samples: int = 24,
         camera_height_m: float = 2.0,
         zoom: int = 12,
     ) -> Dict[str, Any]:
@@ -106,10 +106,10 @@ class DEMProvider(BaseProvider):
         Returns bearings, elevation angles (degrees), distances to skyline peaks,
         accounting for Earth curvature and refraction.
         """
-        samples = min(max(int(samples), 16), 48)
+        samples = min(max(int(samples), 16), 80)
         cam_elev = self.get_elevation(lat, lon, zoom=zoom) + camera_height_m
         bearings = np.linspace(heading - hfov / 2.0, heading + hfov / 2.0, samples)
-        distances = np.linspace(800.0, range_m, 20)  # 20 radial distance rings
+        distances = np.linspace(500.0, range_m, 35)  # High-fidelity radial distance rings
 
         skyline_elev_angles = np.full(samples, -90.0, dtype=np.float32)
         skyline_distances = np.zeros(samples, dtype=np.float32)

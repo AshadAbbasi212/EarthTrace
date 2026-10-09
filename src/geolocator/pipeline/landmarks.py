@@ -103,6 +103,8 @@ LANDMARK_DATABASE: List[Tuple[str, str, float, float, str]] = [
     ("Alhambra Moorish palace Granada Spain", "Alhambra Palace, Granada, Spain", 37.176078, -3.588141, "unesco_world_heritage"),
     ("Statue of Liberty Liberty Island New York USA", "Statue of Liberty, New York, USA", 40.689249, -74.044500, "national_monument"),
     ("Empire State Building Art Deco skyscraper Manhattan New York", "Empire State Building, New York, USA", 40.748817, -73.985428, "landmark_building"),
+    ("Tokyo Tower red and white lattice communications tower Tokyo Japan", "Tokyo Tower, Tokyo, Japan", 35.658581, 139.745433, "world_landmark"),
+    ("Bixby Creek Bridge open-spandrel arch bridge Big Sur California", "Bixby Creek Bridge, Big Sur, California, USA", 36.371389, -121.901944, "bridge"),
     ("Golden Gate Bridge San Francisco California", "Golden Gate Bridge, San Francisco, USA", 37.819929, -122.478255, "bridge"),
     ("Pyramids of Giza Great Pyramid Khufu Cairo Egypt", "Great Pyramid of Giza, Giza, Egypt", 29.979167, 31.134167, "unesco_world_heritage"),
     ("Great Sphinx of Giza limestone statue Egypt", "Great Sphinx of Giza, Giza, Egypt", 29.975278, 31.137500, "ancient_monument"),
@@ -118,6 +120,81 @@ LANDMARK_DATABASE: List[Tuple[str, str, float, float, str]] = [
     ("Machu Picchu Inca citadel Andes Mountains Peru", "Machu Picchu, Cusco Region, Peru", -13.163141, -72.544963, "unesco_world_heritage"),
     ("Christ the Redeemer Art Deco statue Corcovado Rio de Janeiro", "Christ the Redeemer, Rio de Janeiro, Brazil", -22.951916, -43.210487, "world_landmark"),
     ("Chichen Itza El Castillo Mayan pyramid Yucatan Mexico", "El Castillo (Temple of Kukulcan), Chichen Itza, Mexico", 20.684285, -88.567783, "unesco_world_heritage"),
+
+    # --- World Iconic Natural Landmarks, Mountains & Valleys ---
+    ("Matterhorn pyramid peak Zermatt Swiss Alps", "Matterhorn Peak, Zermatt, Switzerland", 45.976300, 7.748000, "mountain_peak"),
+    ("Mount Fuji snow capped volcanic cone Japan", "Mount Fuji, Honshu, Japan", 35.360600, 138.727400, "mountain_peak"),
+    ("Denali Mount McKinley Alaska mountain range", "Denali (Mount McKinley), Alaska, USA", 63.069200, -151.007000, "mountain_peak"),
+    ("Mount Cook Aoraki Southern Alps New Zealand", "Aoraki / Mount Cook, South Island, New Zealand", -43.595000, 170.141800, "mountain_peak"),
+    ("Mount Aconcagua Andes mountain peak Argentina", "Mount Aconcagua, Mendoza, Argentina", -32.653200, -70.010900, "mountain_peak"),
+    ("Mount Kilimanjaro volcanic peak Tanzania Africa", "Mount Kilimanjaro, Tanzania", -3.067400, 37.355600, "mountain_peak"),
+    ("Yosemite Valley El Capitan Half Dome California", "Yosemite Valley, California, USA", 37.745600, -119.593600, "national_park"),
+    ("Lauterbrunnen Valley waterfalls Swiss Alps", "Lauterbrunnen Valley, Bernese Oberland, Switzerland", 46.593600, 7.909100, "alpine_valley"),
+    ("Sacred Valley of the Incas Urubamba Peru", "Sacred Valley of the Incas, Cusco, Peru", -13.333300, -72.083300, "historical_valley"),
+    ("Great Rift Valley Kenya East Africa", "Great Rift Valley Viewpoint, Kenya", -0.366700, 36.083300, "rift_valley"),
+    ("Capertee Valley sandstone canyon New South Wales Australia", "Capertee Valley, NSW, Australia", -33.150000, 150.050000, "canyon_valley"),
+
+    # --- World Deserts, Coasts, Waters & Islands ---
+    ("Erg Chebbi sand dunes Sahara Desert Merzouga Morocco", "Erg Chebbi Dunes, Merzouga, Morocco", 31.149200, -4.011700, "desert_dunes"),
+    ("Death Valley Badwater Basin salt flats California", "Death Valley (Badwater Basin), California, USA", 36.532300, -116.932500, "desert_basin"),
+    ("Atacama Desert salt flats and volcanic peaks Chile", "Atacama Desert, Antofagasta, Chile", -23.863400, -69.132800, "arid_desert"),
+    ("Wadi Rum red sandstone desert monoliths Jordan", "Wadi Rum Protected Area, Jordan", 29.573300, 35.433300, "desert_valley"),
+    ("Simpson Desert red sand ridges Outback Australia", "Simpson Desert, Northern Territory, Australia", -24.570000, 137.420000, "desert_dunes"),
+    ("Rub al Khali Empty Quarter sand dunes Oman", "Rub' al Khali (Empty Quarter), Oman", 20.000000, 50.000000, "desert_dunes"),
+    ("Big Sur Pacific coastal cliffs California highway", "Big Sur Coastal Highway, California, USA", 36.270400, -121.808100, "coastal_cliffs"),
+    ("Algarve sandstone sea cliffs and caves Portugal", "Algarve Coast (Ponta da Piedade), Portugal", 37.089100, -8.243600, "coastal_cliffs"),
+    ("Twelve Apostles limestone sea stacks Great Ocean Road Australia", "Twelve Apostles, Victoria, Australia", -38.665800, 143.104400, "coastal_stacks"),
+    ("Cape Point Cape of Good Hope cliffs South Africa", "Cape Point (Cape of Good Hope), South Africa", -34.357200, 18.497500, "coastal_cape"),
+    ("Ha Long Bay emerald water limestone karst islands Vietnam", "Ha Long Bay, Quang Ninh, Vietnam", 20.910100, 107.183900, "coastal_karst"),
+    ("Giants Causeway interlocking basalt columns Northern Ireland", "Giant's Causeway, County Antrim, UK", 55.240800, -6.511600, "coastal_basalt"),
+    ("Lake Como alpine lake and villas Lombardy Italy", "Lake Como, Lombardy, Italy", 45.986700, 9.257200, "alpine_lake"),
+    ("Lake Tahoe clear blue water Sierra Nevada USA", "Lake Tahoe, California/Nevada, USA", 39.096800, -120.032400, "alpine_lake"),
+    ("Lake Baikal deep freshwater lake Siberia Russia", "Lake Baikal, Irkutsk, Russia", 53.558700, 108.165000, "lake"),
+    ("Lake Titicaca high altitude Andean lake Bolivia Peru", "Lake Titicaca, Bolivia/Peru", -15.925400, -69.335400, "lake"),
+    ("Lake Wakatipu Queenstown alpine lake New Zealand", "Lake Wakatipu, Otago, New Zealand", -45.050000, 168.650000, "alpine_lake"),
+    ("Victoria Falls Mosi-oa-Tunya waterfall Zambezi Zimbabwe Zambia", "Victoria Falls, Zimbabwe/Zambia", -17.924300, 25.855900, "waterfall"),
+    ("Black Forest evergreen woodland Baden-Wurttemberg Germany", "Black Forest (Schwarzwald), Germany", 48.300000, 8.150000, "forest"),
+    ("Redwood National Park giant coastal redwoods California", "Redwood National and State Parks, California, USA", 41.213200, -124.004600, "forest"),
+    ("Amazon Rainforest tropical river basin Manaus Brazil", "Amazon Rainforest, Manaus, Brazil", -3.119000, -60.021700, "rainforest"),
+    ("Yakushima ancient cedar temperate rainforest Japan", "Yakushima Primeval Forest, Kagoshima, Japan", 30.358500, 130.528600, "rainforest"),
+    ("Daintree Rainforest tropical coastal canopy Queensland Australia", "Daintree Rainforest, Queensland, Australia", -16.280000, 145.416700, "rainforest"),
+    ("Svalbard Arctic tundra mountains Spitsbergen Norway", "Svalbard Archipelago, Norway", 78.223200, 15.626700, "arctic_tundra"),
+    ("Franz Josef Glacier temperate glacier South Island New Zealand", "Franz Josef Glacier, New Zealand", -43.466700, 170.183300, "glacier"),
+    ("Columbia Icefield Athabasca Glacier Canadian Rockies Alberta", "Columbia Icefield, Alberta, Canada", 52.216700, -117.216700, "glacier"),
+    ("Perito Moreno Glacier ice wall Lake Argentino Patagonia", "Perito Moreno Glacier, Santa Cruz, Argentina", -50.483300, -73.050000, "glacier"),
+    ("Santorini white caldera cliff houses Cyclades Greece", "Santorini (Thira), Cyclades, Greece", 36.393200, 25.461500, "volcanic_island"),
+    ("Maui tropical volcanic beaches Hawaii USA", "Maui, Hawaiian Islands, USA", 20.798400, -156.331900, "volcanic_island"),
+    ("Galapagos Islands volcanic archipelago Ecuador", "Galápagos Islands, Ecuador", -0.953800, -90.965600, "volcanic_island"),
+    ("Bora Bora turquoise barrier reef French Polynesia", "Bora Bora, French Polynesia", -16.500400, -151.741500, "atoll_island"),
+    ("Zanzibar tropical spice island beaches Tanzania", "Zanzibar Archipelago, Tanzania", -6.165900, 39.202600, "island"),
+    ("Vestmannaeyjar volcanic cliffs Westman Islands Iceland", "Vestmannaeyjar (Westman Islands), Iceland", 63.438900, -20.273600, "volcanic_island"),
+
+    # --- Global Metropolises & Urban Hubs ---
+    ("Tokyo Skytree Shinjuku Shibuya skyline Japan", "Tokyo Metropolis, Japan", 35.689500, 139.691700, "urban_metropolis"),
+    ("Obelisco de Buenos Aires Avenida 9 de Julio Argentina", "Buenos Aires (Obelisco), Argentina", -34.603700, -58.381600, "urban_metropolis"),
+    ("Kenyatta International Convention Centre KICC Nairobi Kenya", "Nairobi City Center, Kenya", -1.286400, 36.817200, "urban_metropolis"),
+
+    # --- Famous World Highways & Scenic Corridors ---
+    ("Glencoe A82 Scottish Highlands mountain pass Scotland UK", "Glencoe A82 Valley, Scottish Highlands, UK", 56.666700, -4.983300, "scenic_corridor"),
+    ("Route 66 historic highway Arizona desert Southwest USA", "Route 66 Historic Corridor, Arizona, USA", 35.325800, -112.874200, "scenic_corridor"),
+    ("Ruta 40 Patagonia highway steppe mountains Argentina", "Ruta 40 Corridor, Patagonia, Argentina", -47.166700, -70.916700, "scenic_corridor"),
+    ("Stuart Highway Outback red desert Northern Territory Australia", "Stuart Highway, Outback, Australia", -23.700000, 133.880000, "scenic_corridor"),
+    ("Pamir Highway high altitude mountain pass Pamir Mountains Tajikistan", "Pamir Highway, GBAO, Tajikistan", 38.535800, 73.136100, "scenic_corridor"),
+    ("Garden Route coastal scenic road Western Cape South Africa", "Garden Route, Western Cape, South Africa", -34.035100, 23.046500, "scenic_corridor"),
+
+    # --- Famous Global Farmlands & Agricultural Landscapes ---
+    ("Val d'Orcia rolling hills cypress trees Tuscany Italy", "Val d'Orcia, Tuscany, Italy", 43.064200, 11.606700, "agricultural_landscape"),
+    ("Iowa cornfields Midwest agricultural plains USA", "Iowa Cornfields, Midwest, USA", 41.878000, -93.097700, "agricultural_landscape"),
+    ("Pampas fertile agricultural plains cattle ranching Argentina", "Pampas Agricultural Plains, Argentina", -36.616700, -64.283300, "agricultural_landscape"),
+    ("Hokkaido agricultural rolling fields Biei Furano Japan", "Hokkaido Plains, Hokkaido, Japan", 43.583300, 142.466700, "agricultural_landscape"),
+    ("Alentejo cork oak groves rolling farmland Portugal", "Alentejo Farmlands, Portugal", 38.016700, -7.866700, "agricultural_landscape"),
+    ("Canterbury Plains braided rivers pastoral farmland New Zealand", "Canterbury Plains, South Island, New Zealand", -43.616700, 172.116700, "agricultural_landscape"),
+
+    # --- Unique Valleys, Wilderness, and Polar Stations ---
+    ("Barun Valley Makalu Barun National Park Himalayas Nepal", "Barun Valley, Himalayas, Nepal", 27.700000, 87.100000, "himalayan_valley"),
+    ("Bwindi Impenetrable National Park mountain rainforest Uganda", "Bwindi Impenetrable Forest, Uganda", -1.050000, 29.616700, "rainforest"),
+    ("McMurdo Station scientific research base Ross Island Antarctica", "McMurdo Station, Ross Island, Antarctica", -77.846300, 166.668200, "polar_research_station"),
+    ("Zanskar frozen river Chadar Trek ice gorge Ladakh India", "Zanskar Frozen Gorge, Ladakh, India", 33.780000, 76.920000, "polar_frozen_river"),
 ]
 
 
@@ -159,14 +236,26 @@ class LandmarkMatcher:
             top_lm[1], top_prob, uniform_baseline, margin
         )
 
-        # Trigger if confidence exceeds min_threshold OR is 3x higher than uniform baseline with positive margin
-        is_significant = (top_prob >= min_confidence) or (top_prob >= uniform_baseline * 3.0 and margin >= 0.04)
+        # Trigger ONLY if confidence is high AND has substantial margin over runner-up
+        # Real landmarks achieve top_prob > 0.50 and margin > 0.20; close ties indicate ambiguity
+        is_significant = (top_prob >= 0.50) or (top_prob >= 0.30 and margin >= 0.08) or (top_prob >= 0.22 and margin >= 0.12)
 
         if not is_significant:
             return None
 
         prompt_text, canonical_name, lat, lon, category = top_lm
-        calibrated_radius_km = 0.05 if top_prob >= 0.30 else (0.10 if top_prob >= 0.20 else 0.25)
+        if category in ("monument", "national_monument", "fortress", "unesco_world_heritage", "world_landmark", "landmark_building", "cathedral", "grand_mosque", "national_mosque", "historical_mosque", "palace", "museum", "university_campus", "hospital_complex", "civic_building", "civic_market"):
+            calibrated_radius_km = 0.05 if top_prob >= 0.25 else 0.10
+            tier = "T1"
+        elif category in ("urban_metropolis", "scenic_corridor", "coastal_cliffs", "coastal_stacks", "coastal_cape", "bridge"):
+            calibrated_radius_km = 5.0
+            tier = "T2"
+        elif category in ("mountain_peak", "alpine_valley", "himalayan_valley", "rift_valley", "desert_dunes", "desert_basin", "arid_desert", "desert_valley", "alpine_lake", "lake", "waterfall", "glacier", "volcanic_island", "atoll_island", "island", "polar_research_station"):
+            calibrated_radius_km = 10.0
+            tier = "T2"
+        else:
+            calibrated_radius_km = 15.0
+            tier = "T3"
 
         return {
             "name": canonical_name,
@@ -175,7 +264,8 @@ class LandmarkMatcher:
             "longitude": lon,
             "confidence": top_prob,
             "margin": margin,
-            "tier": "T1",
+            "tier": tier,
             "radius_km": calibrated_radius_km,
             "rationale": f"High-confidence visual perception match against landmark database for {canonical_name}",
         }
+
