@@ -210,6 +210,26 @@ class Stage3Terrain:
         job_dir = Path(job_dir)
         job_dir.mkdir(parents=True, exist_ok=True)
 
+        # Check if visual cues indicate an urban building, flat terrain, or no natural horizon
+        vc = board.data.get("visual_cues", {})
+        vc_terrain = vc.get("terrain", {})
+        vc_scene = vc.get("scene_type", "")
+        if vc_scene in ("urban", "building", "landmark") or vc_terrain.get("relief") == "flat" or not vc_terrain.get("horizon_visible", True):
+            logger.info("[stage3_terrain] Terrain skyline matching not applicable for scene='%s', relief='%s'", vc_scene, vc_terrain.get("relief"))
+            board.data["stages_run"].append("stage3_terrain")
+            board.data["terrain_evaluation"] = {
+                "status": "not_applicable",
+                "reason": "Scene dominated by building/urban architecture; natural terrain skyline bypassed.",
+            }
+            board.save()
+            summary = {
+                "status": "not_applicable",
+                "reason": "Scene dominated by building/urban architecture; natural terrain skyline bypassed.",
+                "fit_results": {"best_score": 0.0, "best_viewpoint": None},
+            }
+            (job_dir / "terrain_results.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+            return summary, board
+
         # 1. Extract photo skyline
         overlay_path = job_dir / "skyline_overlay.png"
         if photo_skyline_override is not None:

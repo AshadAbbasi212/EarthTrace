@@ -116,3 +116,31 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
   - Safetensors provides zero-copy memory mapping, instantaneous loading (<0.1s on SSD), and complete protection against arbitrary code execution.
   - Removed redundant `pytorch_model.bin` to conserve 1.7 GB of local disk space.
 
+---
+
+## 15. Elimination of Spurious Mountain Skylines on Urban/Flat Scenes & CLIP Landmark Recognition
+- **Problem:** When users submitted photos of buildings or urban scenes (such as historic brick institutions or famous monuments), the pipeline was predicting random mountain ridgelines (e.g. Margalla Hills ridgelines with NCC=0.82) and naming them "Terrain Ridgeline Viewpoint" with high confidence, even though no mountains or natural skylines were present.
+- **Root Cause:**
+  1. In Stage 1 clue extraction, photos with fewer than 3 OCR text snippets fell back to a heuristic that categorized them as `rural_road` or `other`, defaulting `relief` to non-flat.
+  2. In `orchestrator.py`, Stage 3a (`Stage3Terrain`) was triggered whenever GeoCLIP placed prior mass near rugged terrain, without verifying if the photo actually exhibited a visible natural horizon.
+  3. In `Stage3Terrain`, searching 18 headings across rugged DEM cells near the prior center produced high numerical normalized cross-correlations against building rooflines/trees, and assigned exponential log-likelihood weights ($e^{3.5} \approx 33\times$) that hijacked the candidate board.
+  4. In `generator.py`, the DEM evidence status was marked as `"used"` unconditionally if `stage3_terrain` was executed.
+- **Solution & Decision:**
+  - Added local zero-shot CLIP classification in Stage 1 using `openai/clip-vit-large-patch14` with architectural and landmark prompts. Urban, brick institutional, and architectural monuments are classified with high confidence (>90%), setting `relief="flat"` and `horizon_visible=False`.
+  - Added specialized landmark matching against prominent national and international landmarks and educational/medical institutions with automatic geocoded coordinate assignment.
+  - Implemented strict gating in `orchestrator.py`: `Stage3Terrain` is strictly skipped when `relief == "flat"` or `horizon_visible == False` or `scene_type in ("urban", "building", "landmark")`.
+  - Added early-exit in `Stage3Terrain.process`: immediately returns `status: "not_applicable"` and fit score `0.0` when visual clues indicate flat or urban scenery.
+  - Updated report generation to honestly report DEM evidence status as `"not applicable"` when terrain matching is bypassed.
+
+---
+
+## 16. Next-Gen 3D Dark Tactical Cyber-HUD Frontend Architecture
+- **Problem:** User reported that the previous frontend was too generic and requested a professional, modern 3D dark-themed interface following current web design trends.
+- **Solution & Decision:**
+  - Redesigned the entire user interface into an ultra-premium 3D dark tactical cyber-HUD aesthetic (`#05070d` deep obsidian theme).
+  - Integrated dynamic 3D card tilt physics using CSS `perspective: 1200px` and `transform-style: preserve-3d` with mouse-following 3D perspective transforms and specular dynamic glare lighting (`.card-glare`).
+  - Implemented a 60 FPS interactive 3D particle earth globe canvas widget on the header displaying real-time latitude/longitude coordinates and orientation rings.
+  - Styled all panels with cybernetic HUD corner brackets (`┌ ┐ └ ┘`), glowing telemetry status pills, monospaced coordinate badges, and neon cyber cyan/emerald accents.
+  - Preserved complete compliance with all test suites (`tests/test_frontend.py` 3/3 passed) and the mandatory responsible-use policy.
+
+

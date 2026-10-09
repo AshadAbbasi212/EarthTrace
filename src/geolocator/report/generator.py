@@ -169,8 +169,9 @@ class ReportGenerator:
             }
 
         # Evidence 2: Elevation Skylines
-        if "stage3_terrain" in stages_run or terrain_data:
-            fit_score = terrain_data.get("fit_results", {}).get("best_score", 0.0)
+        dem_status = terrain_data.get("status", "")
+        fit_score = terrain_data.get("fit_results", {}).get("best_score", 0.0) if terrain_data else 0.0
+        if ("stage3_terrain" in stages_run or terrain_data) and dem_status != "not_applicable" and fit_score >= 0.70:
             dem_evidence = {
                 "name": "Elevation Skylines",
                 "status": "used",
@@ -181,7 +182,7 @@ class ReportGenerator:
             dem_evidence = {
                 "name": "Elevation Skylines",
                 "status": "not applicable",
-                "findings": "Horizon obstructed or scene dominated by urban/flat terrain",
+                "findings": terrain_data.get("reason", "Natural terrain skyline not applicable: scene dominated by urban/building architecture or flat horizon"),
                 "artifact": None,
             }
 

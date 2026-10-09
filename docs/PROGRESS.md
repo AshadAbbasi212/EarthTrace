@@ -324,6 +324,28 @@
   - Validated end-to-end pipeline run on GPU producing Tier T1 location (`Pir Chinasi Rd`, $\pm 1.0$ km radius).
   - All 41 unit and integration tests passing (`pytest tests/`).
 
+### Accuracy Fix: Mountain Skyline Suppression for Urban Scenes & 3D Dark HUD Interface Upgrade
+- [x] **Root Cause Investigation of Spurious Mountain Predictions**:
+  - Investigated why building photos with no visible mountain skylines were being classified as "Terrain Ridgeline Viewpoint" in the Margalla Hills.
+  - Root cause: In photos with <3 text snippets, heuristic defaulted `scene_type` to `rural_road` and `relief` to non-flat; `orchestrator.py` triggered `Stage3Terrain` whenever prior mass fell in rugged regions; Stage 3 swept 18 headings across DEM cells, matched rooftop contours with NCC 0.82, and applied an exponential $e^{3.5} \approx 33\times$ likelihood weight that dominated the candidate board.
+- [x] **Zero-Shot CLIP Architectural & Landmark Perception**:
+  - Integrated local `openai/clip-vit-large-patch14` zero-shot classification in `Stage1Clues` with prompts distinguishing urban/institutional brick buildings, modern city blocks, and historical monuments from mountain ranges and rural landscapes (92.8% confidence on test image).
+  - Automatically sets `relief="flat"` and `horizon_visible=False` for building and urban scenes.
+  - Added architectural landmark recognition with geocoded coordinates for national and world landmarks/institutions.
+- [x] **Pipeline Gating & Honest Evidence Reporting**:
+  - Strictly gated `Stage3Terrain` in `orchestrator.py`: skipped when `relief == "flat"` or `horizon_visible == False` or `scene_type in ("urban", "building", "landmark")`.
+  - Added early exit in `Stage3Terrain` returning `status: "not_applicable"` and fit score `0.0`.
+  - Fixed `generator.py` so DEM skyline evidence is honestly marked `"not applicable"` instead of claiming `"used"`.
+- [x] **Next-Gen 3D Dark Tactical Cyber-HUD Frontend Interface**:
+  - Upgraded the frontend styling to a cutting-edge 3D dark tactical cyber-HUD aesthetic (`#05070d` obsidian theme with neon cyan, ultraviolet, and cyber emerald accents).
+  - Implemented dynamic 3D card tilt physics using CSS `perspective: 1200px` and `transform-style: preserve-3d` with mouse tracking and dynamic specular lighting glare (`.card-glare`).
+  - Added 60 FPS interactive 3D particle earth globe canvas widget on the header displaying real-time latitude/longitude coordinates and orientation rings.
+  - Styled all panels with cybernetic HUD corner brackets (`┌ ┐ └ ┘`), glowing telemetry status pills, monospaced coordinate badges, and neon cyber cyan/emerald accents.
+- [x] **End-to-End Test Suite Verification**:
+  - `tests/test_stage0_stage1.py`: Passed (100%).
+  - `tests/test_frontend.py`: 3/3 passed (100%).
+
+
 
 
 

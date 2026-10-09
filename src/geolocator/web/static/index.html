@@ -3,23 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global Photo Geolocator</title>
+  <title>Global Photo Geolocator — 3D Geospatial Intelligence</title>
   <meta name="description" content="Autonomous, keyless global photo geolocation engine powered by local models and open geospatial data.">
   <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+  <!-- Top Mission Control Navigation -->
   <header>
-    <div class="logo-area">
-      <div class="logo-icon">🌐</div>
-      <div class="logo-title">GLOBAL PHOTO GEOLOCATOR</div>
+    <div class="header-left">
+      <div class="logo-area">
+        <div class="logo-icon-3d">🌐</div>
+        <div class="logo-title-group">
+          <div class="logo-title">GLOBAL PHOTO GEOLOCATOR</div>
+          <div class="logo-sub">KEYLESS MULTI-HYPOTHESIS 3D INTEL</div>
+        </div>
+      </div>
+      <div class="header-globe-widget" id="header-globe-widget" title="Interactive 3D Tactical Globe">
+        <canvas id="header-globe-canvas" width="64" height="64"></canvas>
+        <span class="header-globe-coords" id="header-globe-coords">00.00°N, 00.00°E</span>
+      </div>
     </div>
     <div class="system-status">
-      <div class="status-indicator">
+      <div class="status-badge-3d">
         <span class="pulse-dot" id="system-status-dot"></span>
-        <span id="system-status-text">System Ready</span>
+        <span id="system-status-text">SYSTEM READY</span>
       </div>
-      <span id="gpu-info" style="font-size: 0.8rem; opacity: 0.7;">Local GPU</span>
+      <div class="gpu-pill" id="gpu-info">
+        <span>⚡</span> <span>LOCAL GPU</span>
+      </div>
     </div>
   </header>
 
@@ -28,21 +40,27 @@
     <div class="left-panel">
       <!-- Responsible Use Banner -->
       <div class="notice-banner">
-        <strong>Responsible Use Notice:</strong> This system is for open research and environmental navigation.
+        <strong>Responsible Use Notice:</strong> This system is for open research, historical verification, and disaster mapping.
         Do not use this system to locate or track non-consenting individuals.
       </div>
 
       <!-- Upload Card -->
-      <div class="card" id="upload-card">
+      <div class="card card-3d" id="upload-card">
+        <div class="card-glare"></div>
+        <div class="hud-corner top-left"></div>
+        <div class="hud-corner top-right"></div>
+        <div class="hud-corner bottom-left"></div>
+        <div class="hud-corner bottom-right"></div>
+
         <div class="card-title">
-          <span>📷</span> Target Photo Upload
+          <span class="icon">📷</span> Target Photo Upload
         </div>
         
         <div class="dropzone" id="dropzone">
           <input type="file" id="file-input" accept="image/*" style="display: none;">
-          <div class="dropzone-icon">📥</div>
-          <div style="font-weight: 600; margin-bottom: 0.25rem;">Drop image here or click to browse</div>
-          <div style="font-size: 0.8rem; color: var(--text-muted);">JPEG, PNG, WebP up to 30 MB</div>
+          <div class="dropzone-icon-3d">📥</div>
+          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem; color: #fff;">Drop target image here or click to browse</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">JPEG, PNG, WebP up to 30 MB &bull; EXIF Fast-Path Supported</div>
         </div>
 
         <div class="preview-container" id="preview-container">
@@ -61,24 +79,30 @@
         </div>
 
         <button type="button" class="btn-primary" id="locate-btn" disabled>
-          🔍 Geolocate Photo
+          ⚡ INITIATE GEOLOCATION RUN
         </button>
       </div>
 
       <!-- Live Progress & Timeline Card -->
-      <div class="card progress-card" id="progress-card">
-        <div class="card-title" style="display: flex; justify-content: space-between;">
+      <div class="card card-3d progress-card" id="progress-card">
+        <div class="card-glare"></div>
+        <div class="hud-corner top-left"></div>
+        <div class="hud-corner top-right"></div>
+        <div class="hud-corner bottom-left"></div>
+        <div class="hud-corner bottom-right"></div>
+
+        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
           <span style="display: flex; align-items: center; gap: 0.5rem;">
-            <span>⚡</span> <span id="pipeline-status-title">Pipeline Active</span>
+            <span class="icon">⚡</span> <span id="pipeline-status-title">Pipeline Active</span>
           </span>
-          <span id="progress-pct" style="font-size: 0.85rem; color: var(--accent-blue);">0%</span>
+          <span id="progress-pct" style="font-family: var(--font-mono); font-size: 0.95rem; color: var(--cyan); font-weight: 700;">0%</span>
         </div>
 
         <div class="progress-bar-container">
           <div class="progress-bar-fill" id="progress-bar-fill"></div>
         </div>
 
-        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;" id="progress-step-label">
+        <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.75rem;" id="progress-step-label">
           Awaiting initialization...
         </div>
 
@@ -87,8 +111,8 @@
         </div>
 
         <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
-          <button type="button" class="btn-secondary" id="cancel-btn" style="color: var(--accent-red); border-color: rgba(239, 68, 68, 0.3);">
-            Cancel Job
+          <button type="button" class="btn-secondary" id="cancel-btn" style="color: var(--red); border-color: rgba(239, 68, 68, 0.3);">
+            ✕ Cancel Job
           </button>
         </div>
       </div>
@@ -96,23 +120,35 @@
 
     <!-- Right Column: Visualization, Evidence & Reports -->
     <div class="right-panel">
-      <!-- Leaflet Map Card -->
-      <div class="card map-card">
+      <!-- Leaflet Map Card with 3D Depth Frame -->
+      <div class="card card-3d map-card">
+        <div class="card-glare"></div>
+        <div class="hud-corner top-left"></div>
+        <div class="hud-corner top-right"></div>
+        <div class="hud-corner bottom-left"></div>
+        <div class="hud-corner bottom-right"></div>
+
         <div id="map"></div>
         <div class="map-badge" id="map-badge">
-          <span>📍</span>
+          <span>🎯</span>
           <span id="map-badge-text">Worldwide Coverage Ready</span>
         </div>
       </div>
 
       <!-- Results Card (Revealed on Completion) -->
-      <div class="card results-card" id="results-card">
+      <div class="card card-3d results-card" id="results-card">
+        <div class="card-glare"></div>
+        <div class="hud-corner top-left"></div>
+        <div class="hud-corner top-right"></div>
+        <div class="hud-corner bottom-left"></div>
+        <div class="hud-corner bottom-right"></div>
+
         <div class="result-header">
           <div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Determined Location</div>
+            <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.08em;">Determined Location Target</div>
             <div class="result-location" id="result-location">Analyzing...</div>
           </div>
-          <div class="tier-badge" id="tier-badge" style="background: #3b82f6;">Tier T-</div>
+          <div class="tier-badge" id="tier-badge" style="background: var(--cyan);">Tier T-</div>
         </div>
 
         <div class="result-stats">
@@ -134,7 +170,7 @@
           </div>
         </div>
 
-        <div style="font-size: 0.85rem; line-height: 1.5; color: var(--text-muted); margin-bottom: 1rem;" id="result-rationale">
+        <div style="font-size: 0.88rem; line-height: 1.6; color: #cbd5e1; margin-bottom: 1.25rem;" id="result-rationale">
           <!-- Full reasoning trail -->
         </div>
 
@@ -155,10 +191,16 @@
       </div>
 
       <!-- 4 Mandatory Evidence Tabs Section -->
-      <div class="card" id="evidence-section">
+      <div class="card card-3d" id="evidence-section">
+        <div class="card-glare"></div>
+        <div class="hud-corner top-left"></div>
+        <div class="hud-corner top-right"></div>
+        <div class="hud-corner bottom-left"></div>
+        <div class="hud-corner bottom-right"></div>
+
         <div class="evidence-section-header">
           <div class="card-title" style="margin-bottom: 0;">
-            <span>🔬</span> Multimodal Verification Evidence (4 Pillars)
+            <span class="icon">🔬</span> Multimodal Verification Evidence (4 Pillars)
           </div>
           <!-- Navigation Tabs Bar -->
           <div class="evidence-tabs-bar" role="tablist">

@@ -508,6 +508,15 @@
 
     const alternatives = report.top_alternatives || report.alternatives || [];
 
+    // Update 3D Tactical Globe Target
+    if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
+      setGlobeTarget(lat, lon);
+      const latStr = `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}`;
+      const lonStr = `${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`;
+      const globeCoordsEl = document.getElementById('header-globe-coords');
+      if (globeCoordsEl) globeCoordsEl.textContent = `${latStr}, ${lonStr}`;
+    }
+
     // Render Map
     try {
       if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
@@ -914,9 +923,149 @@
     }
   });
 
+  // --- 3D Tactical Particle Globe Engine ---
+  let globeTargetLat = null;
+  let globeTargetLon = null;
+  let globeCurrentRotY = 0;
+  let globeCurrentRotX = 0.2;
+
+  function setGlobeTarget(lat, lon) {
+    globeTargetLat = lat;
+    globeTargetLon = lon;
+  }
+
+  function initGlobeCanvas() {
+    const canvas = document.getElementById('header-globe-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const width = canvas.width;
+    const height = canvas.height;
+    const radius = width * 0.42;
+    const cx = width / 2;
+    const cy = height / 2;
+
+    // Generate fixed 3D sphere points (parallels & meridians)
+    const points = [];
+    for (let lat = -60; lat <= 60; lat += 30) {
+      const phi = (lat * Math.PI) / 180;
+      const cosPhi = Math.cos(phi);
+      const sinPhi = Math.sin(phi);
+      for (let lon = 0; lon < 360; lon += 24) {
+        const theta = (lon * Math.PI) / 180;
+        points.push({
+          x: radius * cosPhi * Math.cos(theta),
+          y: radius * sinPhi,
+          z: radius * cosPhi * Math.sin(theta)
+        });
+      }
+    }
+
+    function animateGlobe() {
+      ctx.clearRect(0, 0, width, height);
+
+      // Rotate continuously or smoothly steer toward target coordinates
+      if (globeTargetLon !== null && globeTargetLat !== null) {
+        const targetRotY = - (globeTargetLon * Math.PI) / 180 + Math.PI / 2;
+        globeCurrentRotY += (targetRotY - globeCurrentRotY) * 0.05;
+        const targetRotX = (globeTargetLat * Math.PI) / 180 * 0.4;
+        globeCurrentRotX += (targetRotX - globeCurrentRotX) * 0.05;
+      } else {
+        globeCurrentRotY += 0.015;
+      }
+
+      const cosY = Math.cos(globeCurrentRotY);
+      const sinY = Math.sin(globeCurrentRotY);
+      const cosX = Math.cos(globeCurrentRotX);
+      const sinX = Math.sin(globeCurrentRotX);
+
+      // Outer atmosphere rim
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Render 3D points
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        const x1 = p.x * cosY - p.z * sinY;
+        const z1 = p.x * sinY + p.z * cosY;
+        const y2 = p.y * cosX - z1 * sinX;
+        const z2 = p.y * sinX + z1 * cosX;
+
+        if (z2 > -12) {
+          const depthAlpha = Math.max(0.15, (z2 + radius) / (2 * radius));
+          const screenX = cx + x1;
+          const screenY = cy - y2;
+
+          ctx.fillStyle = `rgba(0, 240, 255, ${depthAlpha * 0.75})`;
+          ctx.beginPath();
+          ctx.arc(screenX, screenY, depthAlpha > 0.65 ? 1.2 : 0.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // If target locked, draw pulsing beacon reticle
+      if (globeTargetLat !== null && globeTargetLon !== null) {
+        const phi = (globeTargetLat * Math.PI) / 180;
+        const theta = (globeTargetLon * Math.PI) / 180;
+        const tx = radius * Math.cos(phi) * Math.cos(theta);
+        const ty = radius * Math.sin(phi);
+        const tz = radius * Math.cos(phi) * Math.sin(theta);
+
+        const x1 = tx * cosY - tz * sinY;
+        const z1 = tx * sinY + tz * cosY;
+        const y2 = ty * cosX - z1 * sinX;
+        const z2 = ty * sinX + z1 * cosX;
+
+        if (z2 > 0) {
+          const screenX = cx + x1;
+          const screenY = cy - y2;
+          ctx.beginPath();
+          ctx.arc(screenX, screenY, 3, 0, Math.PI * 2);
+          ctx.fillStyle = '#00f0ff';
+          ctx.shadowColor = '#00f0ff';
+          ctx.shadowBlur = 10;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      requestAnimationFrame(animateGlobe);
+    }
+
+    animateGlobe();
+  }
+
+  // --- 3D Card Hover Physics ---
+  function initCardTilt3D() {
+    const cards = document.querySelectorAll('.card-3d');
+    cards.forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top) / rect.height;
+        const tiltX = (y - 0.5) * -10;
+        const tiltY = (x - 0.5) * 10;
+        card.style.transform = `perspective(1000px) rotateX(${tiltX.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg) translateY(-2px)`;
+        card.style.setProperty('--mouse-x', `${(x * 100).toFixed(1)}%`);
+        card.style.setProperty('--mouse-y', `${(y * 100).toFixed(1)}%`);
+      });
+
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)';
+      });
+    });
+  }
+
   // --- Initial Launch ---
   window.addEventListener('DOMContentLoaded', () => {
     initMap();
     checkHealth();
+    initGlobeCanvas();
+    initCardTilt3D();
   });
 })();
+
