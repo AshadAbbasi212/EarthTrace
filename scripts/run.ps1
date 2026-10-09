@@ -3,15 +3,18 @@
 # ==============================================================================
 # Usage:
 #   powershell -ExecutionPolicy Bypass -File scripts\run.ps1
-#   powershell -ExecutionPolicy Bypass -File scripts\run.ps1 -Host 0.0.0.0 -Port 8080
+#   powershell -ExecutionPolicy Bypass -File scripts\run.ps1 -Port 8080
+#   powershell -ExecutionPolicy Bypass -File scripts\run.ps1 -HostAddress 0.0.0.0 -Port 8050
+#   powershell -ExecutionPolicy Bypass -File scripts\run.ps1 -KillExisting
 # ==============================================================================
 
 [CmdletBinding()]
 param(
     [string]$HostAddress = "127.0.0.1",
-    [int]$Port = 8000,
+    [int]$Port = 8080,
     [switch]$Reload,
-    [switch]$OpenBrowser
+    [switch]$OpenBrowser,
+    [switch]$KillExisting
 )
 
 $ErrorActionPreference = "Stop"
@@ -28,6 +31,40 @@ if (-not (Test-Path $VenvPython)) {
     Write-Host "Please run the setup script first:" -ForegroundColor Yellow
     Write-Host "  powershell -ExecutionPolicy Bypass -File scripts\setup_windows.ps1`n" -ForegroundColor White
     exit 1
+}
+
+# ------------------------------------------------------------------------------
+# Port Collision & Address Resolution
+# ------------------------------------------------------------------------------
+function Test-PortOccupied([int]$CheckPort) {
+    $connections = Get-NetTCPConnection -LocalPort $CheckPort -ErrorAction SilentlyContinue
+    if ($null -ne $connections -and $connections.Count -gt 0) {
+        return $true
+    }
+    return $false
+}
+
+$RequestedPort = $Port
+
+if ($KillExisting) {
+    $existingConns = Get-NetTCPConnection -LocalPort $RequestedPort -ErrorAction SilentlyContinue
+    if ($existingConns) {
+        $procIds = $existingConns.OwningProcess | Where-Object { $_ -gt 0 } | Select-Object -Unique
+        foreach ($pidToKill in $procIds) {
+            Write-Host "[CLEANUP] Stopping existing process (PID $pidToKill) on port $RequestedPort..." -ForegroundColor Yellow
+            Stop-Process -Id $pidToKill -Force -ErrorAction SilentlyContinue
+        }
+        Start-Sleep -Milliseconds 800
+    }
+}
+
+if (Test-PortOccupied -CheckPort $Port) {
+    Write-Host "[NOTICE] Address http://${HostAddress}:${Port} is already in use or locked by Windows TCP." -ForegroundColor Yellow
+    $OriginalPort = $Port
+    while (Test-PortOccupied -CheckPort $Port) {
+        $Port++
+    }
+    Write-Host "[AUTO-ASSIGN] Automatically selected available address: http://${HostAddress}:${Port}`n" -ForegroundColor Cyan
 }
 
 Write-Host "`n============================================================" -ForegroundColor Cyan
