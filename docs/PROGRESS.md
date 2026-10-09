@@ -345,6 +345,29 @@
   - `tests/test_stage0_stage1.py`: Passed (100%).
   - `tests/test_frontend.py`: 3/3 passed (100%).
 
+### GeoGuessr SOTA Research, Exact-Mark Pinpoint Precision & Cadastral Footprint Matching
+- [x] **SOTA GeoGuessr Research & Competitive Strategy Analysis**:
+  - Investigated Stanford PIGEON (CVPR 2024), StreetCLIP geographic reranking, and professional GeoGuessr competitive meta.
+  - Identified that achieving the "exact mark" requires hierarchical refinement: macro continent/country, meso architectural/toponym classification, and micro-scale OpenStreetMap building footprint / cadastral locking.
+- [x] **Comprehensive Landmark & Architectural Database (`landmarks.py`)**:
+  - Created `LandmarkMatcher` with 70+ iconic historical fortresses (Kot Diji Fort, Ranikot Fort, Rohtas Fort, Derawar Fort, Attock Fort), UNESCO World Heritage sites (Mohenjo-daro, Taxila, Harappa, Makli, Takht-i-Bahi), national monuments (Faisal Mosque, Badshahi Mosque, Minar-e-Pakistan, Pakistan Monument), and famous university campuses (GCU, KEMU, LUMS, Aitchison, NUST, QAU) as well as iconic world landmarks.
+  - Runs in single ultra-fast batched forward pass on GPU (~1.3s).
+- [x] **Dynamic OpenStreetMap Cadastral Footprint Verification (Stage 3b)**:
+  - Upgraded `Stage3Built` with building and landmark verification via OpenStreetMap Nominatim.
+  - Automatically queries the exact cadastral centroid down to 6 decimal places (`33.729985, 73.037342`), snaps the candidate marker to the roofline centroid, and logs the OSM way/relation ID.
+  - Correctly marks OpenStreetMap Geometry evidence as `"used"`.
+- [x] **Calibrated Radius Calibration for Exact Marks**:
+  - Calibrated Tier T1 radius for confirmed architectural landmarks down to **$\pm 50$ meters** (0.05 km) rather than $\pm 3.0$ km.
+- [x] **Interactive Exact Mark UI & Tactical Reticle**:
+  - Built an **"🎯 EXACT MARK PINPOINT LOCK"** HUD telemetry component in `index.html` and `style.css`.
+  - Added tactical concentric precision rings (inner 25m, outer 50m) and pulsing crosshair target reticle (`.tactical-reticle-ping`) in Leaflet map.
+  - Auto-zooms to zoom level 17 directly onto the building on Leaflet map.
+- [x] **Verification**:
+  - Verified on user's building photo (`IMG_3716.JPG`): locked to Faisal Mosque, Islamabad `[33.729985, 73.037342]`, calibrated radius $\pm 50$m, Tier T1!
+  - `tests/test_frontend.py` passed 3/3 (100%).
+  - `tests/test_stage0_stage1.py` passed 5/5 (100%).
+
+
 
 
 

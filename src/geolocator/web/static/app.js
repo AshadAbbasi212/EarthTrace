@@ -493,6 +493,20 @@
 
     resultRationale.textContent = top.rationale || report.summary || 'Reasoning completed with multimodal evidence.';
 
+    // Setup Exact Mark Pinpoint HUD
+    const exactMarkHud = document.getElementById('exact-mark-hud');
+    const exactMetricPrec = document.getElementById('exact-metric-precision');
+    if (exactMarkHud) {
+      if (tier === 'T1' && radiusM <= 150) {
+        exactMarkHud.style.display = 'flex';
+        if (exactMetricPrec) {
+          exactMetricPrec.textContent = `PRECISION: ±${Math.round(radiusM)}m (EXACT MARK)`;
+        }
+      } else {
+        exactMarkHud.style.display = 'none';
+      }
+    }
+
     // Setup action bar links
     openReportHtmlBtn.href = appendPassphraseParam(`/api/jobs/${jobId}/report.html`);
     downloadJsonBtn.href = appendPassphraseParam(`/api/jobs/${jobId}/report`);
@@ -539,35 +553,78 @@
     if (!mapLayers || !map) return;
     mapLayers.clearLayers();
 
-    // 1. Error Circle
-    const circle = L.circle([lat, lon], {
-      radius: radiusM,
-      color: '#3b82f6',
-      fillColor: '#3b82f6',
-      fillOpacity: 0.18,
-      weight: 2
-    }).addTo(mapLayers);
+    const isExactMark = (tier === 'T1' && radiusM <= 150);
 
-    // 2. Custom pulsing pin marker for top solution
-    const pinHtml = `
-      <div style="
-        width: 18px;
-        height: 18px;
-        background: #3b82f6;
-        border: 3px solid #ffffff;
-        border-radius: 50%;
-        box-shadow: 0 0 10px rgba(59, 130, 246, 0.9);
-      "></div>
-    `;
+    // 1. Error Circle & Concentric Tactical Rings
+    if (isExactMark) {
+      // Concentric precision rings for Exact Mark
+      L.circle([lat, lon], {
+        radius: radiusM,
+        color: '#10b981',
+        fillColor: '#10b981',
+        fillOpacity: 0.15,
+        weight: 2,
+        dashArray: '4, 4'
+      }).addTo(mapLayers);
+
+      L.circle([lat, lon], {
+        radius: Math.max(15, radiusM * 0.5),
+        color: '#00f0ff',
+        fillColor: '#00f0ff',
+        fillOpacity: 0.25,
+        weight: 1.5
+      }).addTo(mapLayers);
+    } else {
+      L.circle([lat, lon], {
+        radius: radiusM,
+        color: '#3b82f6',
+        fillColor: '#3b82f6',
+        fillOpacity: 0.18,
+        weight: 2
+      }).addTo(mapLayers);
+    }
+
+    // 2. Custom pulsing pin or Tactical Reticle marker
+    let pinHtml = '';
+    let iconSize = [18, 18];
+    let iconAnchor = [9, 9];
+
+    if (isExactMark) {
+      pinHtml = `<div class="tactical-reticle-ping"></div>`;
+      iconSize = [28, 28];
+      iconAnchor = [14, 14];
+    } else {
+      pinHtml = `
+        <div style="
+          width: 18px;
+          height: 18px;
+          background: #3b82f6;
+          border: 3px solid #ffffff;
+          border-radius: 50%;
+          box-shadow: 0 0 10px rgba(59, 130, 246, 0.9);
+        "></div>
+      `;
+    }
+
     const pinIcon = L.divIcon({
       html: pinHtml,
       className: 'camera-pin',
-      iconSize: [18, 18],
-      iconAnchor: [9, 9]
+      iconSize: iconSize,
+      iconAnchor: iconAnchor
     });
 
     const marker = L.marker([lat, lon], { icon: pinIcon }).addTo(mapLayers);
-    marker.bindPopup(`<b>Estimated Position</b><br>Lat: ${lat.toFixed(5)}<br>Lon: ${lon.toFixed(5)}<br>Tier: ${tier}<br>Radius: ±${(radiusM/1000).toFixed(1)} km`);
+    const popupText = isExactMark 
+      ? `<b>🎯 EXACT MARK PINPOINT</b><br>Lat: ${lat.toFixed(6)}<br>Lon: ${lon.toFixed(6)}<br>Precision: ±${Math.round(radiusM)} m<br>Status: Cadastral Footprint Confirmed`
+      : `<b>Estimated Position</b><br>Lat: ${lat.toFixed(5)}<br>Lon: ${lon.toFixed(5)}<br>Tier: ${tier}<br>Radius: ±${(radiusM/1000).toFixed(1)} km`;
+    marker.bindPopup(popupText);
+
+    // Zoom into exact target
+    if (isExactMark) {
+      map.setView([lat, lon], 17, { animate: true });
+    } else {
+      map.fitBounds(L.circle([lat, lon], { radius: radiusM }).getBounds(), { padding: [40, 40], maxZoom: 14 });
+    }
 
     // 3. Camera Heading Ray if available
     if (heading !== null && heading !== undefined && !isNaN(heading)) {

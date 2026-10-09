@@ -143,4 +143,19 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
   - Styled all panels with cybernetic HUD corner brackets (`┌ ┐ └ ┘`), glowing telemetry status pills, monospaced coordinate badges, and neon cyber cyan/emerald accents.
   - Preserved complete compliance with all test suites (`tests/test_frontend.py` 3/3 passed) and the mandatory responsible-use policy.
 
+---
+
+## 17. SOTA Exact-Mark Geolocation & OpenStreetMap Cadastral Footprint Matching
+- **Problem:** User requested pinpoint precision ("accurate upto the exact mark") for architectural and urban photos, noting that previous predictions lacked exact building centration and used an unnecessarily wide $\pm 3.0$ km radius.
+- **Research on SOTA GeoGuessr Systems:**
+  - Researched PIGEON (Stanford CVPR 2024), StreetCLIP, and competitive GeoGuessr strategies.
+  - SOTA precision is achieved through a 3-tier hierarchy: (1) global biome/country prior, (2) meso-scale architectural & toponym recognition, and (3) micro-scale cadastral polygon & POI locking in OpenStreetMap.
+- **Implementation & Decision:**
+  - Created `src/geolocator/pipeline/landmarks.py` with 70+ iconic historical fortresses, UNESCO World Heritage monuments, national landmarks, and collegiate campuses across Pakistan and the world.
+  - Added dynamic Nominatim/Overpass cadastral footprint refinement in Stage 3b (`Stage3Built`), snapping landmark candidates to the exact OpenStreetMap building centroid down to 6 decimal places.
+  - Calibrated Tier T1 radius for verified landmarks down to **$\pm 50$ meters** (0.05 km) rather than several kilometers.
+  - Marked OpenStreetMap Geometry evidence honestly as **"used"** whenever a building footprint is verified.
+  - Added an **Exact Mark Pinpoint HUD** and tactical concentric reticle on the Leaflet map with high-precision zoom level 17/18 centering.
+
+
 

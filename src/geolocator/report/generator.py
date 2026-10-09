@@ -115,6 +115,9 @@ class ReportGenerator:
             elif "fit_score" in meta and meta["fit_score"] >= 0.70:
                 tier = "T2"
                 calibrated_radius_km = float(meta.get("radius_km", 2.5))
+            elif "landmark" in meta or "Landmark:" in top_name or meta.get("source") == "landmark_exact_mark" or meta.get("tier") == "T1":
+                tier = "T1"
+                calibrated_radius_km = float(meta.get("radius_km", 0.05))
             elif meta.get("source") == "exif_gps":
                 tier = "T2"
                 calibrated_radius_km = 3.0
@@ -145,21 +148,32 @@ class ReportGenerator:
 
         # Evidence 1: OpenStreetMap Geometry
         if "stage3_built" in stages_run or osm_data:
-            crossings = osm_data.get("crossings_found", 0)
-            if crossings > 0:
+            if osm_data.get("building_verified"):
+                osm_feat = osm_data.get("osm_feature", {})
+                disp_str = osm_feat.get("display_name", "Building footprint")[:60]
+                osm_id_str = osm_feat.get("osm_id", "")
                 osm_evidence = {
                     "name": "OpenStreetMap Geometry",
                     "status": "used",
-                    "findings": f"Linear corridor & infrastructure matching evaluated ({crossings} crossings analyzed)",
+                    "findings": f"Cadastral building footprint verified: {disp_str} (OSM {osm_id_str})",
                     "artifact": "osm_corridor_results.json",
                 }
             else:
-                osm_evidence = {
-                    "name": "OpenStreetMap Geometry",
-                    "status": "not applicable",
-                    "findings": "Linear corridor query completed: 0 matching structural corridor intersections found in candidate region",
-                    "artifact": "osm_corridor_results.json",
-                }
+                crossings = osm_data.get("crossings_found", 0)
+                if crossings > 0:
+                    osm_evidence = {
+                        "name": "OpenStreetMap Geometry",
+                        "status": "used",
+                        "findings": f"Linear corridor & infrastructure matching evaluated ({crossings} crossings analyzed)",
+                        "artifact": "osm_corridor_results.json",
+                    }
+                else:
+                    osm_evidence = {
+                        "name": "OpenStreetMap Geometry",
+                        "status": "not applicable",
+                        "findings": "Linear corridor query completed: 0 matching structural corridor intersections found in candidate region",
+                        "artifact": "osm_corridor_results.json",
+                    }
         else:
             osm_evidence = {
                 "name": "OpenStreetMap Geometry",

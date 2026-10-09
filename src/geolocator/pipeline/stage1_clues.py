@@ -24,6 +24,7 @@ from geolocator.providers.nominatim import NominatimProvider
 from geolocator.pipeline.board import CandidateBoard
 from geolocator.pipeline.hint_parser import HintParser
 from geolocator.pipeline.schema import ClueExtractionResult, TextSignItem, RegionGuessItem
+from geolocator.pipeline.landmarks import LandmarkMatcher
 
 logger = logging.getLogger("geolocator.pipeline.stage1")
 
@@ -368,46 +369,27 @@ class Stage1Clues:
                 relief = "flat"
                 horizon_visible = False
                 
-                # Check known prominent national and world landmarks / institutions
-                landmark_queries = [
-                    ("Children's Hospital, Lahore, Pakistan", (31.4820, 74.3435), "Children Hospital Lahore"),
-                    ("Mayo Hospital, Lahore, Pakistan", (31.5724, 74.3120), "Mayo Hospital Lahore"),
-                    ("Services Hospital, Lahore, Pakistan", (31.5398, 74.3364), "Services Hospital Lahore"),
-                    ("King Edward Medical University, Lahore, Pakistan", (31.5724, 74.3168), "KEMU Lahore"),
-                    ("Lahore High Court, Lahore, Pakistan", (31.5620, 74.3142), "Lahore High Court"),
-                    ("Supreme Court of Pakistan, Islamabad", (33.7297, 73.0934), "Supreme Court Islamabad"),
-                    ("Prime Minister Secretariat, Islamabad, Pakistan", (33.7380, 73.0970), "PM Secretariat Islamabad"),
-                    ("Parliament House of Pakistan, Islamabad", (33.7314, 73.0955), "Parliament House Islamabad"),
-                    ("Faisal Mosque, Islamabad, Pakistan", (33.7296, 73.0372), "Faisal Mosque Islamabad"),
-                    ("Badshahi Mosque, Lahore, Pakistan", (31.5881, 74.3108), "Badshahi Mosque Lahore"),
-                    ("Minar-e-Pakistan, Lahore, Pakistan", (31.5925, 74.3095), "Minar-e-Pakistan"),
-                    ("Pakistan Monument, Islamabad, Pakistan", (33.6934, 73.0684), "Pakistan Monument Islamabad"),
-                    ("NUST Islamabad Campus", (33.6425, 72.9904), "NUST Islamabad"),
-                    ("University of the Punjab New Campus, Lahore", (31.5034, 74.3005), "Punjab University Lahore"),
-                    ("University of Engineering and Technology UET Lahore", (31.5794, 74.3562), "UET Lahore"),
-                    ("Taj Mahal, Agra, India", (27.1751, 78.0421), "Taj Mahal Agra"),
-                    ("Eiffel Tower, Paris, France", (48.8584, 2.2945), "Eiffel Tower Paris"),
-                    ("Big Ben, London, UK", (51.5007, -0.1246), "Big Ben London"),
-                    ("Empire State Building, New York, USA", (40.7484, -73.9857), "Empire State Building"),
-                    ("Colosseum, Rome, Italy", (41.8902, 12.4922), "Colosseum Rome"),
-                    ("Burj Khalifa, Dubai, UAE", (25.1972, 55.2744), "Burj Khalifa Dubai"),
-                    ("Hagia Sophia, Istanbul, Turkey", (41.0086, 28.9802), "Hagia Sophia Istanbul"),
-                ]
+                lm_matcher = LandmarkMatcher()
+                lm_res = lm_matcher.match(im, clip_model, clip_proc, device=device)
+                if lm_res:
+                    l_name = lm_res["name"]
+                    l_lat = lm_res["latitude"]
+                    l_lon = lm_res["longitude"]
+                    l_conf = lm_res["confidence"]
+                    l_radius = lm_res["radius_km"]
 
-                l_texts = [f"a photo of {l[0]}" for l in landmark_queries]
-                l_inputs = clip_proc(text=l_texts, images=im, return_tensors="pt", padding=True).to(device)
-                with torch.no_grad():
-                    l_out = clip_model(**l_inputs)
-                    l_probs = l_out.logits_per_image.softmax(dim=-1).cpu().numpy()[0]
+                    # Attempt high-precision Nominatim geocoding to lock exact building footprint center
+                    try:
+                        nom_hits = self.nominatim.search(l_name, limit=1)
+                        if nom_hits:
+                            hit = nom_hits[0]
+                            l_lat = float(hit["lat"])
+                            l_lon = float(hit["lon"])
+                            logger.info("[stage1_landmark] Exact OSM coordinate locked: (%f, %f) for %s", l_lat, l_lon, hit.get("display_name"))
+                    except Exception as e:
+                        logger.debug("[stage1_landmark] Nominatim refinement skipped: %s", e)
 
-                top_l_idx = int(np.argmax(l_probs))
-                top_l_prob = float(l_probs[top_l_idx])
-                top_landmark = landmark_queries[top_l_idx]
-                logger.info("[stage1_clip] Top landmark match: '%s' (conf=%.3f)", top_landmark[0], top_l_prob)
-
-                if top_l_prob >= 0.18:
-                    l_name, (l_lat, l_lon), l_short = top_landmark
-                    region_guesses.append(RegionGuessItem(place=l_name, confidence=min(0.95, top_l_prob * 2.5), reason="CLIP zero-shot landmark recognition"))
+                    region_guesses.append(RegionGuessItem(place=l_name, confidence=min(0.98, l_conf * 1.5), reason="Zero-shot landmark perception"))
                     if board is not None:
                         cand_name = f"Landmark: {l_name}"
                         board.add_candidate(
@@ -415,24 +397,26 @@ class Stage1Clues:
                             level="point",
                             lat=l_lat,
                             lon=l_lon,
-                            prior=40.0,
+                            prior=50.0,
                             metadata={
                                 "landmark": l_name,
                                 "tier": "T1",
-                                "radius_km": 1.5,
+                                "radius_km": l_radius,
+                                "category": lm_res.get("category", "landmark"),
+                                "source": "landmark_exact_mark",
                             }
                         )
                         cid_lm = board.add_clue(
-                            text=f"Visual perception identified landmark architecture: {l_name} (conf={top_l_prob:.2f})",
+                            text=f"Visual perception identified exact landmark: {l_name} (conf={l_conf:.2f}, precision=±{int(l_radius*1000)}m)",
                             kind="landmark",
                             status="observed",
                             source="clip_zero_shot",
-                            confidence=round(top_l_prob, 2),
+                            confidence=round(l_conf, 2),
                         )
                         board.add_evidence(
                             clue_id=cid_lm,
-                            candidate_weights={cand_name: 150.0},
-                            rationale=f"High-confidence visual perception match against architectural database for {l_name}",
+                            candidate_weights={cand_name: 250.0},
+                            rationale=lm_res["rationale"],
                         )
 
             # Unload model and free GPU VRAM
