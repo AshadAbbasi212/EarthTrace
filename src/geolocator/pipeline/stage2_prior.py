@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import torch
+import numpy as np
 from PIL import Image
 
 from geolocator.config import AppConfig, get_config
@@ -64,6 +65,69 @@ class Stage2Prior:
                     return GeoCLIP().to("cpu")
 
             self.model_manager.register_loader("geoclip", _loader)
+
+    def _ensure_reranker_registered(self) -> None:
+        """Register StreetCLIP / CLIP ViT-Large lazy loader with ModelManager."""
+        if "geo_reranker" not in self.model_manager._model_loaders:
+            def _loader():
+                from transformers import CLIPProcessor, CLIPModel
+                from pathlib import Path
+                
+                # Check if StreetCLIP is locally ready
+                streetclip_dir = Path(r"C:\Users\David\.cache\huggingface\hub\models--geolocal--StreetCLIP\snapshots\e3561ba2ad9bf14c9efd6b0092607b8497efbfea")
+                if (streetclip_dir / "model.safetensors").exists() and (streetclip_dir / "model.safetensors").stat().st_size > 1700000000:
+                    model_id = str(streetclip_dir)
+                    logger.info("[stage2] Initializing fine-tuned StreetCLIP for zero-shot geographic reranking: %s...", model_id)
+                else:
+                    model_id = "openai/clip-vit-large-patch14"
+                    logger.info("[stage2] Initializing CLIP ViT-Large for zero-shot geographic reranking: %s...", model_id)
+
+                dev_setting = getattr(getattr(self.config, "hardware", None), "device", "cuda")
+                device = "cuda" if (torch.cuda.is_available() and dev_setting == "cuda") else "cpu"
+                processor = CLIPProcessor.from_pretrained(model_id, local_files_only=True)
+                model = CLIPModel.from_pretrained(model_id, local_files_only=True).to(device)
+                model.eval()
+                return (processor, model)
+
+            self.model_manager.register_loader("geo_reranker", _loader)
+
+    def score_candidate_countries_zero_shot(
+        self,
+        image_path: Path,
+        candidate_countries: List[str],
+    ) -> Dict[str, float]:
+        """Compute vision-language geographic likelihood for candidate countries using StreetCLIP / CLIP ViT-Large."""
+        if not candidate_countries:
+            return {}
+
+        clean_countries = [c.strip() for c in candidate_countries if c and len(c.strip()) >= 2]
+        unique_countries = list(dict.fromkeys(clean_countries))
+        if len(unique_countries) < 2:
+            return {c: 1.0 for c in unique_countries}
+
+        try:
+            self._ensure_reranker_registered()
+            with self.model_manager.acquire("geo_reranker") as (processor, model):
+                device = next(model.parameters()).device
+                with Image.open(str(image_path)) as img:
+                    im = img.convert("RGB")
+                    if max(im.size) > 672:
+                        im.thumbnail((672, 672), Image.LANCZOS)
+                    
+                    prompts = [f"a photo taken in {c}" for c in unique_countries]
+                    inputs = processor(text=prompts, images=im, return_tensors="pt", padding=True).to(device)
+                    with torch.no_grad():
+                        outputs = model(**inputs)
+                        probs = outputs.logits_per_image.softmax(dim=-1).cpu().numpy()[0]
+                    
+                    scored = {c: float(p) for c, p in zip(unique_countries, probs)}
+                    sorted_scored = dict(sorted(scored.items(), key=lambda kv: kv[1], reverse=True))
+                    logger.info("[stage2] Zero-shot geographic ranking: %s", 
+                                {k: f"{v*100:.1f}%" for k, v in list(sorted_scored.items())[:5]})
+                    return sorted_scored
+        except Exception as e:
+            logger.warning("[stage2] Geographic zero-shot reranking error: %s", e)
+            return {}
 
     def predict_image_locations(
         self,
@@ -201,7 +265,32 @@ class Stage2Prior:
             except Exception:
                 pass
 
-        # 3. Fuse evidence for each candidate point
+        # 3. Vision-Language Geographic Zero-Shot Reranking (StreetCLIP / CLIP ViT-Large)
+        candidate_countries_set = set()
+        for p in raw_predictions[:25]:
+            c_name = get_country_candidate(p["lat"], p["lon"])
+            if c_name:
+                candidate_countries_set.add(c_name)
+        for hc in hint_countries:
+            candidate_countries_set.add(hc)
+        for sc in script_countries:
+            candidate_countries_set.add(sc)
+        if tld_country:
+            candidate_countries_set.add(tld_country)
+        if phone_country:
+            candidate_countries_set.add(phone_country)
+
+        country_zero_shot_probs: Dict[str, float] = {}
+        if candidate_countries_set and len(candidate_countries_set) >= 2:
+            try:
+                country_zero_shot_probs = self.score_candidate_countries_zero_shot(
+                    image_path=working_image_path,
+                    candidate_countries=list(candidate_countries_set),
+                )
+            except Exception as e:
+                logger.warning("[stage2] Country zero-shot scoring failed: %s", e)
+
+        # 4. Fuse evidence for each candidate point
         scored_points: List[Dict[str, Any]] = []
 
         for p in raw_predictions:
@@ -266,7 +355,17 @@ class Stage2Prior:
                 else:
                     meta_lr -= 3.0
 
-            combined_score = base_log_prior + climate_lr + hint_lr + driving_lr + meta_lr
+            # Zero-shot vision-language geographic likelihood adjustment
+            reranker_lr = 0.0
+            if country and country_zero_shot_probs:
+                c_prob = country_zero_shot_probs.get(country, 0.0)
+                n_cands = max(1, len(country_zero_shot_probs))
+                uniform_p = 1.0 / n_cands
+                if c_prob > 0.0:
+                    ratio = c_prob / uniform_p
+                    reranker_lr = float(np.clip(math.log(max(1e-4, ratio)), -4.5, 4.5))
+
+            combined_score = base_log_prior + climate_lr + hint_lr + driving_lr + meta_lr + reranker_lr
 
             scored_points.append({
                 "lat": lat,
@@ -279,6 +378,8 @@ class Stage2Prior:
                 "hint_lr": hint_lr,
                 "driving_lr": driving_lr,
                 "meta_lr": meta_lr,
+                "reranker_lr": reranker_lr,
+                "country_zero_shot_prob": country_zero_shot_probs.get(country, 0.0) if country else 0.0,
                 "score": combined_score,
             })
 
@@ -306,6 +407,17 @@ class Stage2Prior:
             status="observed",
         )
 
+        cid_reranker = None
+        if country_zero_shot_probs:
+            top_ranked = list(country_zero_shot_probs.items())[:3]
+            top_str = ", ".join(f"{c}: {p*100:.1f}%" for c, p in top_ranked)
+            cid_reranker = board.add_clue(
+                text=f"Zero-shot geographic vision-language reranking ({top_str})",
+                kind="reranker",
+                status="observed",
+                confidence=0.92,
+            )
+
         search_bboxes: List[Dict[str, Any]] = []
 
         for c in clusters:
@@ -326,6 +438,13 @@ class Stage2Prior:
                 candidate_weights={cand_name: math.exp(min(1.5, c["best_score"] / 10.0))},
                 rationale="Visual embedding similarity from GeoCLIP",
             )
+            if cid_reranker and c.get("country") in country_zero_shot_probs:
+                c_zs_prob = country_zero_shot_probs[c["country"]]
+                board.add_evidence(
+                    clue_id=cid_reranker,
+                    candidate_weights={cand_name: 1.0 + 3.0 * c_zs_prob},
+                    rationale=f"Zero-shot vision-language country likelihood ({c_zs_prob*100:.1f}%)",
+                )
 
             search_bboxes.append({
                 "cluster_id": c["cluster_id"],
@@ -358,7 +477,7 @@ class Stage2Prior:
 
         board.data["search_bboxes"] = geocoded_bboxes + search_bboxes
         board.data["stages_run"].append("stage2_prior")
-        board.save()
+        board.save(job_dir / "board.json")
 
         # 6. Save prior artifact
         summary = {
@@ -369,6 +488,7 @@ class Stage2Prior:
             "aridity_cue": aridity_cue,
             "veg_cue": veg_cue,
             "snow_cue": snow_cue,
+            "zero_shot_country_probs": dict(list(country_zero_shot_probs.items())[:5]),
         }
 
         prior_results_path = job_dir / "prior_results.json"

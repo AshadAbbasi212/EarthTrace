@@ -52,9 +52,10 @@ class ModelItemConfig(BaseModel):
 
 class ModelsConfig(BaseModel):
     vlm: VLMConfig = Field(default_factory=VLMConfig)
-    clip: ModelItemConfig = Field(default_factory=lambda: ModelItemConfig(model_id="openai/clip-vit-base-patch32", device="cuda"))
+    clip: ModelItemConfig = Field(default_factory=lambda: ModelItemConfig(model_id="openai/clip-vit-large-patch14", device="cuda"))
     dinov2: ModelItemConfig = Field(default_factory=lambda: ModelItemConfig(model_id="facebook/dinov2-small", device="cuda"))
-    geo_prior: ModelItemConfig = Field(default_factory=lambda: ModelItemConfig(model_id="vincent-claes/GeoCLIP", device="cpu"))
+    streetclip: ModelItemConfig = Field(default_factory=lambda: ModelItemConfig(model_id="geolocal/StreetCLIP", device="cuda"))
+    geo_prior: ModelItemConfig = Field(default_factory=lambda: ModelItemConfig(model_id="vincent-claes/GeoCLIP", device="cuda"))
 
 
 class OSMProviderConfig(BaseModel):

@@ -26,13 +26,30 @@ class LocalOCR:
     def _get_easy_engine(self):
         if self._easy_engine is None:
             try:
+                import torch
                 import easyocr
-                # Offline multilingual reader with Arabic and English on CPU to keep GPU clear for vision models
-                self._easy_engine = easyocr.Reader(['ar', 'en'], gpu=False, download_enabled=False)
+                use_gpu = bool(torch.cuda.is_available())
+                logger.info("[ocr] Initializing EasyOCR multilingual reader (GPU: %s)...", use_gpu)
+                self._easy_engine = easyocr.Reader(['ar', 'en'], gpu=use_gpu, download_enabled=False)
             except Exception as e:
                 logger.warning("[ocr] EasyOCR initialization: %s", e)
                 self._easy_engine = False
         return self._easy_engine if self._easy_engine else None
+
+    def unload(self) -> None:
+        """Unload EasyOCR from GPU and free memory for subsequent pipeline stages."""
+        if self._easy_engine is not None and self._easy_engine is not False:
+            try:
+                logger.info("[ocr] Unloading EasyOCR engine from memory/GPU...")
+                del self._easy_engine
+            except Exception:
+                pass
+            self._easy_engine = None
+            import gc
+            import torch
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
 
     def read_text(self, image_input: str | Path | Image.Image, min_conf: float = 0.3) -> List[Dict[str, Any]]:
         """Run OCR and return list of detected text snippets with bounding boxes."""

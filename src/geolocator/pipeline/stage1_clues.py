@@ -289,6 +289,12 @@ class Stage1Clues:
         board.mark_stage_run("stage1_clues")
         board.save(job_path / "board.json")
 
+        # Unload OCR from GPU so subsequent vision models have full VRAM headroom
+        try:
+            self.ocr.unload()
+        except Exception as e:
+            logger.debug("[stage1] Error unloading OCR: %s", e)
+
         return clues_result, board
 
     def _extract_visual_clues_heuristic(

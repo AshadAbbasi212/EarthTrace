@@ -9,9 +9,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import cv2
 import numpy as np
+import torch
 from PIL import Image
 
 from geolocator.config import AppConfig, get_config
+from geolocator.models.model_manager import ModelManager, get_model_manager
 from geolocator.providers.satellite import SatelliteProvider
 from geolocator.providers.street_image import StreetImageProvider
 from geolocator.pipeline.board import CandidateBoard
@@ -26,15 +28,52 @@ class Stage4Verification:
     def __init__(
         self,
         config: Optional[AppConfig] = None,
+        model_manager: Optional[ModelManager] = None,
         satellite_provider: Optional[SatelliteProvider] = None,
         street_provider: Optional[StreetImageProvider] = None,
         pose_solver: Optional[CameraPoseSolver] = None,
     ):
         self.config = config or get_config()
+        self.model_manager = model_manager or get_model_manager(self.config)
         cache_dir = getattr(self.config, "storage", None) and self.config.storage.cache_dir or ".geo-cache"
         self.sat = satellite_provider or SatelliteProvider(cache_dir=cache_dir, offline_mode=self.config.offline_mode)
         self.street = street_provider or StreetImageProvider(cache_dir=cache_dir, offline_mode=self.config.offline_mode)
         self.pose = pose_solver or CameraPoseSolver()
+
+    def _ensure_dinov2_registered(self) -> None:
+        """Register DINOv2 self-supervised feature extractor with ModelManager."""
+        if "dinov2" not in self.model_manager._model_loaders:
+            def _loader():
+                from transformers import AutoImageProcessor, AutoModel
+                model_id = getattr(getattr(self.config.models, "dinov2", None), "model_id", "facebook/dinov2-small")
+                dev_setting = getattr(getattr(self.config, "hardware", None), "device", "cuda")
+                device = "cuda" if (torch.cuda.is_available() and dev_setting == "cuda") else "cpu"
+                logger.info("[stage4] Initializing DINOv2 (%s) on device '%s'...", model_id, device)
+                processor = AutoImageProcessor.from_pretrained(model_id)
+                model = AutoModel.from_pretrained(model_id).to(device)
+                model.eval()
+                return (processor, model)
+
+            self.model_manager.register_loader("dinov2", _loader)
+
+    def _compute_dinov2_similarity(self, img1: Image.Image, img2: Image.Image) -> float:
+        """Compute DINOv2 ViT foundation model visual cosine similarity between ground query and satellite orthophoto."""
+        try:
+            self._ensure_dinov2_registered()
+            with self.model_manager.acquire("dinov2") as (processor, model):
+                device = next(model.parameters()).device
+                inputs1 = processor(images=img1.convert("RGB"), return_tensors="pt").to(device)
+                inputs2 = processor(images=img2.convert("RGB"), return_tensors="pt").to(device)
+                with torch.no_grad():
+                    out1 = model(**inputs1)
+                    out2 = model(**inputs2)
+                    cls1 = out1.last_hidden_state[:, 0]
+                    cls2 = out2.last_hidden_state[:, 0]
+                    sim = torch.cosine_similarity(cls1, cls2).item()
+                    return round(float(sim), 4)
+        except Exception as e:
+            logger.warning("[stage4] DINOv2 visual similarity evaluation skipped: %s", e)
+            return 0.50
 
     def _compute_sift_similarity(self, img1: Image.Image, img2: Image.Image) -> Dict[str, Any]:
         """Compute SIFT feature matching and RANSAC inlier count between two images."""
@@ -127,17 +166,20 @@ class Stage4Verification:
                 sat_img.save(sat_path)
 
         sat_sift = self._compute_sift_similarity(query_img, sat_img)
-        sat_similarity = round(0.5 + min(0.4, sat_sift["inliers"] * 0.05), 3)
+        sat_dinov2_sim = self._compute_dinov2_similarity(query_img, sat_img)
+        sift_boost = min(0.3, sat_sift["inliers"] * 0.05)
+        # Composite calibrated similarity: blend DINOv2 representation and SIFT geometry
+        sat_similarity = round(max(0.2, min(0.98, 0.70 * sat_dinov2_sim + 0.30 * 0.5 + sift_boost)), 3)
 
         cid_sat = board.add_clue(
-            text=f"Satellite tile verification at zoom 16 (similarity={sat_similarity})",
+            text=f"Satellite verification (DINOv2 visual sim={sat_dinov2_sim:.3f}, SIFT inliers={sat_sift['inliers']})",
             kind="satellite",
             status="computed",
         )
         board.add_evidence(
             clue_id=cid_sat,
-            candidate_weights={cand_name: 1.5 if sat_similarity > 0.6 else 1.0},
-            rationale="Overhead satellite orthoimagery visual consistency",
+            candidate_weights={cand_name: 1.6 if sat_similarity > 0.65 else (1.2 if sat_similarity > 0.50 else 0.8)},
+            rationale=f"Overhead satellite orthoimagery visual consistency via DINOv2 foundation embeddings ({sat_dinov2_sim:.3f}) and SIFT",
             artifact_path=str(sat_path),
         )
 
@@ -205,7 +247,7 @@ class Stage4Verification:
         )
 
         board.data["stages_run"].append("stage4_verification")
-        board.save()
+        board.save(job_dir / "board.json")
 
         summary = {
             "verified_candidate": cand_name,
@@ -213,6 +255,8 @@ class Stage4Verification:
             "satellite_verification": {
                 "status": sat_status,
                 "similarity": sat_similarity,
+                "dinov2_similarity": sat_dinov2_sim,
+                "sift_inliers": sat_sift["inliers"],
                 "artifact_path": str(sat_path),
             },
             "street_level_verification": street_evidence_info,
