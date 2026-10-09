@@ -399,6 +399,21 @@
       - `forest`: 19.6 km median error, 100% $\le$ 200 km.
     - Generated machine-readable audit report `eval/results/real_50_benchmark/real_50_report.json` and Markdown summary `eval/results/real_50_benchmark/real_50_summary.md`.
 
+### Landmark False Lock Resolution & Negative Prompt Rejection
+- [x] **Investigation of Ubiquitous "Pir Chinasi Shrine" False Positive**:
+  - Found that closed-set CLIP classification in `landmarks.py` without negative classes forced every image (including non-landmark photos) to match whichever landmark had the highest dot-product score.
+  - The generic prompt `"Pir Chinasi shrine viewpoint Azad Kashmir Muzaffarabad"` matched outdoor/scenic pictures broadly due to terms like `"viewpoint"`.
+  - Identified runaway candidate priors (`prior = 50.0`, `candidate_weights = {cand_name: 250.0}`) that overpowered the entire pipeline.
+- [x] **Negative Prompt Rejection & Precision Gating**:
+  - Added 8 non-landmark background prompts to `landmarks.py`. Any image whose top class is a negative prompt is automatically rejected.
+  - Required strict margin ($\ge 0.15$) and probability thresholds ($\ge 0.35$ or $\ge 0.50$) for positive landmark confirmations.
+  - Removed fuzzy 3-letter OCR substring synonyms from `clues_adapter.py`.
+  - Calibrated Bayesian weights: landmark prior reduced from $50.0 \rightarrow 5.0$, evidence likelihood weight reduced from $250.0 \rightarrow 12.0$.
+- [x] **Verification**:
+  - Unit tests verified: random/non-landmark images reject with 85.8% negative probability; legitimate landmarks (e.g. Eiffel Tower) correctly pass with 97.8% positive probability.
+  - Full test suite verified: **41/41 tests passing** (`pytest -q`).
+
+
 
 
 

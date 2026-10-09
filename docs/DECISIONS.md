@@ -178,9 +178,17 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
     - **Within 25 km (Local Area)**: **66.0%** (33 / 50 photos).
     - **Within 200 km (Regional)**: **80.0%** (40 / 50 photos).
     - **Within 750 km (Sub-continental)**: **90.0%** (45 / 50 photos).
-    - **Within 2,500 km (Continental)**: **92.0%** (46 / 50 photos).
-    - Produced comprehensive JSON and Markdown audit reports in `eval/results/real_50_benchmark/`.
+    ---
 
-
-
-
+## 19. Landmark Negative Prompt Rejection, Bayesian Weight Calibration & Elimination of False Locks
+- **Problem:**
+  - User reported that every uploaded picture was incorrectly identified as `Pir Chinasi Shrine, Muzaffarabad, AJK` with calibrated radius $\pm 50$ meters, regardless of the actual subject or scene.
+- **Root Cause Analysis:**
+  1. **Closed-set Softmax Artifact:** `LandmarkMatcher` in `src/geolocator/pipeline/landmarks.py` evaluated a database consisting exclusively of landmarks. Because CLIP zero-shot classification uses softmax across the prompt candidates, the probabilities sum to 1.0 even on images that contain no landmarks whatsoever (e.g. random household objects, generic city streets, noise).
+  2. **Overly Broad Landmark Prompt:** The entry `("Pir Chinasi shrine viewpoint Azad Kashmir Muzaffarabad", ...)` contained generic words like `"viewpoint"`, yielding high dot-product similarities against arbitrary outdoor or scenic photos.
+  3. **Disproportionate Bayesian Priors:** When a landmark match occurred, `Stage1Clues` injected it into `CandidateBoard` with `prior = 50.0` and evidence likelihood weight `candidate_weights = {cand_name: 250.0}` ($e^{250}$ likelihood multiplier), completely drowning out GeoCLIP, StreetCLIP, and downstream satellite verification.
+  4. **Fuzzy Gazetteer Substrings:** `GEO_PHONETIC_SYNONYMS` in `clues_adapter.py` over-mapped several short 3- and 4-letter Urdu substrings (`"جنسی"`, `"حناسی"`, `"پیراسی"`, `"پیراس"`, `"ییراس"`, `"یراس"`, `"چناس"`) directly to `"Pir Chinasi"`, causing spurious sign matches on OCR fragments.
+- **Solution & Decision:**
+  - **Negative Prompt Rejection:** Added `NEGATIVE_PROMPTS` (8 comprehensive non-landmark classes: ordinary street, residential house, commercial storefront, generic natural landscape without landmark, indoor room, people/vehicles, agricultural fields, close-up non-scenic) to `LandmarkMatcher`. Any image whose top prediction matches a negative prompt is automatically rejected with `None`. Genuine landmarks now require `neg_margin >= 0.15` and `top_prob >= 0.35` (or `top_prob >= 0.50` with clear margin over runner-up).
+  - **Pruned Database & Synonyms:** Removed generic viewpoint prompts and cleaned `GEO_PHONETIC_SYNONYMS` to require exact proper nouns. Removed hardcoded condition in `stage1_clues.py`.
+  - **Calibrated Bayesian Weights:** Lowered landmark prior from `50.0` to `5.0` and clue likelihood from `250.0` to `12.0`, restoring proper Bayesian balance where multimodal downstream evidence can independently confirm or refute visual landmark proposals.

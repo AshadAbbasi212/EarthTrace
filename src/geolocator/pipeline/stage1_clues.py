@@ -168,9 +168,9 @@ class Stage1Clues:
                         source="nominatim_geocoding",
                         confidence=0.96,
                     )
-                    is_specific = any(w in display_name.lower() for w in ("road", "point", "hill", "peak", "street", "building", "shrine", "station", "police")) or phrase.lower() in ("pir chinasi", "chinasi")
-                    cand_prior = 35.0 if is_specific else 15.0
-                    weight = 120.0 if is_specific else 80.0
+                    is_specific = any(w in display_name.lower() for w in ("road", "point", "hill", "peak", "street", "building", "shrine", "station", "police"))
+                    cand_prior = 8.0 if is_specific else 4.0
+                    weight = 12.0 if is_specific else 6.0
 
                     cand_name = f"Geocoded Sign '{phrase}': {display_name[:40]}"
                     board.add_candidate(
@@ -395,7 +395,7 @@ class Stage1Clues:
                         level="point",
                         lat=l_lat,
                         lon=l_lon,
-                        prior=50.0,
+                        prior=5.0,
                         metadata={
                             "landmark": l_name,
                             "tier": "T1",
@@ -413,7 +413,7 @@ class Stage1Clues:
                     )
                     board.add_evidence(
                         clue_id=cid_lm,
-                        candidate_weights={cand_name: 250.0},
+                        candidate_weights={cand_name: 12.0},
                         rationale=lm_res["rationale"],
                     )
 

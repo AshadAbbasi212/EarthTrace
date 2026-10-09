@@ -52,7 +52,6 @@ LANDMARK_DATABASE: List[Tuple[str, str, float, float, str]] = [
     ("Ziarat Residency Quaid-e-Azam wooden architecture Balochistan", "Quaid-e-Azam Residency, Ziarat, Balochistan", 30.385278, 67.726944, "historical_building"),
     ("Clock Tower Ghanta Ghar Faisalabad", "Clock Tower (Ghanta Ghar), Faisalabad", 31.418611, 73.078889, "civic_monument"),
     ("Sharda Peeth ancient Hindu temple Neelum Valley Azad Kashmir", "Sharda Peeth, Neelum Valley, AJK", 34.793056, 74.190278, "historical_temple"),
-    ("Pir Chinasi shrine viewpoint Azad Kashmir Muzaffarabad", "Pir Chinasi Shrine, Muzaffarabad, AJK", 34.372738, 73.523538, "viewpoint_shrine"),
 
     # --- Pakistan: Palaces, Colonial & Institutional Architecture ---
     ("Government College University GCU Gothic Clock Tower Lahore", "Government College University (GCU), Lahore", 31.573152, 74.308354, "university_campus"),
@@ -75,9 +74,6 @@ LANDMARK_DATABASE: List[Tuple[str, str, float, float, str]] = [
     ("Supreme Court of Pakistan Constitution Avenue Islamabad", "Supreme Court of Pakistan, Islamabad", 33.729700, 73.093400, "government_building"),
     ("Parliament House National Assembly Islamabad", "Parliament House of Pakistan, Islamabad", 33.731400, 73.095500, "government_building"),
     ("Prime Minister Secretariat Constitution Avenue Islamabad", "Prime Minister Secretariat, Islamabad", 33.738000, 73.097000, "government_building"),
-    ("Mayo Hospital Lahore historic brick medical building", "Mayo Hospital, Lahore", 31.572400, 74.312000, "hospital_complex"),
-    ("Services Hospital Jail Road Lahore", "Services Hospital, Lahore", 31.539800, 74.336400, "hospital_complex"),
-    ("Children Hospital Ferozepur Road Lahore", "The Children's Hospital, Lahore", 31.482000, 74.343500, "hospital_complex"),
 
     # --- World Iconic Landmarks & UNESCO World Heritage ---
     ("Taj Mahal white marble mausoleum Agra India", "Taj Mahal, Agra, India", 27.175145, 78.042142, "unesco_world_heritage"),
@@ -198,11 +194,23 @@ LANDMARK_DATABASE: List[Tuple[str, str, float, float, str]] = [
 ]
 
 
+NEGATIVE_PROMPTS = [
+    "an ordinary street, road, or intersection without famous landmarks",
+    "an ordinary residential house, apartment building, or residential neighborhood",
+    "an ordinary commercial building, shop, or retail storefront",
+    "a generic natural landscape, hill, field, or countryside without famous landmarks",
+    "a photo of ordinary people, vehicles, cars, or everyday objects",
+    "an indoor room, office, or domestic interior",
+    "ordinary agricultural farmland, rural pasture, or wild forest without landmarks",
+    "a close up photo or non-scenic view",
+]
+
+
 class LandmarkMatcher:
     """High-accuracy zero-shot landmark recognition and exact mark geocoding."""
 
     def __init__(self):
-        self._prompts = [f"a photo of {lm[0]}" for lm in LANDMARK_DATABASE]
+        self._prompts = [f"a photo of {lm[0]}" for lm in LANDMARK_DATABASE] + NEGATIVE_PROMPTS
 
     def match(
         self,
@@ -210,11 +218,11 @@ class LandmarkMatcher:
         clip_model: Any,
         clip_proc: Any,
         device: str = "cuda",
-        min_confidence: float = 0.12,
+        min_confidence: float = 0.35,
     ) -> Optional[Dict[str, Any]]:
         """Run batched zero-shot classification against landmark database.
         
-        Returns exact candidate metadata if confidence exceeds threshold, else None.
+        Returns exact candidate metadata ONLY if confident and clearly exceeding negative background prompts.
         """
         inputs = clip_proc(text=self._prompts, images=image, return_tensors="pt", padding=True).to(device)
         with torch.no_grad():
@@ -223,22 +231,36 @@ class LandmarkMatcher:
 
         top_idx = int(np.argmax(probs))
         top_prob = float(probs[top_idx])
-        top_lm = LANDMARK_DATABASE[top_idx]
 
-        # Uniform baseline probability across N items
-        uniform_baseline = 1.0 / len(LANDMARK_DATABASE)
-        # Margin over second place
-        sorted_probs = np.sort(probs)
-        margin = top_prob - float(sorted_probs[-2]) if len(sorted_probs) > 1 else top_prob
+        # 1. If highest match is any negative/generic prompt, reject immediately
+        if top_idx >= len(LANDMARK_DATABASE):
+            logger.info(
+                "[landmark_matcher] Matched negative/generic scene: '%s' (conf=%.4f) -> No landmark",
+                NEGATIVE_PROMPTS[top_idx - len(LANDMARK_DATABASE)], top_prob
+            )
+            return None
+
+        top_lm = LANDMARK_DATABASE[top_idx]
+        neg_probs = probs[len(LANDMARK_DATABASE):]
+        max_neg_prob = float(np.max(neg_probs)) if len(neg_probs) > 0 else 0.0
+
+        # Margin over the best negative prompt
+        neg_margin = top_prob - max_neg_prob
+
+        # Margin over second place landmark
+        lm_probs = probs[:len(LANDMARK_DATABASE)]
+        sorted_lm_probs = np.sort(lm_probs)
+        lm_margin = top_prob - float(sorted_lm_probs[-2]) if len(sorted_lm_probs) > 1 else top_prob
 
         logger.info(
-            "[landmark_matcher] Top match: '%s' (conf=%.4f, baseline=%.4f, margin=%.4f)",
-            top_lm[1], top_prob, uniform_baseline, margin
+            "[landmark_matcher] Candidate match: '%s' (conf=%.4f, lm_margin=%.4f, neg_margin=%.4f, max_neg=%.4f)",
+            top_lm[1], top_prob, lm_margin, neg_margin, max_neg_prob
         )
 
-        # Trigger ONLY if confidence is high AND has substantial margin over runner-up
-        # Real landmarks achieve top_prob > 0.50 and margin > 0.20; close ties indicate ambiguity
-        is_significant = (top_prob >= 0.50) or (top_prob >= 0.30 and margin >= 0.08) or (top_prob >= 0.22 and margin >= 0.12)
+        # A real landmark must:
+        # 1. Substantially beat the highest negative class (neg_margin >= 0.15)
+        # 2. Have clear lead over other landmarks and substantial absolute probability
+        is_significant = (top_prob >= 0.50 and neg_margin >= 0.15) or (top_prob >= 0.35 and lm_margin >= 0.12 and neg_margin >= 0.20)
 
         if not is_significant:
             return None
@@ -263,7 +285,7 @@ class LandmarkMatcher:
             "latitude": lat,
             "longitude": lon,
             "confidence": top_prob,
-            "margin": margin,
+            "margin": lm_margin,
             "tier": tier,
             "radius_km": calibrated_radius_km,
             "rationale": f"High-confidence visual perception match against landmark database for {canonical_name}",
