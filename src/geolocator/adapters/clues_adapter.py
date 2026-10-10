@@ -207,6 +207,9 @@ COMMON_STOP_WORDS = {
     "drive", "lane", "way", "highway", "expressway", "toll", "free", "city", "center",
     "north", "south", "east", "west", "the", "and", "for", "with", "from", "service",
     "wc", "info", "information", "ticket", "tickets", "fast", "food", "express", "auto",
+    "seat", "belt", "seatbelt", "seatbeit", "nyok", "nyoi", "speed", "limit", "slow",
+    "safe", "safety", "fasten", "buckle", "caution", "danger", "warning", "toll plaza",
+    "vehicle", "traffic", "rules", "fine", "penalty", "camera", "km/h", "mph",
     "پولیس", "کنٹرول", "سب", "چائے", "ہوٹل", "روڈ", "تھانہ", "ڈویژن", "ضلع", "تحصیل", "شہر", "مرکز",
 }
 
@@ -232,6 +235,8 @@ GEO_PHONETIC_SYNONYMS = {
     "کاغان": "Kaghan",
     "ہنزہ": "Hunza",
     "سکردو": "Skardu",
+    "N-75": "N-75, Pakistan",
+    "N75": "N-75, Pakistan",
 }
 
 

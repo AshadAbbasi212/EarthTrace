@@ -467,32 +467,57 @@ class Stage2Prior:
                 "probability": c.get("cluster_prob", 0.0),
             })
 
-        # Check if high-confidence geocoded sign or landmark candidates exist from Stage 1
-        geocoded_bboxes = []
+        # 5b. Geographically Validate Point / Sign Candidates Against Visual Prior Clusters
+        # Reject false homonyms (e.g. a street in France when visual prior is in Pakistan)
+        corroborated_point_bboxes = []
         raw_cands = board.data.get("candidates", {})
         cand_list = list(raw_cands.values()) if isinstance(raw_cands, dict) else list(raw_cands)
         for cand in cand_list:
-            if isinstance(cand, dict) and cand.get("lat") is not None and (
-                cand.get("level") == "point"
-                or "sign" in cand.get("name", "").lower()
-                or cand.get("metadata", {}).get("landmark")
-                or "landmark" in cand.get("name", "").lower()
-            ):
-                p_lat = float(cand["lat"])
-                p_lon = float(cand["lon"])
-                g_bbox = cand.get("bbox") or [p_lat - 0.05, p_lon - 0.05, p_lat + 0.05, p_lon + 0.05]
-                is_lm = bool(cand.get("metadata", {}).get("landmark") or "landmark" in cand.get("name", "").lower())
-                geocoded_bboxes.append({
-                    "cluster_id": "landmark" if is_lm else "geocoded_sign",
-                    "candidate_name": cand["name"],
-                    "country": cand.get("metadata", {}).get("country"),
-                    "bbox": g_bbox,
-                    "center": [p_lat, p_lon],
-                    "score": 35.0 if is_lm else 10.0,
-                    "probability": 0.99 if is_lm else 0.95,
-                })
+            if isinstance(cand, dict) and cand.get("lat") is not None and cand.get("lon") is not None:
+                if cand.get("level") == "point" or "sign" in cand.get("name", "").lower():
+                    p_lat = float(cand["lat"])
+                    p_lon = float(cand["lon"])
+                    
+                    # Compute minimum distance to any top visual prior cluster
+                    min_dist_km = 99999.0
+                    if clusters:
+                        for c in clusters[:5]:
+                            d = haversine_distance_km(p_lat, p_lon, c["center_lat"], c["center_lon"])
+                            if d < min_dist_km:
+                                min_dist_km = d
+                    else:
+                        min_dist_km = 0.0
 
-        board.data["search_bboxes"] = geocoded_bboxes + search_bboxes
+                    # Check user hints for country match
+                    hint_match = False
+                    if hint_countries:
+                        c_cand_country = cand.get("metadata", {}).get("country") or get_country_candidate(p_lat, p_lon)
+                        if c_cand_country and any(hc.lower() in c_cand_country.lower() for hc in hint_countries):
+                            hint_match = True
+
+                    # Only accept point candidates within 800 km of visual prior clusters or matching user hint
+                    if min_dist_km <= 800.0 or hint_match:
+                        g_bbox = cand.get("bbox") or [p_lat - 0.05, p_lon - 0.05, p_lat + 0.05, p_lon + 0.05]
+                        corroborated_point_bboxes.append({
+                            "cluster_id": "verified_point",
+                            "candidate_name": cand["name"],
+                            "country": cand.get("metadata", {}).get("country") or get_country_candidate(p_lat, p_lon),
+                            "bbox": g_bbox,
+                            "center": [p_lat, p_lon],
+                            "score": 10.0,
+                            "probability": 0.90,
+                        })
+                        logger.info("[stage2_prior] Point candidate '%s' corroborated by visual prior (dist=%.1f km)", cand["name"], min_dist_km)
+                    else:
+                        logger.warning(
+                            "[stage2_prior] Pruned contradictory point candidate '%s' at (%.2f, %.2f) (%.1f km away from visual prior)",
+                            cand["name"], p_lat, p_lon, min_dist_km
+                        )
+                        # Penalize candidate on board so it does not win
+                        cand["prior"] = 0.0001
+                        cand["score"] = -20.0
+
+        board.data["search_bboxes"] = corroborated_point_bboxes + search_bboxes
         board.data["stages_run"].append("stage2_prior")
         board.save(job_dir / "board.json")
 

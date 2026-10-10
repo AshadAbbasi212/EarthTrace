@@ -210,33 +210,16 @@ class Stage3Terrain:
         job_dir = Path(job_dir)
         job_dir.mkdir(parents=True, exist_ok=True)
 
-        # Check if visual cues indicate an urban building, flat terrain, or no natural horizon
-        vc = board.data.get("visual_cues", {})
-        vc_terrain = vc.get("terrain", {})
-        vc_scene = vc.get("scene_type", "")
-        if vc_scene in ("urban", "building", "landmark") or vc_terrain.get("relief") == "flat" or not vc_terrain.get("horizon_visible", True):
-            logger.info("[stage3_terrain] Terrain skyline matching not applicable for scene='%s', relief='%s'", vc_scene, vc_terrain.get("relief"))
-            board.data["stages_run"].append("stage3_terrain")
-            board.data["terrain_evaluation"] = {
-                "status": "not_applicable",
-                "reason": "Scene dominated by building/urban architecture; natural terrain skyline bypassed.",
-            }
-            board.save()
-            summary = {
-                "status": "not_applicable",
-                "reason": "Scene dominated by building/urban architecture; natural terrain skyline bypassed.",
-                "fit_results": {"best_score": 0.0, "best_viewpoint": None},
-            }
-            (job_dir / "terrain_results.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
-            return summary, board
-
-        # 1. Extract photo skyline
+        # 1. Extract photo skyline and ALWAYS save visual overlay
         overlay_path = job_dir / "skyline_overlay.png"
         if photo_skyline_override is not None:
             photo_profile = np.array(photo_skyline_override, dtype=np.float32)
             skyline_info = {
                 "samples": len(photo_skyline_override),
                 "normalized_profile": photo_skyline_override,
+                "raw_elevations": photo_skyline_override,
+                "std_elevation": float(np.std(photo_skyline_override)),
+                "is_non_flat": float(np.std(photo_skyline_override)) >= 0.02,
                 "overlay_saved": False,
             }
         else:
@@ -251,27 +234,49 @@ class Stage3Terrain:
         skyline_json_path = job_dir / "skyline_extracted.json"
         skyline_json_path.write_text(json.dumps(skyline_info, indent=2), encoding="utf-8")
 
+        # Check if the extracted horizon has actual undulating mountain/hill relief
+        std_elev = skyline_info.get("std_elevation", float(np.std(photo_profile)))
+        is_non_flat = skyline_info.get("is_non_flat", std_elev >= 0.02)
+
+        if not is_non_flat and std_elev < 0.015:
+            logger.info("[stage3_terrain] Extracted skyline is flat (std=%.4f). Bypassing DEM search.", std_elev)
+            board.data["stages_run"].append("stage3_terrain")
+            board.data["terrain_evaluation"] = {
+                "status": "not_applicable",
+                "reason": f"Extracted horizon profile is flat (relief variation std={std_elev:.3f}); natural mountain terrain skyline bypassed.",
+            }
+            board.save()
+            summary = {
+                "status": "not_applicable",
+                "reason": f"Extracted horizon profile is flat (relief variation std={std_elev:.3f}); natural mountain terrain skyline bypassed.",
+                "skyline_overlay_path": str(overlay_path) if overlay_path.exists() else None,
+                "fit_results": {"best_score": 0.0, "best_viewpoint": None},
+            }
+            (job_dir / "terrain_results.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+            return summary, board
+
         # 2. Determine search center from Stage 2 bounding box if not provided
         if search_center is None:
-            # Check if candidate point is already locked by landmark or sign
-            for cand_name, cand in board.data.get("candidates", {}).items():
-                if cand.get("level") == "point" and (cand.get("prior", 0.0) >= 20.0 or "landmark" in cand.get("metadata", {})):
-                    search_center = (float(cand["lat"]), float(cand["lon"]))
-                    radius_km = 3.0
-                    logger.info("[stage3_terrain] Localizing search to verified candidate '%s' (radius=%.1f km)", cand_name, radius_km)
+            bboxes = board.data.get("search_bboxes", [])
+            # Find the top prior cluster that is not an unverified distant point
+            top_cluster = None
+            for b in bboxes:
+                c_id = str(b.get("cluster_id", ""))
+                # Prefer true regional cell clusters from visual prior
+                if "cell" in c_id or "cluster" in c_id or "prior" in c_id:
+                    top_cluster = b
                     break
+            if top_cluster is None and bboxes:
+                top_cluster = bboxes[0]
 
-            if search_center is None:
-                bboxes = board.data.get("search_bboxes", [])
-                if bboxes:
-                    top_bbox = bboxes[0]
-                    search_center = (float(top_bbox["center"][0]), float(top_bbox["center"][1]))
+            if top_cluster:
+                search_center = (float(top_cluster["center"][0]), float(top_cluster["center"][1]))
+            else:
+                ranked = board.rank()
+                if ranked and ranked[0].get("lat") is not None:
+                    search_center = (float(ranked[0]["lat"]), float(ranked[0]["lon"]))
                 else:
-                    ranked = board.rank()
-                    if ranked and ranked[0].get("lat") is not None:
-                        search_center = (float(ranked[0]["lat"]), float(ranked[0]["lon"]))
-                    else:
-                        search_center = (35.4983, 138.7688)
+                    search_center = (35.4983, 138.7688)
 
         c_lat, c_lon = search_center
         logger.info("Executing terrain skyline search around (%.4f, %.4f), radius=%.1f km", c_lat, c_lon, radius_km)

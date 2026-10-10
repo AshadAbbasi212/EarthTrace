@@ -21,6 +21,14 @@ def haversine_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) ->
 
 # Curated table of major country and region bounding boxes [min_lat, min_lon, max_lat, max_lon]
 COUNTRY_BBOXES: Dict[str, Tuple[float, float, float, float]] = {
+    # Specific sub-continental and regional countries checked first
+    "pakistan": (23.6, 60.8, 37.1, 77.8),
+    "nepal": (26.3, 80.0, 30.5, 88.2),
+    "bangladesh": (20.5, 88.0, 26.7, 92.7),
+    "sri lanka": (5.9, 79.6, 9.9, 81.9),
+    "afghanistan": (29.3, 60.5, 38.5, 74.9),
+    "iran": (25.0, 44.0, 39.8, 63.4),
+    "iraq": (29.0, 38.7, 37.4, 48.6),
     "united kingdom": (49.8, -8.6, 60.9, 1.8),
     "ireland": (51.4, -10.5, 55.4, -5.9),
     "france": (41.3, -5.1, 51.1, 9.6),
@@ -48,8 +56,13 @@ COUNTRY_BBOXES: Dict[str, Tuple[float, float, float, float]] = {
     "united arab emirates": (22.6, 51.5, 26.1, 56.4),
     "japan": (24.0, 122.9, 45.6, 153.0),
     "south korea": (33.1, 124.6, 38.6, 131.9),
-    "china": (18.0, 73.5, 53.6, 135.1),
+    "thailand": (5.6, 97.3, 20.5, 105.7),
+    "vietnam": (8.5, 102.1, 23.4, 109.5),
+    "indonesia": (-11.0, 95.0, 6.0, 141.0),
+    "malaysia": (1.0, 99.6, 7.4, 119.3),
+    "philippines": (4.6, 116.9, 21.3, 126.6),
     "india": (6.7, 68.1, 35.5, 97.4),
+    "china": (18.0, 75.0, 53.6, 135.1),
     "australia": (-43.7, 112.9, -10.0, 153.7),
     "new zealand": (-47.3, 166.4, -34.4, 178.6),
     "united states": (24.5, -124.8, 49.4, -66.9),

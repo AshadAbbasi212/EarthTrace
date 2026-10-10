@@ -11,6 +11,7 @@ from geolocator.adapters.clues_adapter import (
     detect_calling_code,
     extract_candidate_place_phrases,
     GEO_PHONETIC_SYNONYMS,
+    COMMON_STOP_WORDS,
 )
 from geolocator.adapters.ocr_adapter import get_ocr, LocalOCR
 
@@ -27,6 +28,7 @@ __all__ = [
     "detect_calling_code",
     "extract_candidate_place_phrases",
     "GEO_PHONETIC_SYNONYMS",
+    "COMMON_STOP_WORDS",
     "get_ocr",
     "LocalOCR",
 ]

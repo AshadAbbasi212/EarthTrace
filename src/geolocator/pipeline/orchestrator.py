@@ -93,17 +93,9 @@ class PipelineOrchestrator:
         relief = getattr(terrain_obj, "relief", "flat") if terrain_obj else "flat"
         horizon_vis = getattr(terrain_obj, "horizon_visible", False) if terrain_obj else False
 
-        # Terrain branch runs ONLY if genuine mountain/hill relief is present AND horizon is visible
-        # Urban buildings, architectural photos, and flat scenes are strictly excluded
-        is_terrain_scene = (
-            any(t in scene_type for t in ("mountain", "valley", "hills", "rugged_terrain"))
-            or relief in ("mountainous", "hilly", "rugged")
-        ) and horizon_vis and scene_type not in ("urban", "building", "landmark")
-
-        if is_terrain_scene:
-            self.stage3_terrain.process(job_dir, board)
-        else:
-            logger.info("Terrain skyline branch bypassed: scene_type=%s, relief=%s, horizon=%s", scene_type, relief, horizon_vis)
+        # Terrain skyline branch: analyzes image skyline, saves skyline_overlay.png,
+        # and executes DEM correlation search whenever genuine mountain/hill relief exists.
+        self.stage3_terrain.process(job_dir, board)
 
         # Built & infrastructure branch runs for urban, buildings, landmarks, roads, bridges
         if any(b in scene_type for b in ("urban", "building", "landmark", "rural_road", "farmland", "bridge", "coast", "other")):

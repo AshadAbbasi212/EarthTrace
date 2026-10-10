@@ -19,6 +19,7 @@ from geolocator.adapters import (
     detect_calling_code,
     extract_candidate_place_phrases,
     GEO_PHONETIC_SYNONYMS,
+    COMMON_STOP_WORDS,
 )
 from geolocator.providers.nominatim import NominatimProvider
 from geolocator.pipeline.board import CandidateBoard
@@ -139,20 +140,30 @@ class Stage1Clues:
                         )
                         board.add_candidate(code_country, level="country", prior=7.0)
 
-        # 1e. Autonomous Place-Name & Landmark Geocoding via Nominatim
+        # 1e. Autonomous Place-Name & Route Geocoding via Nominatim
         # Collect candidate place phrases across all detected text
         all_place_phrases = []
         for snip in ocr_snippets:
             all_place_phrases.extend(extract_candidate_place_phrases(snip["text"]))
         unique_phrases = list(dict.fromkeys(all_place_phrases))
         known_synonyms = set(GEO_PHONETIC_SYNONYMS.values())
-        # Prioritize recognized gazetteer place names first so they are checked immediately
-        unique_phrases.sort(key=lambda p: (0 if p in known_synonyms else 1, len(p) < 4))
-        unique_phrases = unique_phrases[:8]  # Polite limit of 8 lookups
 
-        for phrase in unique_phrases:
+        # Filter out obvious false positives and stop words
+        filtered_phrases = []
+        for p in unique_phrases:
+            pl = p.strip().lower()
+            if pl not in COMMON_STOP_WORDS and len(pl) >= 3:
+                filtered_phrases.append(p)
+
+        # Prioritize recognized gazetteer place names and route codes
+        filtered_phrases.sort(key=lambda p: (0 if p in known_synonyms else 1, len(p) < 4))
+        filtered_phrases = filtered_phrases[:6]  # Polite limit of 6 lookups
+
+        for phrase in filtered_phrases:
             try:
-                nom_results = self.nominatim.search(phrase, limit=1)
+                # Query with known synonym expansion if available
+                query_str = GEO_PHONETIC_SYNONYMS.get(phrase, phrase)
+                nom_results = self.nominatim.search(query_str, limit=1)
                 if nom_results:
                     hit = nom_results[0]
                     p_lat = float(hit["lat"])
@@ -166,11 +177,11 @@ class Stage1Clues:
                         kind="place_sign",
                         status="observed",
                         source="nominatim_geocoding",
-                        confidence=0.96,
+                        confidence=0.92,
                     )
-                    is_specific = any(w in display_name.lower() for w in ("road", "point", "hill", "peak", "street", "building", "shrine", "station", "police"))
-                    cand_prior = 8.0 if is_specific else 4.0
-                    weight = 12.0 if is_specific else 6.0
+                    is_specific = any(w in display_name.lower() for w in ("road", "expressway", "highway", "point", "hill", "peak", "street", "building", "shrine", "station"))
+                    cand_prior = 4.0 if is_specific else 2.0
+                    weight = 6.0 if is_specific else 3.0
 
                     cand_name = f"Geocoded Sign '{phrase}': {display_name[:40]}"
                     board.add_candidate(
@@ -360,61 +371,44 @@ class Stage1Clues:
                 horizon_visible = top_cat[3]
                 architecture = top_cat[4]
 
-            # Universal High-Accuracy Landmark & Heritage Perception
-            lm_matcher = LandmarkMatcher()
-            lm_res = lm_matcher.match(im, clip_model, clip_proc, device=device)
-            if lm_res:
-                l_name = lm_res["name"]
-                l_lat = lm_res["latitude"]
-                l_lon = lm_res["longitude"]
-                l_conf = lm_res["confidence"]
-                l_radius = lm_res["radius_km"]
-                l_cat = lm_res.get("category", "landmark")
+            # Direct Contour Skyline Analysis: Check image directly for genuine mountain/hill relief
+            try:
+                from geolocator.pipeline.skyline_extractor import SkylineExtractor
+                extractor = SkylineExtractor(target_width=120)
+                overlay_path = image_path.parent / "skyline_overlay.png"
+                sky_info = extractor.extract_from_image(im, save_overlay_path=overlay_path)
+                std_elev = sky_info.get("std_elevation", 0.0)
+                if sky_info.get("is_non_flat", False) or std_elev >= 0.02:
+                    relief = "mountainous" if std_elev >= 0.055 else "hilly"
+                    horizon_visible = True
+                    logger.info("[stage1_skyline] Direct contour inspection confirmed non-flat terrain (std=%.4f, relief=%s)", std_elev, relief)
+            except Exception as e:
+                logger.debug("[stage1_skyline] Direct contour check error: %s", e)
 
-                # If building, architectural, or urban monument, ensure flat relief and suppressed horizon
-                if l_cat in ("fortress", "university_campus", "hospital_complex", "civic_building", "civic_market", "cathedral", "government_building", "national_mosque", "historical_mosque", "world_landmark", "landmark_building", "unesco_world_heritage") or scene_type == "urban":
-                    relief = "flat"
-                    horizon_visible = False
-
-                # Attempt high-precision Nominatim geocoding to lock exact building footprint center
-                try:
-                    nom_hits = self.nominatim.search(l_name, limit=1)
-                    if nom_hits:
-                        hit = nom_hits[0]
-                        l_lat = float(hit["lat"])
-                        l_lon = float(hit["lon"])
-                        logger.info("[stage1_landmark] Exact OSM coordinate locked: (%f, %f) for %s", l_lat, l_lon, hit.get("display_name"))
-                except Exception as e:
-                    logger.debug("[stage1_landmark] Nominatim refinement skipped: %s", e)
-
-                region_guesses.append(RegionGuessItem(place=l_name, confidence=min(0.98, l_conf * 1.5), reason="Zero-shot landmark perception"))
-                if board is not None:
+            # Informational landmark perception (Only if explicitly hinted or high confidence; never force-snap)
+            user_requested_landmark = bool(board and board.data.get("user_hints", {}).get("landmarks"))
+            if user_requested_landmark:
+                lm_matcher = LandmarkMatcher()
+                lm_res = lm_matcher.match(im, clip_model, clip_proc, device=device)
+                if lm_res and lm_res.get("confidence", 0.0) >= 0.65:
+                    l_name = lm_res["name"]
+                    l_lat = lm_res["latitude"]
+                    l_lon = lm_res["longitude"]
+                    l_conf = lm_res["confidence"]
+                    region_guesses.append(RegionGuessItem(place=l_name, confidence=l_conf, reason="User-requested landmark perception"))
                     cand_name = f"Landmark: {l_name}"
                     board.add_candidate(
                         name=cand_name,
                         level="point",
                         lat=l_lat,
                         lon=l_lon,
-                        prior=5.0,
+                        prior=2.0,
                         metadata={
                             "landmark": l_name,
-                            "tier": "T1",
-                            "radius_km": l_radius,
-                            "category": l_cat,
-                            "source": "landmark_exact_mark",
+                            "tier": "T2",
+                            "radius_km": lm_res.get("radius_km", 2.0),
+                            "source": "landmark_hint",
                         }
-                    )
-                    cid_lm = board.add_clue(
-                        text=f"Visual perception identified exact landmark: {l_name} (conf={l_conf:.2f}, precision=±{int(l_radius*1000)}m)",
-                        kind="landmark",
-                        status="observed",
-                        source="clip_zero_shot",
-                        confidence=round(l_conf, 2),
-                    )
-                    board.add_evidence(
-                        clue_id=cid_lm,
-                        candidate_weights={cand_name: 12.0},
-                        rationale=lm_res["rationale"],
                     )
 
             # Offload CLIP model to CPU and purge VRAM for subsequent stages

@@ -413,6 +413,25 @@
   - Unit tests verified: random/non-landmark images reject with 85.8% negative probability; legitimate landmarks (e.g. Eiffel Tower) correctly pass with 97.8% positive probability.
   - Full test suite verified: **41/41 tests passing** (`pytest -q`).
 
+### OCR Stop-Words, Highway Route Codes, False Homonym Pruning & Visual Skyline Evidence
+- [x] **Road Sign & Traffic Stop-Word Expansion (`clues_adapter.py`)**:
+  - Added traffic and safety stop-words (`seat`, `belt`, `seatbelt`, `seatbeit`, `nyok`, `nyoi`, `speed`, `limit`, `slow`, `safe`, `safety`, `fasten`, `buckle`, `caution`, `danger`, `warning`, `toll plaza`, `vehicle`, `traffic`, `rules`, `fine`, `penalty`, `camera`, `km/h`, `mph`).
+  - Prevents non-geographic instructional highway signs from generating spurious overseas geocoding hits.
+- [x] **Highway Route Code Expansion**:
+  - Added national route mappings (`N-75`, `N75` $\rightarrow$ `N-75, Pakistan`) in `GEO_PHONETIC_SYNONYMS`, enabling accurate geocoding along major transit corridors.
+  - Expanded `COUNTRY_BBOXES` in `geo_utils.py` for regional coverage (Pakistan, Nepal, Bangladesh, Sri Lanka, Afghanistan, Iran, Iraq, Southeast Asian nations).
+- [x] **Geographic Corroboration & False Homonym Pruning (`stage2_prior.py`)**:
+  - Evaluated all point and sign candidates against the top visual prior clusters.
+  - Candidates located $> 800$ km from the visual prior without explicit user confirmation are pruned from search bounding boxes and penalized with negative scores ($-20.0$), eliminating false homonyms (e.g. Jerusalem, Bergamo).
+- [x] **Continuous Horizon Analysis & Visual Skyline Evidence (`stage3_terrain.py`, `skyline_extractor.py`)**:
+  - Enhanced `SkylineExtractor` to compute standard deviation and contrast, saving a visual ridgeline overlay (`skyline_overlay.png`) with tactical outlines.
+  - Gated DEM search: dynamically bypasses heavy DEM sweeps if the horizon is flat (`std < 0.015`), and executes correlation when undulating terrain is present.
+  - Updated report generation to honestly cite `skyline_overlay.png` as verified evidence.
+- [x] **Regression & Verification**:
+  - Validated end-to-end execution on user's highway photo (`test_job_3100_clean`): locked location to Murree / Hazara mountains along the N-75 corridor (`34.0851, 73.8769`, Tier T2, 4.5 km radius), pruned false overseas signs, and generated multimodal evidence.
+  - All **41/41 unit and integration tests passing** (`pytest tests/`).
+
+
 
 
 

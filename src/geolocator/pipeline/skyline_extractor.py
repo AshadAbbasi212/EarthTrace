@@ -84,6 +84,8 @@ class SkylineExtractor:
         ridge_inverted = (h - final_ridge) / float(h)
         # Normalize curve so mean is 0, std is 1 for cross-correlation matching
         std_val = float(np.std(ridge_inverted))
+        contrast_val = float(np.max(ridge_inverted) - np.min(ridge_inverted)) if len(ridge_inverted) > 0 else 0.0
+        is_non_flat = bool(std_val >= 0.02 and contrast_val >= 0.07)
         norm_curve = (ridge_inverted - np.mean(ridge_inverted)) / (std_val if std_val > 1e-4 else 1.0)
 
         # Generate visual overlay if requested
@@ -95,7 +97,9 @@ class SkylineExtractor:
             draw = ImageDraw.Draw(overlay_im)
             pts = [(col, int(final_ridge[col])) for col in range(w)]
             for i in range(len(pts) - 1):
-                draw.line([pts[i], pts[i + 1]], fill=(255, 30, 30), width=2)
+                # Glowing HUD style line (dark outline + bright neon red center)
+                draw.line([pts[i], pts[i + 1]], fill=(0, 0, 0), width=4)
+                draw.line([pts[i], pts[i + 1]], fill=(255, 40, 40), width=2)
             overlay_im.save(save_overlay_path)
             overlay_saved = True
 
@@ -104,6 +108,9 @@ class SkylineExtractor:
             "horizon_rows": [int(r) for r in final_ridge],
             "normalized_profile": [round(float(v), 4) for v in norm_curve],
             "raw_elevations": [round(float(v), 4) for v in ridge_inverted],
+            "std_elevation": round(std_val, 4),
+            "contrast": round(contrast_val, 4),
+            "is_non_flat": is_non_flat,
             "overlay_saved": overlay_saved,
             "overlay_path": str(save_overlay_path) if overlay_saved else None,
         }

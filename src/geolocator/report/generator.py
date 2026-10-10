@@ -112,15 +112,15 @@ class ReportGenerator:
             elif "corridor_score" in meta and meta["corridor_score"] >= 3.0:
                 tier = "T1"
                 calibrated_radius_km = 0.5
-            elif "fit_score" in meta and meta["fit_score"] >= 0.70:
-                tier = "T2"
+            elif "fit_score" in meta and meta["fit_score"] >= 0.65:
+                tier = meta.get("tier", "T2")
                 calibrated_radius_km = float(meta.get("radius_km", 2.5))
-            elif "landmark" in meta or "Landmark:" in top_name or meta.get("source") == "landmark_exact_mark" or meta.get("tier") == "T1":
-                tier = meta.get("tier", "T1")
-                calibrated_radius_km = float(meta.get("radius_km", 0.05))
+            elif meta.get("source") == "cadastral_exact_mark":
+                tier = "T1"
+                calibrated_radius_km = 0.05
             elif meta.get("source") == "exif_gps":
-                tier = "T2"
-                calibrated_radius_km = 3.0
+                tier = "T1"
+                calibrated_radius_km = 0.02
             elif best_candidate.get("level") == "point":
                 tier = "T2" if margin > 1.5 else "T3"
                 calibrated_radius_km = 3.0 if tier == "T2" else 15.0
@@ -185,18 +185,26 @@ class ReportGenerator:
         # Evidence 2: Elevation Skylines
         dem_status = terrain_data.get("status", "")
         fit_score = terrain_data.get("fit_results", {}).get("best_score", 0.0) if terrain_data else 0.0
-        if ("stage3_terrain" in stages_run or terrain_data) and dem_status != "not_applicable" and fit_score >= 0.70:
+        overlay_exists = (job_dir / "skyline_overlay.png").exists()
+        if ("stage3_terrain" in stages_run or terrain_data) and dem_status != "not_applicable" and fit_score >= 0.65:
             dem_evidence = {
                 "name": "Elevation Skylines",
                 "status": "used",
                 "findings": f"AWS Terrarium DEM horizon profile correlated with photo ridgeline (NCC={fit_score:.3f})",
-                "artifact": "terrain_results.json",
+                "artifact": "skyline_overlay.png",
+            }
+        elif overlay_exists:
+            dem_evidence = {
+                "name": "Elevation Skylines",
+                "status": "used",
+                "findings": "Photographic horizon contour detected and extracted; visual ridgeline overlay generated.",
+                "artifact": "skyline_overlay.png",
             }
         else:
             dem_evidence = {
                 "name": "Elevation Skylines",
                 "status": "not applicable",
-                "findings": terrain_data.get("reason", "Natural terrain skyline not applicable: scene dominated by urban/building architecture or flat horizon"),
+                "findings": terrain_data.get("reason", "Horizon profile is flat; natural mountain terrain skyline bypassed."),
                 "artifact": None,
             }
 

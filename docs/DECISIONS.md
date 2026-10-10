@@ -192,3 +192,17 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
   - **Negative Prompt Rejection:** Added `NEGATIVE_PROMPTS` (8 comprehensive non-landmark classes: ordinary street, residential house, commercial storefront, generic natural landscape without landmark, indoor room, people/vehicles, agricultural fields, close-up non-scenic) to `LandmarkMatcher`. Any image whose top prediction matches a negative prompt is automatically rejected with `None`. Genuine landmarks now require `neg_margin >= 0.15` and `top_prob >= 0.35` (or `top_prob >= 0.50` with clear margin over runner-up).
   - **Pruned Database & Synonyms:** Removed generic viewpoint prompts and cleaned `GEO_PHONETIC_SYNONYMS` to require exact proper nouns. Removed hardcoded condition in `stage1_clues.py`.
   - **Calibrated Bayesian Weights:** Lowered landmark prior from `50.0` to `5.0` and clue likelihood from `250.0` to `12.0`, restoring proper Bayesian balance where multimodal downstream evidence can independently confirm or refute visual landmark proposals.
+
+---
+
+## 20. OCR Safety Stop-Words, Highway Route Codes, False Homonym Pruning & Visual Skyline Overlay Evidence
+- **Problem:**
+  - On highway driving photos featuring road safety signs (e.g., "FASTEN SEAT BELT", "SPEED LIMIT", route "N-75"), partial OCR fragments such as `"BEIT"` or `"ATB IT"` triggered unconstrained Nominatim queries returning distant global homonyms (e.g. Jerusalem or Bergamo, Italy).
+  - Spurious point candidates were treated as high-priority bounding boxes in Stage 2 regardless of how contradictory they were to the visual prior (thousands of kilometers away).
+  - In photos where natural terrain skylines existed, visual overlays were only produced when DEM cross-correlation exceeded high thresholds, leaving users without photographic evidence artifacts when correlations were moderate.
+- **Solution & Decision:**
+  - **Stop-Word Filtering:** Added comprehensive traffic and safety terms to `COMMON_STOP_WORDS` (`seat`, `belt`, `seatbelt`, `seatbeit`, `nyok`, `nyoi`, `speed`, `limit`, `slow`, `safe`, `safety`, `fasten`, `buckle`, `caution`, `danger`, `warning`, `toll plaza`, `vehicle`, `traffic`, `rules`, `fine`, `penalty`, `camera`, `km/h`, `mph`), preventing non-geographic instruction signs from generating geocoding hits.
+  - **Route Code Expansion:** Mapped national highway identifiers (`N-75`, `N75`) in `GEO_PHONETIC_SYNONYMS` to explicit country search strings (`N-75, Pakistan`).
+  - **Geographic Corroboration & False Homonym Pruning:** In `Stage2Prior`, all point/sign candidates are cross-checked against top visual prior clusters. Candidates exceeding 800 km from the visual prior without explicit user confirmation are pruned and penalized with a negative score (`-20.0`), preventing spurious foreign matches from contaminating bounding box selection.
+  - **Continuous Horizon & Visual Skyline Overlay:** `SkylineExtractor` now continuously computes horizon standard deviation and contrast, saving a tactical high-contrast visual overlay (`skyline_overlay.png`) as verifiable evidence whenever ridgelines exist, while gracefully bypassing expensive DEM sweeps when the horizon is completely flat.
+
