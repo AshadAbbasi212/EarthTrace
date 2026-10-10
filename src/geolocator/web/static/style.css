@@ -677,6 +677,55 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+.result-target-label-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.result-target-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.location-cycle-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.18rem 0.55rem;
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.location-cycle-hint:hover {
+  background: rgba(0, 240, 255, 0.15);
+  color: var(--cyan);
+  border-color: var(--cyan);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+
+.cycle-icon {
+  font-size: 0.85rem;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.location-cycle-hint:hover .cycle-icon {
+  transform: rotate(180deg);
 }
 
 .result-location {
@@ -688,6 +737,135 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
   letter-spacing: -0.02em;
 }
 
+.clickable-location-title {
+  cursor: pointer;
+  user-select: none;
+  display: inline-block;
+  transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.15s ease;
+  border-bottom: 1px dashed rgba(0, 240, 255, 0.35);
+  padding-bottom: 2px;
+}
+
+.clickable-location-title:hover {
+  color: #00f0ff;
+  text-shadow: 0 0 16px rgba(0, 240, 255, 0.65);
+  border-bottom-color: var(--cyan);
+}
+
+.clickable-location-title:active {
+  transform: scale(0.99);
+}
+
+/* Hypothesis Switcher Pills */
+.hypothesis-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.hypo-pill {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hypo-pill:hover {
+  background: rgba(30, 41, 59, 0.95);
+  color: var(--text-main);
+  border-color: rgba(0, 240, 255, 0.4);
+}
+
+.hypo-pill.active {
+  background: rgba(0, 240, 255, 0.16);
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.35);
+  font-weight: 700;
+}
+
+/* Alternative Locations - Little Gray Mark on Map */
+.alt-little-gray-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 20px;
+  height: 20px;
+  background: #475569;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.75), 0 0 6px rgba(203, 213, 225, 0.4);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.alt-little-gray-mark:hover {
+  border-color: #00f0ff;
+  background: #1e293b;
+  transform: scale(1.35);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.85);
+  z-index: 1000 !important;
+}
+
+.gray-mark-badge {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #f1f5f9;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.alt-little-gray-mark:hover .gray-mark-badge {
+  color: #00f0ff;
+}
+
+.location-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 0.15rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(0, 240, 255, 0.16);
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+  margin-right: 0.55rem;
+  vertical-align: middle;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+}
+
+.location-rank-badge.t2,
+.location-rank-badge.t3,
+.location-rank-badge.t4,
+.location-rank-badge.t5,
+.location-rank-badge.t6 {
+  background: rgba(148, 163, 184, 0.2);
+  border-color: #94a3b8;
+  color: #e2e8f0;
+  box-shadow: 0 0 8px rgba(148, 163, 184, 0.25);
+}
+
+.location-name-text {
+  vertical-align: middle;
+}
+
 .tier-badge {
   font-family: var(--font-mono);
   font-size: 0.85rem;
@@ -697,6 +875,7 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+  white-space: nowrap;
 }
 
 .result-stats {

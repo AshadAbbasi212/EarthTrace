@@ -431,6 +431,21 @@
   - Validated end-to-end execution on user's highway photo (`test_job_3100_clean`): locked location to Murree / Hazara mountains along the N-75 corridor (`34.0851, 73.8769`, Tier T2, 4.5 km radius), pruned false overseas signs, and generated multimodal evidence.
   - All **41/41 unit and integration tests passing** (`pytest tests/`).
 
+### Interactive Alternative Hypothesis Cycling & Tactical Map Gray Marks
+- [x] **Alternative Candidate Representation on Leaflet Map**:
+  - Rendered alternative candidate locations as sleek tactical gray circular marks (`.alt-little-gray-mark`, 20px slate circles with silver border and rank badges `T2`, `T3`...) across Leaflet layers.
+  - Bound direct click handlers on each gray marker so clicking a mark immediately switches the active inspection focus to that hypothesis.
+  - Provided hover tooltips displaying rank label, location name, and click hint.
+- [x] **Interactive Hypothesis Cycling (T1 → T2 → T3 → T1)**:
+  - Added clickable location title (`.clickable-location-title`) and rotation hint badge (`#location-cycle-hint`) allowing users to cycle through candidates with each click.
+  - Highlighted explicit rank badges (`[T1]`, `[T2]`, `[T3]`) directly inside `#result-location`.
+  - Added interactive hypothesis switcher tabs (`#hypothesis-selector`, `.hypo-pill`) for 1-click jumping.
+  - Updated 3D WebGL globe target orientation and Leaflet map centering smoothly on each hypothesis switch.
+  - Added "Next Location" quick switch button inside the active marker's popup.
+- [x] **Automated Regression & Test Suite**:
+  - Added `test_alternative_hypotheses_and_map_marks` in `tests/test_frontend.py`.
+  - Verified full test suite passes completely.
+
 
 
 

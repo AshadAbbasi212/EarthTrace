@@ -273,6 +273,37 @@ class ReportGenerator:
             street_evidence,
         ]
 
+        formatted_alternatives = []
+        for i, alt in enumerate(alternatives[:4]):
+            alt_meta = alt.get("metadata", {})
+            a_score = alt.get("score", 0.0)
+            a_level = alt.get("level", "point")
+            a_tier = alt_meta.get("tier")
+            a_radius = alt_meta.get("radius_km")
+            if a_tier is None:
+                if a_level == "point":
+                    a_tier = "T2" if a_score > 3.0 else "T3"
+                    a_radius = a_radius or (3.0 if a_tier == "T2" else 15.0)
+                elif a_level in ("cell", "area", "city"):
+                    a_tier = "T3" if a_score > 1.0 else "T4"
+                    a_radius = a_radius or (25.0 if a_tier == "T3" else 150.0)
+                else:
+                    a_tier = "T5"
+                    a_radius = a_radius or 1500.0
+            a_radius_km = float(a_radius or 15.0)
+            coords = [round(alt["lat"], 6), round(alt["lon"], 6)] if alt.get("lat") is not None and alt.get("lon") is not None else None
+            formatted_alternatives.append({
+                "name": alt["name"],
+                "coordinates": coords,
+                "score": round(a_score, 4),
+                "level": a_level,
+                "confidence_tier": a_tier,
+                "calibrated_radius_km": a_radius_km,
+                "error_radius_m": a_radius_km * 1000.0,
+                "heading_deg": alt_meta.get("heading"),
+                "rationale": alt_meta.get("rationale") or f"Alternative hypothesis #{i+2}: {alt['name']} (Score: {a_score:.2f})",
+            })
+
         report_data = {
             "version": "1.0.0",
             "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -297,15 +328,7 @@ class ReportGenerator:
                 "camera_heading_deg": heading_deg,
                 "score": round(best_candidate["score"], 4) if best_candidate else 0.0,
             },
-            "top_alternatives": [
-                {
-                    "name": alt["name"],
-                    "coordinates": [round(alt["lat"], 6), round(alt["lon"], 6)] if alt.get("lat") else None,
-                    "score": round(alt["score"], 4),
-                    "level": alt.get("level"),
-                }
-                for alt in alternatives[:4]
-            ],
+            "top_alternatives": formatted_alternatives,
             "evidence": {
                 "osm_geometry": osm_evidence,
                 "elevation_skyline": dem_evidence,

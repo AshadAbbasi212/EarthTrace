@@ -12,6 +12,8 @@
   let eventSource = null;
   let map = null;
   let mapLayers = null;
+  let allHypotheses = [];
+  let currentHypothesisIndex = 0;
 
   // --- DOM Elements ---
   const dropzone = document.getElementById('dropzone');
@@ -442,103 +444,141 @@
     }
   }
 
+  // Global hook for popup clicks
+  window.__selectHypothesis = function(idx) {
+    renderHypothesis(idx);
+  };
+
   function displayReport(report, jobId) {
     currentReportData = report;
     resultsCard.style.display = 'block';
 
+    // 1. Compile all hypotheses list: T1 (Top), T2, T3...
+    allHypotheses = [];
     const top = report.top_hypothesis || report.best_location || {};
-    let lat = null;
-    let lon = null;
+    let topLat = null;
+    let topLon = null;
     if (top.coordinates) {
       if (Array.isArray(top.coordinates) && top.coordinates.length >= 2) {
-        lat = Number(top.coordinates[0]);
-        lon = Number(top.coordinates[1]);
+        topLat = Number(top.coordinates[0]);
+        topLon = Number(top.coordinates[1]);
       } else if (top.coordinates.latitude !== undefined) {
-        lat = Number(top.coordinates.latitude);
-        lon = Number(top.coordinates.longitude);
+        topLat = Number(top.coordinates.latitude);
+        topLon = Number(top.coordinates.longitude);
       }
     } else if (report.best_location && Array.isArray(report.best_location.coordinates)) {
-      lat = Number(report.best_location.coordinates[0]);
-      lon = Number(report.best_location.coordinates[1]);
+      topLat = Number(report.best_location.coordinates[0]);
+      topLon = Number(report.best_location.coordinates[1]);
     }
 
-    const tier = top.confidence_tier || (report.best_location && report.best_location.confidence_tier) || 'T6';
-    const radiusM = top.error_radius_m || 
+    const topTier = top.confidence_tier || (report.best_location && report.best_location.confidence_tier) || 'T6';
+    const topRadiusM = top.error_radius_m || 
       (top.calibrated_radius_km ? top.calibrated_radius_km * 1000 : null) || 
       (report.best_location && report.best_location.calibrated_radius_km ? report.best_location.calibrated_radius_km * 1000 : null) || 
       500000;
-    const heading = top.heading_deg !== undefined ? top.heading_deg : 
+    const topHeading = top.heading_deg !== undefined ? top.heading_deg : 
       (top.camera_heading_deg !== undefined ? top.camera_heading_deg : 
       (report.best_location && report.best_location.camera_heading_deg !== undefined ? report.best_location.camera_heading_deg : null));
 
-    // Location name
-    resultLocation.textContent = report.location_name || top.name || (lat !== null ? `${lat.toFixed(5)}, ${lon.toFixed(5)}` : 'Unknown Region');
-
-    // Tier badge color
-    tierBadge.textContent = `Tier ${tier}`;
-    const tierColors = {
-      'T1': '#10b981', // green
-      'T2': '#3b82f6', // blue
-      'T3': '#8b5cf6', // purple
-      'T4': '#f59e0b', // amber
-      'T5': '#ef4444', // red
-      'T6': '#64748b'  // gray
-    };
-    tierBadge.style.backgroundColor = tierColors[tier] || '#3b82f6';
-
-    statLat.textContent = (lat !== null && !isNaN(lat)) ? lat.toFixed(5) : '--';
-    statLon.textContent = (lon !== null && !isNaN(lon)) ? lon.toFixed(5) : '--';
-    statRadius.textContent = radiusM < 1000 ? `±${radiusM.toFixed(0)} m` : `±${(radiusM / 1000).toFixed(1)} km`;
-    statHeading.textContent = (heading !== null && !isNaN(heading)) ? `${heading.toFixed(0)}°` : 'N/A';
-
-    resultRationale.textContent = top.rationale || report.summary || 'Reasoning completed with multimodal evidence.';
-
-    // Setup Exact Mark Pinpoint HUD
-    const exactMarkHud = document.getElementById('exact-mark-hud');
-    const exactMetricPrec = document.getElementById('exact-metric-precision');
-    if (exactMarkHud) {
-      if (tier === 'T1' && radiusM <= 150) {
-        exactMarkHud.style.display = 'flex';
-        if (exactMetricPrec) {
-          exactMetricPrec.textContent = `PRECISION: ±${Math.round(radiusM)}m (EXACT MARK)`;
-        }
-      } else {
-        exactMarkHud.style.display = 'none';
-      }
+    if (topLat !== null && topLon !== null && !isNaN(topLat) && !isNaN(topLon)) {
+      allHypotheses.push({
+        rank: 1,
+        rankLabel: 'T1',
+        isTop: true,
+        name: report.location_name || top.name || `${topLat.toFixed(5)}, ${topLon.toFixed(5)}`,
+        lat: topLat,
+        lon: topLon,
+        tier: topTier,
+        radiusM: topRadiusM,
+        heading: topHeading,
+        rationale: top.rationale || report.summary || 'Top determined location from multimodal pipeline.',
+        isExactMark: (topTier === 'T1' && topRadiusM <= 150),
+        score: (report.best_location && report.best_location.score) !== undefined ? report.best_location.score : (top.score || 10.0)
+      });
     }
 
-    // Setup action bar links
+    // Process alternatives: T2, T3, T4...
+    const alternatives = report.top_alternatives || report.alternatives || [];
+    if (Array.isArray(alternatives)) {
+      alternatives.forEach((alt) => {
+        let altLat = null;
+        let altLon = null;
+        if (Array.isArray(alt.coordinates) && alt.coordinates.length >= 2) {
+          altLat = Number(alt.coordinates[0]);
+          altLon = Number(alt.coordinates[1]);
+        } else if (alt.coordinates && alt.coordinates.latitude !== undefined) {
+          altLat = Number(alt.coordinates.latitude);
+          altLon = Number(alt.coordinates.longitude);
+        } else if (alt.lat !== undefined && alt.lon !== undefined) {
+          altLat = Number(alt.lat);
+          altLon = Number(alt.lon);
+        }
+
+        if (altLat !== null && altLon !== null && !isNaN(altLat) && !isNaN(altLon)) {
+          // Avoid duplicate coordinates of existing hypotheses
+          const isDup = allHypotheses.some(h => Math.abs(h.lat - altLat) < 0.0001 && Math.abs(h.lon - altLon) < 0.0001);
+          if (!isDup) {
+            const altRank = allHypotheses.length + 1;
+            const altLabel = `T${altRank}`;
+            const altTier = alt.confidence_tier || (alt.score && alt.score > 3.0 ? 'T2' : (alt.score && alt.score > 0 ? 'T3' : 'T4'));
+            const altRadM = alt.error_radius_m || (alt.calibrated_radius_km ? alt.calibrated_radius_km * 1000 : (altTier === 'T2' ? 3000 : (altTier === 'T3' ? 15000 : 45000)));
+            const altHeading = alt.heading_deg !== undefined ? alt.heading_deg : null;
+
+            allHypotheses.push({
+              rank: altRank,
+              rankLabel: altLabel,
+              isTop: false,
+              name: alt.name || `Alternative ${altLabel}`,
+              lat: altLat,
+              lon: altLon,
+              tier: altTier,
+              radiusM: altRadM,
+              heading: altHeading,
+              rationale: alt.rationale || `Alternative candidate ${altLabel}: ${alt.name || 'Candidate'} (Score: ${alt.score !== undefined ? alt.score.toFixed(2) : 'N/A'})`,
+              isExactMark: (altTier === 'T1' && altRadM <= 150),
+              score: alt.score !== undefined ? alt.score : 0.0
+            });
+          }
+        }
+      });
+    }
+
+    // Setup action bar download / export links
     openReportHtmlBtn.href = appendPassphraseParam(`/api/jobs/${jobId}/report.html`);
     downloadJsonBtn.href = appendPassphraseParam(`/api/jobs/${jobId}/report`);
     downloadGeojsonBtn.href = appendPassphraseParam(`/api/jobs/${jobId}/report.geojson`);
 
     copyCoordsBtn.onclick = () => {
-      if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
-        navigator.clipboard.writeText(`${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+      const activeHypo = allHypotheses[currentHypothesisIndex];
+      if (activeHypo) {
+        navigator.clipboard.writeText(`${activeHypo.lat.toFixed(6)}, ${activeHypo.lon.toFixed(6)}`);
         copyCoordsBtn.textContent = '✅ Copied!';
         setTimeout(() => copyCoordsBtn.textContent = '📋 Copy Coords', 2000);
       }
     };
 
-    const alternatives = report.top_alternatives || report.alternatives || [];
-
-    // Update 3D Tactical Globe Target
-    if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
-      setGlobeTarget(lat, lon);
-      const latStr = `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}`;
-      const lonStr = `${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`;
-      const globeCoordsEl = document.getElementById('header-globe-coords');
-      if (globeCoordsEl) globeCoordsEl.textContent = `${latStr}, ${lonStr}`;
-    }
-
-    // Render Map
-    try {
-      if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
-        renderMapSolution(lat, lon, radiusM, heading, tier, alternatives);
+    // Attach click listener so clicking the location title cycles T1 -> T2 -> T3
+    resultLocation.onclick = () => {
+      if (allHypotheses.length > 1) {
+        const nextIdx = (currentHypothesisIndex + 1) % allHypotheses.length;
+        renderHypothesis(nextIdx);
       }
-    } catch (err) {
-      console.error('Failed to render map solution:', err);
+    };
+
+    const cycleHint = document.getElementById('location-cycle-hint');
+    if (cycleHint) {
+      cycleHint.onclick = (e) => {
+        e.stopPropagation();
+        if (allHypotheses.length > 1) {
+          const nextIdx = (currentHypothesisIndex + 1) % allHypotheses.length;
+          renderHypothesis(nextIdx);
+        }
+      };
     }
+
+    // Render initial hypothesis: T1
+    currentHypothesisIndex = 0;
+    renderHypothesis(0);
 
     // Populate 4 Evidence Cards
     try {
@@ -548,17 +588,127 @@
     }
   }
 
-  function renderMapSolution(lat, lon, radiusM, heading, tier, alternatives) {
+  function renderHypothesis(index) {
+    if (!allHypotheses || allHypotheses.length === 0) return;
+    currentHypothesisIndex = ((index % allHypotheses.length) + allHypotheses.length) % allHypotheses.length;
+    const hypo = allHypotheses[currentHypothesisIndex];
+
+    // Location name with explicit rank badge (T1, T2, T3)
+    resultLocation.innerHTML = '';
+    const rankBadge = document.createElement('span');
+    rankBadge.className = `location-rank-badge ${hypo.rankLabel.toLowerCase()}`;
+    rankBadge.textContent = hypo.rankLabel;
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'location-name-text';
+    nameSpan.textContent = hypo.name;
+    resultLocation.appendChild(rankBadge);
+    resultLocation.appendChild(nameSpan);
+
+    resultLocation.title = allHypotheses.length > 1 
+      ? `Viewing ${hypo.rankLabel}. Click location to view ${allHypotheses[(currentHypothesisIndex + 1) % allHypotheses.length].rankLabel} (${currentHypothesisIndex + 1}/${allHypotheses.length})` 
+      : hypo.name;
+
+    // Cycle hint text
+    const cycleHint = document.getElementById('location-cycle-hint');
+    if (cycleHint) {
+      if (allHypotheses.length > 1) {
+        const nextIdx = (currentHypothesisIndex + 1) % allHypotheses.length;
+        const nextLabel = allHypotheses[nextIdx].rankLabel;
+        cycleHint.style.display = 'inline-flex';
+        cycleHint.innerHTML = `<span class="cycle-icon">↻</span> Viewing <b>${hypo.rankLabel}</b> • Click location to view <b>${nextLabel}</b> (${currentHypothesisIndex + 1}/${allHypotheses.length})`;
+      } else {
+        cycleHint.style.display = 'none';
+      }
+    }
+
+    // Tier badge color & text
+    tierBadge.textContent = `Tier ${hypo.tier}`;
+    const tierColors = {
+      'T1': '#10b981', // green
+      'T2': '#3b82f6', // blue
+      'T3': '#8b5cf6', // purple
+      'T4': '#f59e0b', // amber
+      'T5': '#ef4444', // red
+      'T6': '#64748b'  // gray
+    };
+    tierBadge.style.backgroundColor = tierColors[hypo.tier] || '#3b82f6';
+
+    // Statistics readout
+    statLat.textContent = hypo.lat.toFixed(5);
+    statLon.textContent = hypo.lon.toFixed(5);
+    statRadius.textContent = hypo.radiusM < 1000 ? `±${hypo.radiusM.toFixed(0)} m` : `±${(hypo.radiusM / 1000).toFixed(1)} km`;
+    statHeading.textContent = (hypo.heading !== null && !isNaN(hypo.heading)) ? `${hypo.heading.toFixed(0)}°` : 'N/A';
+    resultRationale.textContent = hypo.rationale;
+
+    // Exact Mark HUD
+    const exactMarkHud = document.getElementById('exact-mark-hud');
+    const exactMetricPrec = document.getElementById('exact-metric-precision');
+    if (exactMarkHud) {
+      if (hypo.isExactMark) {
+        exactMarkHud.style.display = 'flex';
+        if (exactMetricPrec) {
+          exactMetricPrec.textContent = `PRECISION: ±${Math.round(hypo.radiusM)}m (EXACT MARK)`;
+        }
+      } else {
+        exactMarkHud.style.display = 'none';
+      }
+    }
+
+    // Update 3D Tactical Globe Target
+    setGlobeTarget(hypo.lat, hypo.lon);
+    const latStr = `${Math.abs(hypo.lat).toFixed(2)}°${hypo.lat >= 0 ? 'N' : 'S'}`;
+    const lonStr = `${Math.abs(hypo.lon).toFixed(2)}°${hypo.lon >= 0 ? 'E' : 'W'}`;
+    const globeCoordsEl = document.getElementById('header-globe-coords');
+    if (globeCoordsEl) globeCoordsEl.textContent = `${latStr}, ${lonStr}`;
+
+    // Update Hypothesis Switcher Pills
+    const selectorEl = document.getElementById('hypothesis-selector');
+    if (selectorEl) {
+      if (allHypotheses.length > 1) {
+        selectorEl.style.display = 'flex';
+        selectorEl.innerHTML = '';
+        allHypotheses.forEach((h, i) => {
+          const pill = document.createElement('button');
+          pill.type = 'button';
+          pill.className = `hypo-pill ${i === currentHypothesisIndex ? 'active' : ''}`;
+          pill.innerHTML = `<span>${i === 0 ? '🎯' : '📍'}</span> ${h.rankLabel} <span style="opacity:0.75;font-size:0.68rem;">(${h.tier})</span>`;
+          pill.title = `${h.rankLabel}: ${h.name} • Click to inspect`;
+          pill.onclick = (e) => {
+            e.stopPropagation();
+            renderHypothesis(i);
+          };
+          selectorEl.appendChild(pill);
+        });
+      } else {
+        selectorEl.style.display = 'none';
+      }
+    }
+
+    // Render Map with selected active marker and little gray marks for alternatives
+    try {
+      renderMapSolution(currentHypothesisIndex);
+    } catch (err) {
+      console.error('Failed to render map solution:', err);
+    }
+  }
+
+  function renderMapSolution(selectedIndex) {
     ensureMap();
-    if (!mapLayers || !map) return;
+    if (!mapLayers || !map || !allHypotheses || allHypotheses.length === 0) return;
     mapLayers.clearLayers();
 
-    const isExactMark = (tier === 'T1' && radiusM <= 150);
+    const activeHypo = allHypotheses[selectedIndex];
+    const isExactMark = activeHypo.isExactMark;
+    const lat = activeHypo.lat;
+    const lon = activeHypo.lon;
+    const radiusM = activeHypo.radiusM;
+    const heading = activeHypo.heading;
+    const tier = activeHypo.tier;
 
-    // 1. Error Circle & Concentric Tactical Rings
+    // 1. Error Circle & Concentric Tactical Rings for Active Hypothesis
+    let activeCircle = null;
     if (isExactMark) {
-      // Concentric precision rings for Exact Mark
-      L.circle([lat, lon], {
+      activeCircle = L.circle([lat, lon], {
         radius: radiusM,
         color: '#10b981',
         fillColor: '#10b981',
@@ -575,7 +725,7 @@
         weight: 1.5
       }).addTo(mapLayers);
     } else {
-      L.circle([lat, lon], {
+      activeCircle = L.circle([lat, lon], {
         radius: radiusM,
         color: '#3b82f6',
         fillColor: '#3b82f6',
@@ -584,7 +734,7 @@
       }).addTo(mapLayers);
     }
 
-    // 2. Custom pulsing pin or Tactical Reticle marker
+    // 2. Active Pulsing Pin or Tactical Reticle Marker
     let pinHtml = '';
     let iconSize = [18, 18];
     let iconAnchor = [9, 9];
@@ -601,7 +751,7 @@
           background: #3b82f6;
           border: 3px solid #ffffff;
           border-radius: 50%;
-          box-shadow: 0 0 10px rgba(59, 130, 246, 0.9);
+          box-shadow: 0 0 12px rgba(59, 130, 246, 0.95);
         "></div>
       `;
     }
@@ -613,18 +763,17 @@
       iconAnchor: iconAnchor
     });
 
-    const marker = L.marker([lat, lon], { icon: pinIcon }).addTo(mapLayers);
-    const popupText = isExactMark 
-      ? `<b>🎯 EXACT MARK PINPOINT</b><br>Lat: ${lat.toFixed(6)}<br>Lon: ${lon.toFixed(6)}<br>Precision: ±${Math.round(radiusM)} m<br>Status: Cadastral Footprint Confirmed`
-      : `<b>Estimated Position</b><br>Lat: ${lat.toFixed(5)}<br>Lon: ${lon.toFixed(5)}<br>Tier: ${tier}<br>Radius: ±${(radiusM/1000).toFixed(1)} km`;
-    marker.bindPopup(popupText);
-
-    // Zoom into exact target
-    if (isExactMark) {
-      map.setView([lat, lon], 17, { animate: true });
-    } else {
-      map.fitBounds(L.circle([lat, lon], { radius: radiusM }).getBounds(), { padding: [40, 40], maxZoom: 14 });
+    const activeMarker = L.marker([lat, lon], { icon: pinIcon, zIndexOffset: 1000 }).addTo(mapLayers);
+    let popupContentHtml = isExactMark 
+      ? `<b>🎯 EXACT MARK PINPOINT (${activeHypo.rankLabel})</b><br>${activeHypo.name}<br>Lat: ${lat.toFixed(6)}<br>Lon: ${lon.toFixed(6)}<br>Precision: ±${Math.round(radiusM)} m`
+      : `<b>${activeHypo.rankLabel}: ${activeHypo.name}</b><br>Lat: ${lat.toFixed(5)}<br>Lon: ${lon.toFixed(5)}<br>Tier: ${tier}<br>Radius: ±${(radiusM/1000).toFixed(1)} km`;
+    
+    if (allHypotheses.length > 1) {
+      const nextIdx = (selectedIndex + 1) % allHypotheses.length;
+      const nextLabel = allHypotheses[nextIdx].rankLabel;
+      popupContentHtml += `<div style="margin-top: 8px;"><button type="button" class="btn-secondary" style="width: 100%; padding: 4px 8px; font-size: 11px; justify-content: center; cursor: pointer;" onclick="window.__cycleNextHypothesis()">↻ Next Location (${nextLabel})</button></div>`;
     }
+    activeMarker.bindPopup(popupContentHtml);
 
     // 3. Camera Heading Ray if available
     if (heading !== null && heading !== undefined && !isNaN(heading)) {
@@ -643,39 +792,60 @@
       rayLine.bindPopup(`Camera Heading: ${heading.toFixed(0)}°`);
     }
 
-    // 4. Alternative hypotheses markers
-    if (Array.isArray(alternatives)) {
-      alternatives.slice(0, 5).forEach((alt, idx) => {
-        let altLat = null;
-        let altLon = null;
-        if (Array.isArray(alt.coordinates) && alt.coordinates.length >= 2) {
-          altLat = Number(alt.coordinates[0]);
-          altLon = Number(alt.coordinates[1]);
-        } else if (alt.coordinates && alt.coordinates.latitude !== undefined) {
-          altLat = Number(alt.coordinates.latitude);
-          altLon = Number(alt.coordinates.longitude);
-        } else if (alt.lat !== undefined && alt.lon !== undefined) {
-          altLat = Number(alt.lat);
-          altLon = Number(alt.lon);
-        }
+    // 4. Little Gray Marks on Map for all other alternative locations
+    allHypotheses.forEach((h, idx) => {
+      if (idx === selectedIndex) return; // Skip active hypothesis
 
-        if (altLat !== null && altLon !== null && !isNaN(altLat) && !isNaN(altLon)) {
-          const altMarker = L.circleMarker([altLat, altLon], {
-            radius: 6,
-            color: '#94a3b8',
-            fillColor: '#64748b',
-            fillOpacity: 0.6,
-            weight: 1
-          }).addTo(mapLayers);
-          altMarker.bindPopup(`<b>Alternative #${idx + 1}: ${alt.name || 'Candidate'}</b><br>Score: ${alt.score ? alt.score.toFixed(2) : 'N/A'}`);
-        }
+      const grayIconHtml = `
+        <div class="alt-little-gray-mark" title="${h.rankLabel}: ${h.name} (Click to switch to this location)">
+          <span class="gray-mark-badge">${h.rankLabel}</span>
+        </div>
+      `;
+
+      const grayIcon = L.divIcon({
+        html: grayIconHtml,
+        className: 'alt-gray-marker-icon',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
       });
+
+      const grayMarker = L.marker([h.lat, h.lon], { icon: grayIcon, zIndexOffset: 500 }).addTo(mapLayers);
+
+      // Tooltip on hover
+      grayMarker.bindTooltip(`<b>${h.rankLabel}:</b> ${h.name} <span style="color:#94a3b8;font-size:10px;">(Click to view)</span>`, { direction: 'top', offset: [0, -10] });
+
+      // Direct activation on click: switches immediately to this candidate!
+      grayMarker.on('click', (e) => {
+        if (e && e.originalEvent) {
+          e.originalEvent.stopPropagation();
+        }
+        renderHypothesis(idx);
+      });
+    });
+
+    // Zoom and center map smoothly
+    if (isExactMark) {
+      map.setView([lat, lon], 17, { animate: true });
+    } else if (activeCircle) {
+      map.fitBounds(activeCircle.getBounds(), { padding: [40, 40], maxZoom: 14 });
+    } else {
+      map.setView([lat, lon], 12, { animate: true });
     }
 
-    // Fit map bounds
-    map.fitBounds(circle.getBounds(), { padding: [40, 40], maxZoom: 16 });
-    mapBadgeText.textContent = `${tier} • ±${(radiusM / 1000).toFixed(1)} km`;
+    mapBadgeText.textContent = `${activeHypo.rankLabel} • ${tier} • ±${(radiusM / 1000).toFixed(1)} km`;
   }
+
+  // Global helpers for hypothesis cycling from map popups or buttons
+  window.__cycleNextHypothesis = () => {
+    if (allHypotheses && allHypotheses.length > 1) {
+      const nextIdx = (currentHypothesisIndex + 1) % allHypotheses.length;
+      renderHypothesis(nextIdx);
+    }
+  };
+
+  window.__selectHypothesis = (idx) => {
+    renderHypothesis(idx);
+  };
 
   function populateEvidenceCards(evidence = {}, jobId) {
     const report = currentReportData || {};

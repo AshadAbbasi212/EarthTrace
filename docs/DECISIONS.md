@@ -206,3 +206,22 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
   - **Geographic Corroboration & False Homonym Pruning:** In `Stage2Prior`, all point/sign candidates are cross-checked against top visual prior clusters. Candidates exceeding 800 km from the visual prior without explicit user confirmation are pruned and penalized with a negative score (`-20.0`), preventing spurious foreign matches from contaminating bounding box selection.
   - **Continuous Horizon & Visual Skyline Overlay:** `SkylineExtractor` now continuously computes horizon standard deviation and contrast, saving a tactical high-contrast visual overlay (`skyline_overlay.png`) as verifiable evidence whenever ridgelines exist, while gracefully bypassing expensive DEM sweeps when the horizon is completely flat.
 
+---
+
+## 21. Interactive Alternative Location Cycling & Tactical Leaflet Gray Marks
+- **Context & Requirement:**
+  - Users wanted alternative candidate locations to appear as subtle tactical gray marks on the Leaflet map rather than overwhelming the primary reticle.
+  - Users also requested direct interactive cycling through ranked candidates (T1, T2, T3) by clicking on the location header, marks, or tabs.
+- **Implementation & Decision:**
+  - **Sleek Tactical Gray Marks:**
+    - Alternatives are plotted on Leaflet using custom HTML divIcons (`.alt-little-gray-mark`): 20px slate-gray circles (`#475569`) with silver borders (`#cbd5e1`), soft tactical drop shadows, and rank badges (`T2`, `T3`...).
+    - Hovering over a gray mark enlarges it with cyan hover aura and displays a tooltip with candidate name and rank label.
+    - Clicking directly on any gray mark triggers immediate selection and focal transition (`renderHypothesis(idx)`), moving the active pulsing reticle and centering the camera smoothly on that hypothesis without popup obstruction.
+  - **Clickable Hypothesis Cycling (T1 → T2 → T3 → T1):**
+    - The location header `#result-location` displays an explicit cyber rank tag (`[T1]`, `[T2]`, `[T3]`) alongside the location title.
+    - Clicking the location title or the `#location-cycle-hint` badge cycles sequentially through candidates ($T1 \rightarrow T2 \rightarrow T3 \rightarrow T1$).
+    - Added `#hypothesis-selector` containing interactive pill buttons (`.hypo-pill`) for direct 1-click inspection of any candidate hypothesis.
+    - Added a "Next Location" action button inside the active marker's popup on the map for seamless map-based exploration.
+    - Updates 3D Earth globe target orientation, coordinate telemetry readouts, error radii, and tier badges in lockstep.
+
+

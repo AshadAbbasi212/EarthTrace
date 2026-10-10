@@ -144,9 +144,16 @@
         <div class="hud-corner bottom-right"></div>
 
         <div class="result-header">
-          <div>
-            <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.08em;">Determined Location Target</div>
-            <div class="result-location" id="result-location">Analyzing...</div>
+          <div style="flex: 1; min-width: 0;">
+            <div class="result-target-label-row">
+              <span class="result-target-tag">Determined Location Target</span>
+              <span class="location-cycle-hint" id="location-cycle-hint" style="display: none;" title="Click to cycle between alternative hypotheses (T1 → T2 → T3)">
+                <span class="cycle-icon">↻</span> Click location to cycle (T1 → T2 → T3)
+              </span>
+            </div>
+            <div class="result-location clickable-location-title" id="result-location" title="Click to cycle alternative locations (T1 → T2 → T3)">Analyzing...</div>
+            <!-- Interactive Hypothesis Switcher Tabs / Pills -->
+            <div class="hypothesis-selector" id="hypothesis-selector" style="display: none;"></div>
           </div>
           <div class="tier-badge" id="tier-badge" style="background: var(--cyan);">Tier T-</div>
         </div>

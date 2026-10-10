@@ -84,3 +84,29 @@ def test_health_api(client):
     assert data["status"] == "healthy"
     assert data["gpu_device"] == "cpu"
     assert data["passphrase_required"] is False
+
+
+def test_alternative_hypotheses_and_map_marks(client):
+    """Verify frontend assets include hypothesis switcher and map gray marks."""
+    # HTML contains cycle hint, clickable location title, and hypothesis selector
+    html_res = client.get("/")
+    assert html_res.status_code == 200
+    assert 'id="location-cycle-hint"' in html_res.text
+    assert 'clickable-location-title' in html_res.text
+    assert 'id="hypothesis-selector"' in html_res.text
+
+    # CSS contains styles for gray marks and hypothesis pills
+    css_res = client.get("/style.css")
+    assert css_res.status_code == 200
+    assert ".alt-little-gray-mark" in css_res.text
+    assert ".hypo-pill" in css_res.text
+    assert ".location-rank-badge" in css_res.text
+
+    # JS contains hypothesis cycling and gray marks logic
+    js_res = client.get("/app.js")
+    assert js_res.status_code == 200
+    assert "renderHypothesis" in js_res.text
+    assert "alt-little-gray-mark" in js_res.text
+    assert "__cycleNextHypothesis" in js_res.text
+    assert "allHypotheses" in js_res.text
+
