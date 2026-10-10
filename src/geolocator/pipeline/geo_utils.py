@@ -21,11 +21,11 @@ def haversine_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) ->
 
 # Curated table of major country and region bounding boxes [min_lat, min_lon, max_lat, max_lon]
 COUNTRY_BBOXES: Dict[str, Tuple[float, float, float, float]] = {
-    # Specific sub-continental and regional countries checked first
-    "pakistan": (23.6, 60.8, 37.1, 77.8),
+    # Distinct sub-continental countries with priority checking
     "nepal": (26.3, 80.0, 30.5, 88.2),
     "bangladesh": (20.5, 88.0, 26.7, 92.7),
     "sri lanka": (5.9, 79.6, 9.9, 81.9),
+    "pakistan": (23.6, 60.8, 37.1, 75.3),
     "afghanistan": (29.3, 60.5, 38.5, 74.9),
     "iran": (25.0, 44.0, 39.8, 63.4),
     "iraq": (29.0, 38.7, 37.4, 48.6),
@@ -76,6 +76,115 @@ COUNTRY_BBOXES: Dict[str, Tuple[float, float, float, float]] = {
     "russia": (41.2, 19.6, 81.9, 180.0),
 }
 
+# Curated regional anchors for high-probability country hypothesis candidate synthesis
+COUNTRY_ANCHORS: Dict[str, List[Dict[str, Any]]] = {
+    "pakistan": [
+        {"name": "Islamabad / Rawalpindi", "lat": 33.6844, "lon": 73.0479},
+        {"name": "Lahore Urban Center", "lat": 31.5204, "lon": 74.3587},
+        {"name": "Karachi Coastal Corridor", "lat": 24.8607, "lon": 67.0011},
+        {"name": "Peshawar Khyber Region", "lat": 34.0151, "lon": 71.5249},
+        {"name": "Faisalabad Agricultural Hub", "lat": 31.4504, "lon": 73.1350},
+        {"name": "Multan Southern Punjab", "lat": 30.1575, "lon": 71.5249},
+        {"name": "Quetta Highlands", "lat": 30.1798, "lon": 66.9750},
+        {"name": "Murree / Galyat Foothills", "lat": 33.9062, "lon": 73.3903},
+    ],
+    "india": [
+        {"name": "Delhi National Capital Region", "lat": 28.6139, "lon": 77.2090},
+        {"name": "Mumbai Western Coast", "lat": 19.0760, "lon": 72.8777},
+        {"name": "Bengaluru Southern Hub", "lat": 12.9716, "lon": 77.5946},
+        {"name": "Jaipur Rajasthan", "lat": 26.9124, "lon": 75.7873},
+        {"name": "Kolkata Eastern Hub", "lat": 22.5726, "lon": 88.3639},
+        {"name": "Chandigarh Urban Plain", "lat": 30.7333, "lon": 76.7794},
+    ],
+    "nepal": [
+        {"name": "Kathmandu Valley", "lat": 27.7172, "lon": 85.3240},
+        {"name": "Pokhara Valley", "lat": 28.2096, "lon": 83.9856},
+    ],
+    "bangladesh": [
+        {"name": "Dhaka Metropolitan", "lat": 23.8103, "lon": 90.4125},
+        {"name": "Chittagong Coastal", "lat": 22.3569, "lon": 91.7832},
+    ],
+    "afghanistan": [
+        {"name": "Kabul Basin", "lat": 34.5553, "lon": 69.2075},
+        {"name": "Herat Western Oasis", "lat": 34.3529, "lon": 62.2040},
+    ],
+    "iran": [
+        {"name": "Tehran Foothills", "lat": 35.6892, "lon": 51.3890},
+        {"name": "Isfahan Central Plateau", "lat": 32.6546, "lon": 51.6680},
+    ],
+    "turkey": [
+        {"name": "Istanbul Bosporus", "lat": 41.0082, "lon": 28.9784},
+        {"name": "Ankara Central Anatolia", "lat": 39.9334, "lon": 32.8597},
+        {"name": "Izmir Aegean Coast", "lat": 38.4237, "lon": 27.1428},
+    ],
+    "saudi arabia": [
+        {"name": "Riyadh Central Plateau", "lat": 24.7136, "lon": 46.6753},
+        {"name": "Jeddah Red Sea", "lat": 21.5433, "lon": 39.1728},
+    ],
+    "united arab emirates": [
+        {"name": "Dubai Urban Coast", "lat": 25.2048, "lon": 55.2708},
+        {"name": "Abu Dhabi Capital", "lat": 24.4539, "lon": 54.3773},
+    ],
+    "egypt": [
+        {"name": "Cairo Nile Delta", "lat": 30.0444, "lon": 31.2357},
+        {"name": "Alexandria Mediterranean", "lat": 31.2001, "lon": 29.9187},
+    ],
+    "morocco": [
+        {"name": "Casablanca Atlantic Coast", "lat": 33.5731, "lon": -7.5898},
+        {"name": "Marrakech Atlas Foothills", "lat": 31.6295, "lon": -7.9811},
+    ],
+    "united kingdom": [
+        {"name": "London Greater Metropolitan", "lat": 51.5074, "lon": -0.1278},
+        {"name": "Manchester Northwest", "lat": 53.4808, "lon": -2.2426},
+        {"name": "Edinburgh Scotland", "lat": 55.9533, "lon": -3.1883},
+    ],
+    "france": [
+        {"name": "Paris Île-de-France", "lat": 48.8566, "lon": 2.3522},
+        {"name": "Marseille Provence Coast", "lat": 43.2965, "lon": 5.3698},
+        {"name": "Lyon Rhône Corridor", "lat": 45.7640, "lon": 4.8357},
+    ],
+    "germany": [
+        {"name": "Berlin Metropolitan", "lat": 52.5200, "lon": 13.4050},
+        {"name": "Munich Bavaria", "lat": 48.1351, "lon": 11.5820},
+        {"name": "Frankfurt Rhine-Main", "lat": 50.1109, "lon": 8.6821},
+    ],
+    "italy": [
+        {"name": "Rome Central", "lat": 41.9028, "lon": 12.4964},
+        {"name": "Milan Lombardy", "lat": 45.4642, "lon": 9.1900},
+        {"name": "Naples Bay", "lat": 40.8518, "lon": 14.2681},
+    ],
+    "spain": [
+        {"name": "Madrid Central Meseta", "lat": 40.4168, "lon": -3.7038},
+        {"name": "Barcelona Catalonia", "lat": 41.3851, "lon": 2.1734},
+    ],
+    "united states": [
+        {"name": "New York Metropolitan", "lat": 40.7128, "lon": -74.0060},
+        {"name": "Los Angeles Coastal Plain", "lat": 34.0522, "lon": -118.2437},
+        {"name": "Chicago Great Lakes", "lat": 41.8781, "lon": -87.6298},
+        {"name": "Austin Texas Corridor", "lat": 30.2672, "lon": -97.7431},
+    ],
+    "japan": [
+        {"name": "Tokyo Kanto Plain", "lat": 35.6762, "lon": 139.6503},
+        {"name": "Osaka / Kyoto Kansai", "lat": 34.6937, "lon": 135.5023},
+    ],
+    "china": [
+        {"name": "Beijing North China Plain", "lat": 39.9042, "lon": 116.4074},
+        {"name": "Shanghai Yangtze Delta", "lat": 31.2304, "lon": 121.4737},
+        {"name": "Guangzhou Pearl River Delta", "lat": 23.1291, "lon": 113.2644},
+        {"name": "Chengdu Sichuan Basin", "lat": 30.5728, "lon": 104.0668},
+    ],
+}
+
+
+def get_country_anchors(country_name: str, max_anchors: int = 6) -> List[Dict[str, Any]]:
+    """Retrieve representative geographic anchors for a specified country."""
+    c_clean = country_name.strip().lower()
+    for k, anchors in COUNTRY_ANCHORS.items():
+        if k == c_clean or k in c_clean or c_clean in k:
+            return anchors[:max_anchors]
+    return []
+
+
 REGION_BOUNDS: Dict[str, Tuple[float, float, float, float]] = {
     "scandinavia": (54.5, 4.5, 71.2, 31.6),       # Norway, Sweden, Finland, Denmark
     "sahara": (15.0, -17.0, 34.0, 35.0),           # North Africa hyper-arid zone
@@ -102,8 +211,40 @@ def is_in_region(lat: float, lon: float, region_name: str) -> bool:
 
 
 def get_country_candidate(lat: float, lon: float) -> Optional[str]:
-    """Find matching country based on bounding box lookup."""
+    """Find matching country based on bounding box lookup with border disambiguation."""
+    # 1. High-precision border disambiguation for South Asia
+    # Pakistan vs India border logic
+    if 23.6 <= lat <= 37.1 and 60.8 <= lon <= 75.3:
+        # Southern border: Rajasthan / Gujarat vs Sindh
+        if lat < 28.0 and lon > 71.0:
+            return "India"
+        if lat < 24.5 and lon > 68.2:
+            return "India"
+        # Central / Punjab border: Indian Punjab / Haryana / Delhi vs Pakistani Punjab
+        if 28.0 <= lat < 32.2 and lon > 74.6:
+            return "India"
+        return "Pakistan"
+
+    # Nepal
+    if 26.3 <= lat <= 30.5 and 80.0 <= lon <= 88.2:
+        return "Nepal"
+
+    # Bangladesh
+    if 20.5 <= lat <= 26.7 and 88.0 <= lon <= 92.7:
+        return "Bangladesh"
+
+    # Sri Lanka
+    if 5.9 <= lat <= 9.9 and 79.6 <= lon <= 81.9:
+        return "Sri Lanka"
+
+    # India broad check
+    if 6.7 <= lat <= 35.5 and 68.1 <= lon <= 97.4:
+        return "India"
+
+    # 2. General bounding box table
     for country, bbox in COUNTRY_BBOXES.items():
+        if country in ("pakistan", "india", "nepal", "bangladesh", "sri lanka"):
+            continue
         if point_in_bbox(lat, lon, bbox):
             return country.title()
     return None

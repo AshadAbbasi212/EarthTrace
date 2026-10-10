@@ -21,6 +21,7 @@ from geolocator.pipeline.geo_utils import (
     point_in_bbox,
     is_in_region,
     get_country_candidate,
+    get_country_anchors,
     cluster_points,
     COUNTRY_BBOXES,
 )
@@ -32,6 +33,31 @@ from geolocator.adapters.clues_adapter import (
 )
 
 logger = logging.getLogger("geolocator.pipeline.stage2_prior")
+
+# Comprehensive global country set for vision-language zero-shot country likelihood estimation
+GLOBAL_GEOLOC_COUNTRIES: List[str] = [
+    # South & Central Asia
+    "Pakistan", "India", "Bangladesh", "Nepal", "Sri Lanka", "Afghanistan",
+    "Kazakhstan", "Uzbekistan", "Kyrgyzstan", "Tajikistan",
+    # Middle East & North Africa
+    "Iran", "Iraq", "Turkey", "Saudi Arabia", "United Arab Emirates", "Israel",
+    "Jordan", "Egypt", "Morocco", "Algeria", "Tunisia",
+    # Europe
+    "United Kingdom", "Ireland", "France", "Germany", "Italy", "Spain", "Portugal",
+    "Netherlands", "Belgium", "Switzerland", "Austria", "Greece", "Poland",
+    "Czech Republic", "Hungary", "Romania", "Sweden", "Norway", "Finland", "Denmark",
+    "Ukraine", "Russia",
+    # East & Southeast Asia
+    "Japan", "South Korea", "China", "Taiwan", "Thailand", "Vietnam",
+    "Indonesia", "Malaysia", "Philippines",
+    # Americas
+    "United States", "Canada", "Mexico", "Brazil", "Argentina", "Chile",
+    "Colombia", "Peru",
+    # Sub-Saharan Africa
+    "South Africa", "Kenya", "Nigeria",
+    # Oceania
+    "Australia", "New Zealand",
+]
 
 
 class Stage2Prior:
@@ -104,12 +130,16 @@ class Stage2Prior:
 
     def score_candidate_countries_zero_shot(
         self,
-        image_path: Path,
-        candidate_countries: List[str],
+        image_path: Path | str,
+        candidate_countries: Optional[List[str]] = None,
     ) -> Dict[str, float]:
         """Compute vision-language geographic likelihood for candidate countries using StreetCLIP / CLIP ViT-Large."""
-        if not candidate_countries:
+        img_p = Path(image_path)
+        if not img_p.exists():
             return {}
+
+        if candidate_countries is None or len(candidate_countries) == 0:
+            candidate_countries = GLOBAL_GEOLOC_COUNTRIES
 
         clean_countries = [c.strip() for c in candidate_countries if c and len(c.strip()) >= 2]
         unique_countries = list(dict.fromkeys(clean_countries))
@@ -222,6 +252,7 @@ class Stage2Prior:
             top_k=top_k,
             mock_predictions=mock_predictions,
         )
+        raw_predictions_count = len(raw_predictions)
 
         # 2. Extract perception cues and user hints from board
         observed_clues = board.data.get("clues", {})
@@ -277,7 +308,8 @@ class Stage2Prior:
                 pass
 
         # 3. Vision-Language Geographic Zero-Shot Reranking (StreetCLIP / CLIP ViT-Large)
-        candidate_countries_set = set()
+        # Formulate full candidate country universe: global baseline + observed GeoCLIP/hint countries
+        candidate_countries_set = set(GLOBAL_GEOLOC_COUNTRIES)
         for p in raw_predictions[:25]:
             c_name = get_country_candidate(p["lat"], p["lon"])
             if c_name:
@@ -292,7 +324,7 @@ class Stage2Prior:
             candidate_countries_set.add(phone_country)
 
         country_zero_shot_probs: Dict[str, float] = {}
-        if candidate_countries_set and len(candidate_countries_set) >= 2:
+        if working_image_path and Path(working_image_path).exists():
             try:
                 country_zero_shot_probs = self.score_candidate_countries_zero_shot(
                     image_path=working_image_path,
@@ -301,16 +333,68 @@ class Stage2Prior:
             except Exception as e:
                 logger.warning("[stage2] Country zero-shot scoring failed: %s", e)
 
+        # 3b. High-Probability Country Anchor Injection
+        # If the visual reranker strongly predicts a country that has sparse coverage in GeoCLIP's gallery,
+        # inject regional urban/corridor anchors so the region can be actively evaluated across all evidence.
+        if country_zero_shot_probs:
+            top_country, top_prob = next(iter(country_zero_shot_probs.items()))
+            rep_count = sum(1 for p in raw_predictions if (get_country_candidate(p["lat"], p["lon"]) or "").lower() == top_country.lower())
+            if rep_count < 3 and top_prob >= 0.05:
+                anchors = get_country_anchors(top_country, max_anchors=6)
+                if anchors:
+                    logger.info("[stage2] Injecting %d regional anchors for top zero-shot country '%s' (prob=%.2f%%)", len(anchors), top_country, top_prob * 100)
+                    anchor_prob = max(0.015, top_prob / len(anchors))
+                    for a in anchors:
+                        raw_predictions.append({
+                            "lat": a["lat"],
+                            "lon": a["lon"],
+                            "prob": anchor_prob,
+                            "anchor_name": a["name"],
+                            "country": top_country,
+                        })
+
+            for c_name, c_prob in list(country_zero_shot_probs.items())[1:3]:
+                if c_prob >= 0.15:
+                    c_rep = sum(1 for p in raw_predictions if (get_country_candidate(p["lat"], p["lon"]) or "").lower() == c_name.lower())
+                    if c_rep < 2:
+                        anchors = get_country_anchors(c_name, max_anchors=3)
+                        anchor_prob = max(0.01, c_prob / max(1, len(anchors)))
+                        for a in anchors:
+                            raw_predictions.append({
+                                "lat": a["lat"],
+                                "lon": a["lon"],
+                                "prob": anchor_prob,
+                                "anchor_name": a["name"],
+                                "country": c_name,
+                            })
+
         # 4. Fuse evidence for each candidate point
+        country_raw_mass: Dict[str, float] = {}
+        for p in raw_predictions:
+            c_name = get_country_candidate(p["lat"], p["lon"]) or "Other"
+            country_raw_mass[c_name] = country_raw_mass.get(c_name, 0.0) + p.get("prob", 0.0)
+
         scored_points: List[Dict[str, Any]] = []
 
         for p in raw_predictions:
             lat = p["lat"]
             lon = p["lon"]
             prob = max(1e-12, p["prob"])
-            base_log_prior = math.log(prob)
-
             country = get_country_candidate(lat, lon)
+
+            # Hierarchical visual prior: P(point | image) = P(country | image) * P(point | country)
+            # This cleanly debiases GeoCLIP's gallery density differences across nations.
+            if country and country_zero_shot_probs:
+                c_prob = country_zero_shot_probs.get(country, 0.0001)
+                c_mass = max(1e-6, country_raw_mass.get(country, 1.0))
+                p_cond = prob / c_mass
+                joint_prior = c_prob * p_cond
+                base_log_prior = math.log(max(1e-12, joint_prior))
+                reranker_lr = 0.0
+            else:
+                base_log_prior = math.log(prob)
+                reranker_lr = 0.0
+
             climate_info = self.climate.get_climate_classification(lat, lon)
             koeppen = climate_info.get("code", "C")
 
@@ -366,16 +450,6 @@ class Stage2Prior:
                 else:
                     meta_lr -= 3.0
 
-            # Zero-shot vision-language geographic likelihood adjustment
-            reranker_lr = 0.0
-            if country and country_zero_shot_probs:
-                c_prob = country_zero_shot_probs.get(country, 0.0)
-                n_cands = max(1, len(country_zero_shot_probs))
-                uniform_p = 1.0 / n_cands
-                if c_prob > 0.0:
-                    ratio = c_prob / uniform_p
-                    reranker_lr = float(np.clip(math.log(max(1e-4, ratio)), -4.5, 4.5))
-
             combined_score = base_log_prior + climate_lr + hint_lr + driving_lr + meta_lr + reranker_lr
 
             scored_points.append({
@@ -391,6 +465,7 @@ class Stage2Prior:
                 "meta_lr": meta_lr,
                 "reranker_lr": reranker_lr,
                 "country_zero_shot_prob": country_zero_shot_probs.get(country, 0.0) if country else 0.0,
+                "anchor_name": p.get("anchor_name"),
                 "score": combined_score,
             })
 
@@ -432,7 +507,12 @@ class Stage2Prior:
         search_bboxes: List[Dict[str, Any]] = []
 
         for c in clusters:
-            cand_name = f"Cell {c['cluster_id']}: {c['country'] or 'Open Region'} ({c['center_lat']:.2f}, {c['center_lon']:.2f})"
+            anchor_lbl = ""
+            for pt in c.get("points", []):
+                if pt.get("anchor_name"):
+                    anchor_lbl = f" - {pt['anchor_name']}"
+                    break
+            cand_name = f"Cell {c['cluster_id']}: {c['country'] or 'Open Region'}{anchor_lbl} ({c['center_lat']:.2f}, {c['center_lon']:.2f})"
             bbox = [round(c["min_lat"], 4), round(c["min_lon"], 4), round(c["max_lat"], 4), round(c["max_lon"], 4)]
             board.add_candidate(
                 name=cand_name,
@@ -523,7 +603,8 @@ class Stage2Prior:
 
         # 6. Save prior artifact
         summary = {
-            "total_raw_predictions": len(raw_predictions),
+            "total_raw_predictions": raw_predictions_count,
+            "total_candidate_points": len(raw_predictions),
             "clusters_count": len(clusters),
             "top_clusters": search_bboxes[:5],
             "top_points": scored_points[:10],
