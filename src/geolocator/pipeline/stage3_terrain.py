@@ -255,43 +255,60 @@ class Stage3Terrain:
             (job_dir / "terrain_results.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
             return summary, board
 
-        # 2. Determine search center from Stage 2 bounding box if not provided
-        if search_center is None:
+        # 2. Determine candidate search centers from Stage 2 bounding boxes or board rank
+        candidate_centers: List[Tuple[float, float]] = []
+        if search_center is not None:
+            candidate_centers.append(search_center)
+        else:
             bboxes = board.data.get("search_bboxes", [])
-            # Find the top prior cluster that is not an unverified distant point
-            top_cluster = None
-            for b in bboxes:
-                c_id = str(b.get("cluster_id", ""))
-                # Prefer true regional cell clusters from visual prior
-                if "cell" in c_id or "cluster" in c_id or "prior" in c_id:
-                    top_cluster = b
-                    break
-            if top_cluster is None and bboxes:
-                top_cluster = bboxes[0]
-
-            if top_cluster:
-                search_center = (float(top_cluster["center"][0]), float(top_cluster["center"][1]))
-            else:
+            for b in bboxes[:3]:
+                if "center" in b:
+                    candidate_centers.append((float(b["center"][0]), float(b["center"][1])))
+            if not candidate_centers:
                 ranked = board.rank()
-                if ranked and ranked[0].get("lat") is not None:
-                    search_center = (float(ranked[0]["lat"]), float(ranked[0]["lon"]))
-                else:
-                    search_center = (35.4983, 138.7688)
+                for cand in ranked[:3]:
+                    if cand.get("lat") is not None and cand.get("lon") is not None:
+                        candidate_centers.append((float(cand["lat"]), float(cand["lon"])))
+            if not candidate_centers:
+                candidate_centers.append((35.4983, 138.7688))
 
-        c_lat, c_lon = search_center
-        logger.info("Executing terrain skyline search around (%.4f, %.4f), radius=%.1f km", c_lat, c_lon, radius_km)
+        # 3. Fit viewpoint across candidate centers, keeping the strongest physical correlation
+        best_overall_fit = None
+        best_overall_score = -2.0
+        chosen_center = candidate_centers[0]
 
-        # 3. Fit viewpoint
-        fit_results = self.search_viewpoint(
-            photo_profile=photo_profile,
-            center_lat=c_lat,
-            center_lon=c_lon,
-            radius_km=radius_km,
-        )
+        for c_idx, (c_lat, c_lon) in enumerate(candidate_centers):
+            logger.info("Executing terrain skyline search around (%.4f, %.4f), radius=%.1f km (center %d/%d)", c_lat, c_lon, radius_km, c_idx + 1, len(candidate_centers))
+            fit_res = self.search_viewpoint(
+                photo_profile=photo_profile,
+                center_lat=c_lat,
+                center_lon=c_lon,
+                radius_km=radius_km,
+            )
+            score_i = fit_res.get("best_score", -2.0)
+            if score_i > best_overall_score:
+                best_overall_score = score_i
+                best_overall_fit = fit_res
+                chosen_center = (c_lat, c_lon)
 
-        best_vp = fit_results["best_viewpoint"]
-        score = fit_results["best_score"]
-        if best_vp and score >= 0.70:
+            # If an exceptionally strong viewpoint correlation is confirmed, stop early
+            if best_overall_score >= 0.65:
+                break
+
+        fit_results = best_overall_fit if best_overall_fit is not None else {
+            "best_viewpoint": None,
+            "best_score": -1.0,
+            "calibrated_radius_km": 45.0,
+            "confidence_tier": "T4",
+            "total_candidates_evaluated": 0,
+        }
+        c_lat, c_lon = chosen_center
+
+        best_vp = fit_results.get("best_viewpoint")
+        score = fit_results.get("best_score", -1.0)
+
+        # Calibrated DEM viewpoint promotion threshold (NCC >= 0.50 confirms genuine physical terrain match)
+        if best_vp and score >= 0.50:
             v_lat = best_vp["lat"]
             v_lon = best_vp["lon"]
             v_heading = best_vp["heading"]

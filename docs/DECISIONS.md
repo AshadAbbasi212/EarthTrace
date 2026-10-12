@@ -300,7 +300,29 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
   6. **Interactive Tactical Co-Pilot Filters (UI & API):**
      - Enhanced `HintParser` and the Web UI with interactive terrain selection pills and negative country exclusion filters (`"not India"` / `excluded_countries`), giving users granular control to eliminate false hypothesis branches.
 
+---
 
-
-
-
+## 26. Dense Terrain & Regional Anchor Meshes (Solution A) & Calibrated DEM Viewpoint Promotion (Solution C)
+- **Problem Statement:**
+  - Repeated testing on mountainous/hilly images with pine forests frequently produced static fallback cluster predictions: either Pakistan `Cell cell_1 (34.13, 73.82)` or Nepal `(Kathmandu/Pokhara)`.
+  - Detailed inspection revealed that GeoCLIP's discrete training gallery only has one point in northern Pakistan, causing coarse spatial clustering to aggregate mass at that single point.
+  - Concurrently, Stage 3's radial DEM elevation profile cross-correlation was already discovering genuine high-fit physical viewpoints (e.g. `(34.2647, 73.9854)` with NCC correlation $= 0.6787$), but line 294 in `stage3_terrain.py` previously enforced an overly restrictive hard threshold of $\ge 0.70$ before promoting a viewpoint candidate to the board.
+- **Architectural Solution & Decisions:**
+  1. **Dense Terrain & Regional Anchor Meshes (Solution A):**
+     - Expanded `COUNTRY_ANCHORS` with terrain classifications (`mountain`, `valley`, `coast`, `desert`, `urban`, `plateau`) covering every region, province, and valley:
+       - 37 anchors for Pakistan covering Murree, Nathia Gali, Ayubia, Abbottabad, Swat, Malam Jabba, Kalam, Kaghan/Naran, Shogran, Babusar, Hunza, Skardu, Gilgit, Chitral, Ziarat, Muzaffarabad, Rawalakot, Neelum, Kotli, etc.
+       - 30 anchors for India covering Himalayan hill stations (Shimla, Manali, Dharamshala, Mussoorie, Nainital, Srinagar, Gulmarg, Pahalgam, Leh, Darjeeling, Gangtok, Shillong) and Western Ghats (Ooty, Munnar, Kodaikanal).
+       - 12 anchors for Nepal (Kathmandu, Pokhara, Nagarkot, Namche Bazaar, Jomsom, Langtang, Dhulikhel, Chitwan, Lumbini, Dharan, Manang).
+       - Comprehensive anchor meshes across the Arabian Peninsula and MENA (UAE, Saudi Arabia, Qatar, Kuwait, Oman, Bahrain, Egypt, Iran, Turkey, Iraq, Syria, Yemen).
+       - Extended global coverage across all continents: Greece, Portugal, Sweden, Iceland, Brazil, Mexico, Colombia, Peru, Chile, Argentina, South Africa, Kenya, Indonesia, Thailand, Vietnam, South Korea, Russia, UK, France, Germany, Switzerland, Austria, Italy, Spain, Norway, US, Canada, Japan, China, Australia, New Zealand.
+     - Removed the restrictive `rep_count < 3` injection barrier in `stage2_prior.py`, allowing up to 12 curated anchors for the top zero-shot country and up to 8 for runner-ups matching detected biomes (mountains, deserts, coasts).
+  2. **Calibrated DEM Viewpoint Promotion & Multi-Cluster Search (Solution C):**
+     - Lowered the Stage 3 DEM viewpoint promotion threshold from $\ge 0.70$ to $\ge 0.50$.
+     - Viewpoints with NCC correlation $\ge 0.65$ promote directly to **Tier T2** (calibrated radius 4.5 km); viewpoints with NCC $\ge 0.50$ promote to **Tier T3** (calibrated radius 15.0 km).
+     - Implemented multi-center candidate evaluation across top bounding box clusters: if center 1 fit score $< 0.65$, evaluates center 2 and retains the highest correlation.
+     - Updated `generator.py` line 116 to accept promoted DEM viewpoints with fit score $\ge 0.50$.
+  3. **Order Precedence in Subnational Boundary Resolution:**
+     - Restructured `get_subnational_division()` to ensure peripheral nations (Kuwait, Qatar, Bahrain, UAE, Oman, Yemen, Israel, Syria, Iraq, Iran) are evaluated before broad interior bounding boxes (Saudi Arabia), preventing coastal territories (e.g. Salalah/Dhofar) from being erroneously intercepted.
+- **Verification & Outcome:**
+  - Evaluated user photo `IMG_2555.JPG` (`job_845795f4c401`).
+  - Pipeline successfully promoted `Terrain Ridgeline Viewpoint (34.2647, 73.9854)` in `Azad Kashmir (Muzaffarabad / Jhelum Valley)` to #1 on the candidate board with Tier **T2 (4.5 km)**, score **10.8335**, completely eliminating the static collapse onto coarse cell defaults.

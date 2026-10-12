@@ -79,224 +79,529 @@ COUNTRY_BBOXES: Dict[str, Tuple[float, float, float, float]] = {
     "brazil": (-33.8, -73.9, 5.3, -34.8),
     "argentina": (-55.1, -73.6, -21.8, -53.6),
     "chile": (-55.9, -75.7, -17.5, -66.9),
+    "colombia": (-4.3, -79.0, 12.5, -66.8),
+    "peru": (-18.4, -81.4, -0.03, -68.6),
+    "iceland": (63.3, -24.5, 66.6, -13.5),
     "south africa": (-34.8, 16.4, -22.1, 32.9),
     "kenya": (-4.7, 33.9, 4.6, 41.9),
     "russia": (41.2, 19.6, 81.9, 180.0),
 }
 
 # Curated regional anchors for high-probability country hypothesis candidate synthesis
+# Every entry includes explicit terrain classification ("mountain", "valley", "coast", "desert", "urban", "plateau")
 COUNTRY_ANCHORS: Dict[str, List[Dict[str, Any]]] = {
     "pakistan": [
-        {"name": "Islamabad Capital Territory", "lat": 33.6844, "lon": 73.0479},
-        {"name": "Rawalpindi / Murree Foothills", "lat": 33.5973, "lon": 73.0479},
-        {"name": "Murree / Galyat Ridge", "lat": 33.9062, "lon": 73.3903},
-        {"name": "Lahore Urban Center", "lat": 31.5204, "lon": 74.3587},
-        {"name": "Karachi Coastal Corridor", "lat": 24.8607, "lon": 67.0011},
-        {"name": "Peshawar Khyber Gateway", "lat": 34.0151, "lon": 71.5249},
-        {"name": "Faisalabad Industrial Hub", "lat": 31.4504, "lon": 73.1350},
-        {"name": "Multan Southern Punjab", "lat": 30.1575, "lon": 71.5249},
-        {"name": "Quetta Highlands", "lat": 30.1798, "lon": 66.9750},
-        {"name": "Abbottabad / Hazara Valley", "lat": 34.1688, "lon": 73.2215},
-        {"name": "Gilgit Karakoram Gateway", "lat": 35.9208, "lon": 74.3144},
-        {"name": "Gwadar Coastal Port", "lat": 25.1264, "lon": 62.3225},
+        # Hill stations, mountain ridges and high valleys
+        {"name": "Murree / Galyat Ridge", "lat": 33.9062, "lon": 73.3903, "terrain": "mountain"},
+        {"name": "Nathia Gali / Abbottabad Hills", "lat": 34.0722, "lon": 73.3833, "terrain": "mountain"},
+        {"name": "Ayubia / Dunga Gali Ridge", "lat": 34.0298, "lon": 73.4011, "terrain": "mountain"},
+        {"name": "Patriata / New Murree", "lat": 33.8821, "lon": 73.4562, "terrain": "mountain"},
+        {"name": "Bhurban Pine Valley", "lat": 33.9556, "lon": 73.4514, "terrain": "mountain"},
+        {"name": "Abbottabad / Hazara Valley", "lat": 34.1688, "lon": 73.2215, "terrain": "valley"},
+        {"name": "Mansehra / Karakoram Highway", "lat": 34.3333, "lon": 73.2000, "terrain": "valley"},
+        {"name": "Shogran / Siri Paye Meadows", "lat": 34.6292, "lon": 73.4903, "terrain": "mountain"},
+        {"name": "Kaghan / Naran Valley", "lat": 34.9080, "lon": 73.6520, "terrain": "mountain"},
+        {"name": "Babusar Pass / Chilas Gateway", "lat": 35.1500, "lon": 74.0300, "terrain": "mountain"},
+        {"name": "Malam Jabba Ski Resort / Swat", "lat": 34.7997, "lon": 72.5714, "terrain": "mountain"},
+        {"name": "Mingora / Swat Valley", "lat": 34.7717, "lon": 72.3602, "terrain": "valley"},
+        {"name": "Kalam / Ushu Valley", "lat": 35.4912, "lon": 72.5878, "terrain": "mountain"},
+        {"name": "Muzaffarabad / Jhelum Valley", "lat": 34.3700, "lon": 73.4711, "terrain": "valley"},
+        {"name": "Rawalakot / Poonch Highlands", "lat": 33.8578, "lon": 73.7604, "terrain": "mountain"},
+        {"name": "Neelum Valley / Keran", "lat": 34.6644, "lon": 73.9189, "terrain": "mountain"},
+        {"name": "Kotli / Mirpur Foothills", "lat": 33.5156, "lon": 73.9019, "terrain": "valley"},
+        {"name": "Hunza / Karimabad", "lat": 36.3167, "lon": 74.6500, "terrain": "mountain"},
+        {"name": "Skardu / Baltistan Valley", "lat": 35.2971, "lon": 75.6333, "terrain": "mountain"},
+        {"name": "Gilgit Karakoram Gateway", "lat": 35.9208, "lon": 74.3144, "terrain": "valley"},
+        {"name": "Chitral / Hindu Kush", "lat": 35.8510, "lon": 71.7864, "terrain": "mountain"},
+        {"name": "Ziarat Juniper Valley", "lat": 30.3824, "lon": 67.7256, "terrain": "mountain"},
+        # Urban, plains, and agricultural centers
+        {"name": "Islamabad Capital Territory", "lat": 33.6844, "lon": 73.0479, "terrain": "urban"},
+        {"name": "Rawalpindi / Potohar Plateau", "lat": 33.5973, "lon": 73.0479, "terrain": "urban"},
+        {"name": "Lahore Urban Center", "lat": 31.5204, "lon": 74.3587, "terrain": "urban"},
+        {"name": "Faisalabad Industrial Hub", "lat": 31.4504, "lon": 73.1350, "terrain": "urban"},
+        {"name": "Multan Southern Punjab", "lat": 30.1575, "lon": 71.5249, "terrain": "urban"},
+        {"name": "Peshawar Khyber Gateway", "lat": 34.0151, "lon": 71.5249, "terrain": "urban"},
+        {"name": "Gujranwala / Sialkot Corridor", "lat": 32.1877, "lon": 74.1945, "terrain": "urban"},
+        {"name": "Quetta Highlands", "lat": 30.1798, "lon": 66.9750, "terrain": "urban"},
+        {"name": "Sukkur Indus Basin", "lat": 27.7052, "lon": 68.8574, "terrain": "urban"},
+        {"name": "Hyderabad Sindh", "lat": 25.3960, "lon": 68.3578, "terrain": "urban"},
+        # Coastal & arid regions
+        {"name": "Karachi Coastal Corridor", "lat": 24.8607, "lon": 67.0011, "terrain": "coast"},
+        {"name": "Gwadar Coastal Port", "lat": 25.1264, "lon": 62.3225, "terrain": "coast"},
+        {"name": "Pasni / Makran Coast", "lat": 25.2631, "lon": 63.4692, "terrain": "coast"},
+        {"name": "Thar Desert / Mithi", "lat": 24.7375, "lon": 69.7972, "terrain": "desert"},
+        {"name": "Cholistan / Bahawalpur", "lat": 29.3956, "lon": 71.6833, "terrain": "desert"},
     ],
     "india": [
-        {"name": "Delhi National Capital Region", "lat": 28.6139, "lon": 77.2090},
-        {"name": "Mumbai Western Coast", "lat": 19.0760, "lon": 72.8777},
-        {"name": "Bengaluru Southern Hub", "lat": 12.9716, "lon": 77.5946},
-        {"name": "Hyderabad Deccan Center", "lat": 17.3850, "lon": 78.4867},
-        {"name": "Chennai Coromandel Coast", "lat": 13.0827, "lon": 80.2707},
-        {"name": "Jaipur Rajasthan Desert Gateway", "lat": 26.9124, "lon": 75.7873},
-        {"name": "Kolkata Eastern Hub", "lat": 22.5726, "lon": 88.3639},
-        {"name": "Chandigarh Urban Plain", "lat": 30.7333, "lon": 76.7794},
-        {"name": "Ahmedabad Gujarat Center", "lat": 23.0225, "lon": 72.5714},
-        {"name": "Lucknow Gangetic Plain", "lat": 26.8467, "lon": 80.9462},
-        {"name": "Amritsar Punjab Gateway", "lat": 31.6340, "lon": 74.8723},
-        {"name": "Srinagar Kashmir Valley", "lat": 34.0837, "lon": 74.7973},
-        {"name": "Pune Western Ghats", "lat": 18.5204, "lon": 73.8567},
-    ],
-    "united arab emirates": [
-        {"name": "Dubai Downtown / Sheikh Zayed Rd", "lat": 25.2048, "lon": 55.2708},
-        {"name": "Dubai Marina / Palm Jumeirah", "lat": 25.0805, "lon": 55.1403},
-        {"name": "Abu Dhabi Corniche / Capital", "lat": 24.4539, "lon": 54.3773},
-        {"name": "Abu Dhabi Yas Island", "lat": 24.4984, "lon": 54.6053},
-        {"name": "Sharjah Urban Center", "lat": 25.3573, "lon": 55.4033},
-        {"name": "Al Ain Oasis / Jebel Hafeet", "lat": 24.2075, "lon": 55.7447},
-        {"name": "Ras Al Khaimah / Jebel Jais", "lat": 25.7895, "lon": 55.9432},
-        {"name": "Fujairah Gulf of Oman Coast", "lat": 25.1288, "lon": 56.3265},
-    ],
-    "saudi arabia": [
-        {"name": "Riyadh Olaya / Kingdom Centre", "lat": 24.7136, "lon": 46.6753},
-        {"name": "Jeddah Corniche / Red Sea Coast", "lat": 21.5433, "lon": 39.1728},
-        {"name": "Makkah Holy Valley", "lat": 21.3891, "lon": 39.8579},
-        {"name": "Madinah Central Basin", "lat": 24.5247, "lon": 39.5692},
-        {"name": "Dammam / Khobar Eastern Coast", "lat": 26.4207, "lon": 50.0888},
-        {"name": "Abha / Asir Highland Ridge", "lat": 18.2164, "lon": 42.5053},
-        {"name": "Taif Mountain Plateau", "lat": 21.2854, "lon": 40.4222},
-        {"name": "Tabuk Northern Oasis", "lat": 28.3835, "lon": 36.5662},
-        {"name": "Buraidah / Al Qassim Oasis", "lat": 26.3260, "lon": 43.9750},
-        {"name": "Al Ula / Madain Saleh", "lat": 26.6080, "lon": 37.9250},
-    ],
-    "qatar": [
-        {"name": "Doha West Bay / Corniche", "lat": 25.2854, "lon": 51.5310},
-        {"name": "Lusail Modern City", "lat": 25.4200, "lon": 51.4900},
-        {"name": "Al Rayyan Education City", "lat": 25.3190, "lon": 51.4250},
-        {"name": "Al Wakrah Coastal City", "lat": 25.1768, "lon": 51.6048},
-        {"name": "Al Khor Northern Coast", "lat": 25.6839, "lon": 51.5058},
-        {"name": "Dukhan Western Oilfield", "lat": 25.4290, "lon": 50.7850},
-    ],
-    "kuwait": [
-        {"name": "Kuwait City Capital / Towers", "lat": 29.3759, "lon": 47.9774},
-        {"name": "Hawalli / Salmiya Coast", "lat": 29.3333, "lon": 48.0833},
-        {"name": "Al Ahmadi Oilfield District", "lat": 29.0769, "lon": 48.0839},
-        {"name": "Al Farwaniya Urban Center", "lat": 29.2778, "lon": 47.9589},
-        {"name": "Al Jahra Western Oasis", "lat": 29.3375, "lon": 47.6581},
-        {"name": "Subiya / Sheikh Jaber Bridge", "lat": 29.6200, "lon": 48.1500},
-    ],
-    "oman": [
-        {"name": "Muscat Capital / Mutrah Corniche", "lat": 23.5880, "lon": 58.3829},
-        {"name": "Salalah Dhofar Monsoon Coast", "lat": 17.0151, "lon": 54.0924},
-        {"name": "Sohar Batinah Industrial Port", "lat": 24.3644, "lon": 56.7468},
-        {"name": "Nizwa Jebel Akhdar Oasis", "lat": 22.9333, "lon": 57.5333},
-        {"name": "Sur Eastern Coastal Port", "lat": 22.5667, "lon": 59.5289},
-        {"name": "Khasab Musandam Fjords", "lat": 26.1799, "lon": 56.2483},
-    ],
-    "bahrain": [
-        {"name": "Manama Diplomatic Area / Capital", "lat": 26.2285, "lon": 50.5860},
-        {"name": "Muharraq Historic Island", "lat": 26.2572, "lon": 50.6119},
-        {"name": "Riffa Southern Palaces", "lat": 26.1300, "lon": 50.5550},
-        {"name": "King Fahd Causeway Gateway", "lat": 26.1850, "lon": 50.4550},
-        {"name": "Sitra Industrial Island", "lat": 26.1550, "lon": 50.6200},
-        {"name": "Amwaj Islands Arabian Gulf", "lat": 26.2900, "lon": 50.6650},
-    ],
-    "egypt": [
-        {"name": "Cairo Downtown / Tahrir", "lat": 30.0444, "lon": 31.2357},
-        {"name": "Giza Pyramids Plateau", "lat": 29.9792, "lon": 31.1342},
-        {"name": "Alexandria Mediterranean Corniche", "lat": 31.2001, "lon": 29.9187},
-        {"name": "Sharm El Sheikh Sinai Resort", "lat": 27.9158, "lon": 34.3299},
-        {"name": "Hurghada Red Sea Coast", "lat": 27.2579, "lon": 33.8116},
-        {"name": "Luxor Nile Temples", "lat": 25.6872, "lon": 32.6396},
-        {"name": "Aswan High Dam / Nile Cataracts", "lat": 24.0889, "lon": 32.8998},
-        {"name": "Port Said Suez Canal Gateway", "lat": 31.2653, "lon": 32.3019},
-    ],
-    "iran": [
-        {"name": "Tehran Foothills / Milad Tower", "lat": 35.6892, "lon": 51.3890},
-        {"name": "Isfahan Naqsh-e Jahan Square", "lat": 32.6546, "lon": 51.6680},
-        {"name": "Shiraz Fars / Persepolis", "lat": 29.5918, "lon": 52.5837},
-        {"name": "Mashhad Khorasan Shrine", "lat": 36.2605, "lon": 59.6168},
-        {"name": "Tabriz Azerbaijan Historic Bazaar", "lat": 38.0800, "lon": 46.2919},
-        {"name": "Ahvaz Khuzestan Karun River", "lat": 31.3183, "lon": 48.6706},
-        {"name": "Yazd Desert Adobe Architecture", "lat": 31.8974, "lon": 54.3569},
-        {"name": "Rasht Caspian Sea Coast", "lat": 37.2808, "lon": 49.5832},
-        {"name": "Bandar Abbas Persian Gulf Strait", "lat": 27.1832, "lon": 56.2666},
-    ],
-    "turkey": [
-        {"name": "Istanbul Bosporus / Sultanahmet", "lat": 41.0082, "lon": 28.9784},
-        {"name": "Istanbul Kadikoy / Asian Shore", "lat": 40.9910, "lon": 29.0270},
-        {"name": "Ankara Central Anatolia / Kizilay", "lat": 39.9334, "lon": 32.8597},
-        {"name": "Izmir Aegean Coast / Kordon", "lat": 38.4237, "lon": 27.1428},
-        {"name": "Antalya Mediterranean Turquoise Coast", "lat": 36.8969, "lon": 30.7133},
-        {"name": "Bursa Uludag Mountain Base", "lat": 40.1885, "lon": 29.0610},
-        {"name": "Trabzon Black Sea Foothills", "lat": 41.0027, "lon": 39.7168},
-        {"name": "Konya Anatolian Steppe", "lat": 37.8746, "lon": 32.4932},
-        {"name": "Gaziantep Southeastern Hub", "lat": 37.0662, "lon": 37.3833},
-        {"name": "Cappadocia / Goreme Fairy Chimneys", "lat": 38.6431, "lon": 34.8289},
-    ],
-    "turkiye": [
-        {"name": "Istanbul Bosporus / Sultanahmet", "lat": 41.0082, "lon": 28.9784},
-        {"name": "Ankara Central Anatolia / Kizilay", "lat": 39.9334, "lon": 32.8597},
-        {"name": "Izmir Aegean Coast / Kordon", "lat": 38.4237, "lon": 27.1428},
-        {"name": "Antalya Mediterranean Turquoise Coast", "lat": 36.8969, "lon": 30.7133},
-    ],
-    "iraq": [
-        {"name": "Baghdad Tigris River / Tahrir", "lat": 33.3152, "lon": 44.3661},
-        {"name": "Basra Shatt al-Arab Port", "lat": 30.5081, "lon": 47.7835},
-        {"name": "Erbil Citadel / Kurdistan Hub", "lat": 36.1901, "lon": 44.0091},
-        {"name": "Sulaymaniyah Zagros Mountains", "lat": 35.5558, "lon": 45.4351},
-        {"name": "Mosul Ninawa Historic City", "lat": 36.3400, "lon": 43.1300},
-        {"name": "Najaf Shrine Oasis", "lat": 32.0000, "lon": 44.3300},
-        {"name": "Karbala Euphrates Basin", "lat": 32.6160, "lon": 44.0249},
-    ],
-    "israel": [
-        {"name": "Tel Aviv Mediterranean Promenade", "lat": 32.0853, "lon": 34.7818},
-        {"name": "Jerusalem Old City / Judean Hills", "lat": 31.7683, "lon": 35.2137},
-        {"name": "Haifa Mount Carmel Bay", "lat": 32.7940, "lon": 34.9896},
-        {"name": "Beersheba Negev Desert Hub", "lat": 31.2529, "lon": 34.7915},
-        {"name": "Eilat Red Sea Gulf", "lat": 29.5577, "lon": 34.9519},
-        {"name": "Nazareth Galilee Hills", "lat": 32.7000, "lon": 35.3000},
-    ],
-    "syria": [
-        {"name": "Damascus Old City / Mount Qasioun", "lat": 33.5138, "lon": 36.2765},
-        {"name": "Aleppo Citadel / Northern Hub", "lat": 36.2021, "lon": 37.1343},
-        {"name": "Homs Orontes Valley", "lat": 34.7324, "lon": 36.7137},
-        {"name": "Latakia Mediterranean Coast", "lat": 35.5317, "lon": 35.7901},
-        {"name": "Tartus Coastal Port", "lat": 34.8890, "lon": 35.8866},
-        {"name": "Hama Orontes Waterwheels", "lat": 35.1318, "lon": 36.7578},
-    ],
-    "yemen": [
-        {"name": "Sana'a Old City / Sarawat Highlands", "lat": 15.3694, "lon": 44.1910},
-        {"name": "Aden Crater / Gulf of Aden Port", "lat": 12.7855, "lon": 45.0187},
-        {"name": "Taiz Jebel Saber Foothills", "lat": 13.5795, "lon": 44.0209},
-        {"name": "Al Hodeidah Red Sea Coast", "lat": 14.7978, "lon": 42.9545},
-        {"name": "Al Mukalla Hadhramaut Coast", "lat": 14.5425, "lon": 49.1242},
-        {"name": "Ibb Highland Terraces", "lat": 13.9750, "lon": 44.1750},
-        {"name": "Shibam Hadhramaut Mud Skyscraper Oasis", "lat": 15.9265, "lon": 48.6258},
+        # Mountain hill stations & valleys
+        {"name": "Shimla / Himachal Pradesh", "lat": 31.1048, "lon": 77.1734, "terrain": "mountain"},
+        {"name": "Manali / Kullu Valley", "lat": 32.2432, "lon": 77.1892, "terrain": "mountain"},
+        {"name": "Dharamshala / Kangra Valley", "lat": 32.2190, "lon": 76.3234, "terrain": "mountain"},
+        {"name": "Mussoorie / Garhwal Hills", "lat": 30.4598, "lon": 78.0644, "terrain": "mountain"},
+        {"name": "Nainital / Kumaon Hills", "lat": 29.3919, "lon": 79.4542, "terrain": "mountain"},
+        {"name": "Srinagar Kashmir Valley", "lat": 34.0837, "lon": 74.7973, "terrain": "valley"},
+        {"name": "Gulmarg Alpine Ski Resort", "lat": 34.0484, "lon": 74.3805, "terrain": "mountain"},
+        {"name": "Pahalgam / Lidder Valley", "lat": 34.0167, "lon": 75.3167, "terrain": "mountain"},
+        {"name": "Leh / Ladakh High Plateau", "lat": 34.1526, "lon": 77.5771, "terrain": "mountain"},
+        {"name": "Darjeeling / Eastern Himalayas", "lat": 27.0410, "lon": 88.2663, "terrain": "mountain"},
+        {"name": "Gangtok / Sikkim", "lat": 27.3389, "lon": 88.6065, "terrain": "mountain"},
+        {"name": "Shillong / Meghalaya", "lat": 25.5788, "lon": 91.8933, "terrain": "mountain"},
+        {"name": "Ooty / Nilgiri Hills", "lat": 11.4102, "lon": 76.6950, "terrain": "mountain"},
+        {"name": "Munnar / Western Ghats", "lat": 10.0889, "lon": 77.0595, "terrain": "mountain"},
+        {"name": "Kodaikanal / Palani Hills", "lat": 10.2381, "lon": 77.4892, "terrain": "mountain"},
+        # Urban & cultural centers
+        {"name": "Delhi National Capital Region", "lat": 28.6139, "lon": 77.2090, "terrain": "urban"},
+        {"name": "Bengaluru Southern Hub", "lat": 12.9716, "lon": 77.5946, "terrain": "urban"},
+        {"name": "Hyderabad Deccan Center", "lat": 17.3850, "lon": 78.4867, "terrain": "urban"},
+        {"name": "Kolkata Eastern Hub", "lat": 22.5726, "lon": 88.3639, "terrain": "urban"},
+        {"name": "Chandigarh Urban Plain", "lat": 30.7333, "lon": 76.7794, "terrain": "urban"},
+        {"name": "Ahmedabad Gujarat Center", "lat": 23.0225, "lon": 72.5714, "terrain": "urban"},
+        {"name": "Lucknow Gangetic Plain", "lat": 26.8467, "lon": 80.9462, "terrain": "urban"},
+        {"name": "Amritsar Punjab Gateway", "lat": 31.6340, "lon": 74.8723, "terrain": "urban"},
+        {"name": "Pune Western Ghats", "lat": 18.5204, "lon": 73.8567, "terrain": "urban"},
+        {"name": "Jaipur Rajasthan Gateway", "lat": 26.9124, "lon": 75.7873, "terrain": "urban"},
+        {"name": "Jodhpur Thar Desert", "lat": 26.2389, "lon": 73.0243, "terrain": "desert"},
+        # Coastal ports
+        {"name": "Mumbai Western Coast", "lat": 19.0760, "lon": 72.8777, "terrain": "coast"},
+        {"name": "Chennai Coromandel Coast", "lat": 13.0827, "lon": 80.2707, "terrain": "coast"},
+        {"name": "Kochi Malabar Coast", "lat": 9.9312, "lon": 76.2673, "terrain": "coast"},
+        {"name": "Goa Konkan Coast", "lat": 15.2993, "lon": 74.1240, "terrain": "coast"},
     ],
     "nepal": [
-        {"name": "Kathmandu Valley", "lat": 27.7172, "lon": 85.3240},
-        {"name": "Pokhara Valley", "lat": 28.2096, "lon": 83.9856},
+        {"name": "Kathmandu Valley", "lat": 27.7172, "lon": 85.3240, "terrain": "valley"},
+        {"name": "Pokhara / Annapurna Foothills", "lat": 28.2096, "lon": 83.9856, "terrain": "valley"},
+        {"name": "Nagarkot Ridge / Kathmandu Rim", "lat": 27.7174, "lon": 85.5200, "terrain": "mountain"},
+        {"name": "Namche Bazaar / Everest Region", "lat": 27.8069, "lon": 86.7140, "terrain": "mountain"},
+        {"name": "Jomsom / Mustang Valley", "lat": 28.7833, "lon": 83.7333, "terrain": "mountain"},
+        {"name": "Langtang Alpine Valley", "lat": 28.2120, "lon": 85.5560, "terrain": "mountain"},
+        {"name": "Dhulikhel Hill Station", "lat": 27.6253, "lon": 85.5561, "terrain": "mountain"},
+        {"name": "Chitwan / Terai Lowlands", "lat": 27.5291, "lon": 84.4533, "terrain": "valley"},
+        {"name": "Lumbini Sacred Terai", "lat": 27.4833, "lon": 83.2760, "terrain": "urban"},
+        {"name": "Dharan Eastern Foothills", "lat": 26.8124, "lon": 87.2834, "terrain": "valley"},
+        {"name": "Biratnagar Terai", "lat": 26.4525, "lon": 87.2718, "terrain": "urban"},
+        {"name": "Manang High Himalayan Valley", "lat": 28.6600, "lon": 84.0200, "terrain": "mountain"},
+    ],
+    "united arab emirates": [
+        {"name": "Dubai Downtown / Sheikh Zayed Rd", "lat": 25.2048, "lon": 55.2708, "terrain": "urban"},
+        {"name": "Dubai Marina / Palm Jumeirah", "lat": 25.0805, "lon": 55.1403, "terrain": "coast"},
+        {"name": "Abu Dhabi Corniche / Capital", "lat": 24.4539, "lon": 54.3773, "terrain": "coast"},
+        {"name": "Abu Dhabi Yas Island", "lat": 24.4984, "lon": 54.6053, "terrain": "urban"},
+        {"name": "Sharjah Urban Center", "lat": 25.3573, "lon": 55.4033, "terrain": "urban"},
+        {"name": "Ajman Corniche", "lat": 25.4052, "lon": 55.4424, "terrain": "coast"},
+        {"name": "Umm Al Quwain Coast", "lat": 25.5647, "lon": 55.5532, "terrain": "coast"},
+        {"name": "Ras Al Khaimah / Jebel Jais Peak", "lat": 25.9525, "lon": 56.1678, "terrain": "mountain"},
+        {"name": "Ras Al Khaimah Coastal City", "lat": 25.7895, "lon": 55.9432, "terrain": "coast"},
+        {"name": "Fujairah Gulf of Oman Coast", "lat": 25.1288, "lon": 56.3265, "terrain": "coast"},
+        {"name": "Khor Fakkan Coastal Fjord", "lat": 25.3377, "lon": 56.3562, "terrain": "coast"},
+        {"name": "Al Ain Oasis / Jebel Hafeet", "lat": 24.0574, "lon": 55.7779, "terrain": "mountain"},
+        {"name": "Hatta / Hajar Mountain Enclave", "lat": 24.8142, "lon": 56.1264, "terrain": "mountain"},
+        {"name": "Liwa Oasis / Empty Quarter Dunes", "lat": 23.1333, "lon": 53.7833, "terrain": "desert"},
+    ],
+    "saudi arabia": [
+        {"name": "Riyadh Olaya / Kingdom Centre", "lat": 24.7136, "lon": 46.6753, "terrain": "urban"},
+        {"name": "Riyadh Edge of the World / Tuwaiq", "lat": 24.9450, "lon": 45.9860, "terrain": "plateau"},
+        {"name": "Jeddah Corniche / Red Sea Coast", "lat": 21.5433, "lon": 39.1728, "terrain": "coast"},
+        {"name": "Makkah Holy Valley", "lat": 21.3891, "lon": 39.8579, "terrain": "urban"},
+        {"name": "Madinah Central Basin", "lat": 24.5247, "lon": 39.5692, "terrain": "urban"},
+        {"name": "Dammam / Khobar Eastern Coast", "lat": 26.4207, "lon": 50.0888, "terrain": "coast"},
+        {"name": "Abha / Asir Highland Ridge", "lat": 18.2164, "lon": 42.5053, "terrain": "mountain"},
+        {"name": "Al Souda Peak / Asir Mountain", "lat": 18.2700, "lon": 42.3600, "terrain": "mountain"},
+        {"name": "Taif Mountain Plateau", "lat": 21.2854, "lon": 40.4222, "terrain": "mountain"},
+        {"name": "Al Baha Mountain Ridge", "lat": 20.0129, "lon": 41.4677, "terrain": "mountain"},
+        {"name": "Tabuk / Jabal Al Lawz Snow Peaks", "lat": 28.6500, "lon": 35.3000, "terrain": "mountain"},
+        {"name": "Al Ula / Hegra Sandstone Canyons", "lat": 26.6080, "lon": 37.9250, "terrain": "desert"},
+        {"name": "Buraidah / Al Qassim Oasis", "lat": 26.3260, "lon": 43.9750, "terrain": "desert"},
+        {"name": "Hail Shammar Desert", "lat": 27.5219, "lon": 41.6961, "terrain": "desert"},
+        {"name": "Jizan Red Sea Coast", "lat": 16.8892, "lon": 42.5511, "terrain": "coast"},
+        {"name": "Najran Valley Oasis", "lat": 17.4924, "lon": 44.1277, "terrain": "valley"},
+    ],
+    "qatar": [
+        {"name": "Doha West Bay / Corniche", "lat": 25.2854, "lon": 51.5310, "terrain": "urban"},
+        {"name": "Lusail Modern City", "lat": 25.4200, "lon": 51.4900, "terrain": "urban"},
+        {"name": "Al Rayyan Education City", "lat": 25.3190, "lon": 51.4250, "terrain": "urban"},
+        {"name": "Al Wakrah Coastal City", "lat": 25.1768, "lon": 51.6048, "terrain": "coast"},
+        {"name": "Al Khor Northern Coast", "lat": 25.6839, "lon": 51.5058, "terrain": "coast"},
+        {"name": "Dukhan Western Oilfield", "lat": 25.4290, "lon": 50.7850, "terrain": "coast"},
+        {"name": "Zubarah Fort / North Peninsula", "lat": 25.9769, "lon": 51.0478, "terrain": "coast"},
+        {"name": "Inland Sea / Khor Al Adaid", "lat": 24.6333, "lon": 51.3500, "terrain": "desert"},
+    ],
+    "kuwait": [
+        {"name": "Kuwait City Capital / Towers", "lat": 29.3759, "lon": 47.9774, "terrain": "urban"},
+        {"name": "Hawalli / Salmiya Coast", "lat": 29.3333, "lon": 48.0833, "terrain": "coast"},
+        {"name": "Al Ahmadi Oilfield District", "lat": 29.0769, "lon": 48.0839, "terrain": "urban"},
+        {"name": "Al Farwaniya Urban Center", "lat": 29.2778, "lon": 47.9589, "terrain": "urban"},
+        {"name": "Al Jahra Western Oasis", "lat": 29.3375, "lon": 47.6581, "terrain": "desert"},
+        {"name": "Subiya / Sheikh Jaber Bridge", "lat": 29.6200, "lon": 48.1500, "terrain": "coast"},
+        {"name": "Abdali Northern Agriculture", "lat": 30.0633, "lon": 47.7083, "terrain": "desert"},
+        {"name": "Wafra Southern Farms", "lat": 28.5917, "lon": 48.1139, "terrain": "desert"},
+    ],
+    "oman": [
+        {"name": "Muscat Capital / Mutrah Corniche", "lat": 23.5880, "lon": 58.3829, "terrain": "coast"},
+        {"name": "Salalah Dhofar Monsoon Coast", "lat": 17.0151, "lon": 54.0924, "terrain": "coast"},
+        {"name": "Nizwa Jebel Akhdar Oasis", "lat": 22.9333, "lon": 57.5333, "terrain": "valley"},
+        {"name": "Jebel Akhdar Green Mountain", "lat": 23.0694, "lon": 57.6667, "terrain": "mountain"},
+        {"name": "Jebel Shams Grand Canyon", "lat": 23.2389, "lon": 57.2650, "terrain": "mountain"},
+        {"name": "Sur Eastern Coastal Port", "lat": 22.5667, "lon": 59.5289, "terrain": "coast"},
+        {"name": "Sohar Batinah Industrial Port", "lat": 24.3644, "lon": 56.7468, "terrain": "coast"},
+        {"name": "Khasab Musandam Fjords", "lat": 26.1799, "lon": 56.2483, "terrain": "coast"},
+        {"name": "Wahiba Sands / Sharqiya", "lat": 22.2500, "lon": 58.7500, "terrain": "desert"},
+    ],
+    "bahrain": [
+        {"name": "Manama Diplomatic Area / Capital", "lat": 26.2285, "lon": 50.5860, "terrain": "urban"},
+        {"name": "Muharraq Historic Island", "lat": 26.2572, "lon": 50.6119, "terrain": "coast"},
+        {"name": "Riffa Southern Palaces", "lat": 26.1300, "lon": 50.5550, "terrain": "urban"},
+        {"name": "King Fahd Causeway Gateway", "lat": 26.1850, "lon": 50.4550, "terrain": "coast"},
+        {"name": "Sitra Industrial Island", "lat": 26.1550, "lon": 50.6200, "terrain": "coast"},
+        {"name": "Amwaj Islands Arabian Gulf", "lat": 26.2900, "lon": 50.6650, "terrain": "coast"},
+        {"name": "Sakhir / Tree of Life Desert", "lat": 25.9900, "lon": 50.5800, "terrain": "desert"},
+    ],
+    "egypt": [
+        {"name": "Cairo Downtown / Tahrir", "lat": 30.0444, "lon": 31.2357, "terrain": "urban"},
+        {"name": "Giza Pyramids Plateau", "lat": 29.9792, "lon": 31.1342, "terrain": "desert"},
+        {"name": "Alexandria Mediterranean Corniche", "lat": 31.2001, "lon": 29.9187, "terrain": "coast"},
+        {"name": "Sharm El Sheikh Sinai Resort", "lat": 27.9158, "lon": 34.3299, "terrain": "coast"},
+        {"name": "Mount Sinai / Saint Catherine", "lat": 28.5392, "lon": 33.9750, "terrain": "mountain"},
+        {"name": "Dahab Sinai Coast", "lat": 28.5097, "lon": 34.5136, "terrain": "coast"},
+        {"name": "Hurghada Red Sea Coast", "lat": 27.2579, "lon": 33.8116, "terrain": "coast"},
+        {"name": "Luxor Nile Temples", "lat": 25.6872, "lon": 32.6396, "terrain": "valley"},
+        {"name": "Aswan High Dam / Nile Cataracts", "lat": 24.0889, "lon": 32.8998, "terrain": "valley"},
+        {"name": "Siwa Oasis Western Desert", "lat": 29.2032, "lon": 25.5195, "terrain": "desert"},
+        {"name": "Marsa Matrouh Mediterranean", "lat": 31.3525, "lon": 27.2453, "terrain": "coast"},
+        {"name": "Port Said Suez Canal Gateway", "lat": 31.2653, "lon": 32.3019, "terrain": "coast"},
+    ],
+    "iran": [
+        {"name": "Tehran Foothills / Milad Tower", "lat": 35.6892, "lon": 51.3890, "terrain": "urban"},
+        {"name": "Dizin / Shemshak Alborz Ski Resort", "lat": 36.0500, "lon": 51.4167, "terrain": "mountain"},
+        {"name": "Mount Damavand Peak", "lat": 35.9517, "lon": 52.1092, "terrain": "mountain"},
+        {"name": "Isfahan Naqsh-e Jahan Square", "lat": 32.6546, "lon": 51.6680, "terrain": "urban"},
+        {"name": "Shiraz Fars / Persepolis", "lat": 29.5918, "lon": 52.5837, "terrain": "valley"},
+        {"name": "Mashhad Khorasan Shrine", "lat": 36.2605, "lon": 59.6168, "terrain": "urban"},
+        {"name": "Tabriz Azerbaijan Historic Bazaar", "lat": 38.0800, "lon": 46.2919, "terrain": "urban"},
+        {"name": "Rasht Caspian Sea Coast", "lat": 37.2808, "lon": 49.5832, "terrain": "coast"},
+        {"name": "Yazd Desert Adobe Architecture", "lat": 31.8974, "lon": 54.3569, "terrain": "desert"},
+        {"name": "Kerman / Lut Desert", "lat": 30.2839, "lon": 57.0788, "terrain": "desert"},
+        {"name": "Kermanshah Zagros Foothills", "lat": 34.3142, "lon": 47.0650, "terrain": "mountain"},
+        {"name": "Bandar Abbas Persian Gulf Strait", "lat": 27.1832, "lon": 56.2666, "terrain": "coast"},
+    ],
+    "turkey": [
+        {"name": "Istanbul Bosporus / Sultanahmet", "lat": 41.0082, "lon": 28.9784, "terrain": "urban"},
+        {"name": "Istanbul Kadikoy / Asian Shore", "lat": 40.9910, "lon": 29.0270, "terrain": "urban"},
+        {"name": "Ankara Central Anatolia / Kizilay", "lat": 39.9334, "lon": 32.8597, "terrain": "urban"},
+        {"name": "Izmir Aegean Coast / Kordon", "lat": 38.4237, "lon": 27.1428, "terrain": "coast"},
+        {"name": "Antalya Mediterranean Turquoise Coast", "lat": 36.8969, "lon": 30.7133, "terrain": "coast"},
+        {"name": "Bursa / Uludag Mountain Peak", "lat": 40.0694, "lon": 29.2217, "terrain": "mountain"},
+        {"name": "Trabzon Black Sea Foothills", "lat": 41.0027, "lon": 39.7168, "terrain": "coast"},
+        {"name": "Rize / Ayder Plateau", "lat": 40.9575, "lon": 41.1000, "terrain": "mountain"},
+        {"name": "Uzungol Alpine Valley", "lat": 40.6178, "lon": 40.2917, "terrain": "mountain"},
+        {"name": "Erzurum / Palandoken Ski", "lat": 39.8500, "lon": 41.2800, "terrain": "mountain"},
+        {"name": "Cappadocia / Goreme Fairy Chimneys", "lat": 38.6431, "lon": 34.8289, "terrain": "plateau"},
+        {"name": "Pamukkale Travertines", "lat": 37.9250, "lon": 29.1208, "terrain": "valley"},
+        {"name": "Konya Anatolian Steppe", "lat": 37.8746, "lon": 32.4932, "terrain": "plateau"},
+        {"name": "Gaziantep Southeastern Hub", "lat": 37.0662, "lon": 37.3833, "terrain": "urban"},
+        {"name": "Bodrum Aegean Coast", "lat": 37.0344, "lon": 27.4305, "terrain": "coast"},
+    ],
+    "turkiye": [
+        {"name": "Istanbul Bosporus / Sultanahmet", "lat": 41.0082, "lon": 28.9784, "terrain": "urban"},
+        {"name": "Ankara Central Anatolia / Kizilay", "lat": 39.9334, "lon": 32.8597, "terrain": "urban"},
+        {"name": "Izmir Aegean Coast / Kordon", "lat": 38.4237, "lon": 27.1428, "terrain": "coast"},
+        {"name": "Antalya Mediterranean Turquoise Coast", "lat": 36.8969, "lon": 30.7133, "terrain": "coast"},
+        {"name": "Bursa / Uludag Mountain Peak", "lat": 40.0694, "lon": 29.2217, "terrain": "mountain"},
+        {"name": "Rize / Ayder Plateau", "lat": 40.9575, "lon": 41.1000, "terrain": "mountain"},
+    ],
+    "iraq": [
+        {"name": "Baghdad Tigris River / Tahrir", "lat": 33.3152, "lon": 44.3661, "terrain": "urban"},
+        {"name": "Basra Shatt al-Arab Port", "lat": 30.5081, "lon": 47.7835, "terrain": "coast"},
+        {"name": "Erbil Citadel / Kurdistan Hub", "lat": 36.1901, "lon": 44.0091, "terrain": "urban"},
+        {"name": "Sulaymaniyah Zagros Mountains", "lat": 35.5558, "lon": 45.4351, "terrain": "mountain"},
+        {"name": "Duhok Kurdistan Valley", "lat": 36.8679, "lon": 42.9885, "terrain": "mountain"},
+        {"name": "Mosul Ninawa Historic City", "lat": 36.3400, "lon": 43.1300, "terrain": "urban"},
+        {"name": "Najaf Shrine Oasis", "lat": 32.0000, "lon": 44.3300, "terrain": "urban"},
+        {"name": "Karbala Euphrates Basin", "lat": 32.6160, "lon": 44.0249, "terrain": "urban"},
+    ],
+    "israel": [
+        {"name": "Tel Aviv Mediterranean Promenade", "lat": 32.0853, "lon": 34.7818, "terrain": "coast"},
+        {"name": "Jerusalem Old City / Judean Hills", "lat": 31.7683, "lon": 35.2137, "terrain": "mountain"},
+        {"name": "Haifa Mount Carmel Bay", "lat": 32.7940, "lon": 34.9896, "terrain": "coast"},
+        {"name": "Beersheba Negev Desert Hub", "lat": 31.2529, "lon": 34.7915, "terrain": "desert"},
+        {"name": "Eilat Red Sea Gulf", "lat": 29.5577, "lon": 34.9519, "terrain": "coast"},
+        {"name": "Nazareth Galilee Hills", "lat": 32.7000, "lon": 35.3000, "terrain": "mountain"},
+    ],
+    "syria": [
+        {"name": "Damascus Old City / Mount Qasioun", "lat": 33.5138, "lon": 36.2765, "terrain": "urban"},
+        {"name": "Bloudan / Anti-Lebanon Mountains", "lat": 33.7333, "lon": 36.0833, "terrain": "mountain"},
+        {"name": "Aleppo Citadel / Northern Hub", "lat": 36.2021, "lon": 37.1343, "terrain": "urban"},
+        {"name": "Homs Orontes Valley", "lat": 34.7324, "lon": 36.7137, "terrain": "valley"},
+        {"name": "Latakia Mediterranean Coast", "lat": 35.5317, "lon": 35.7901, "terrain": "coast"},
+        {"name": "Tartus Coastal Port", "lat": 34.8890, "lon": 35.8866, "terrain": "coast"},
+        {"name": "Hama Orontes Waterwheels", "lat": 35.1318, "lon": 36.7578, "terrain": "valley"},
+        {"name": "Palmyra Desert Oasis", "lat": 34.5600, "lon": 38.2800, "terrain": "desert"},
+    ],
+    "yemen": [
+        {"name": "Sana'a Old City / Sarawat Highlands", "lat": 15.3694, "lon": 44.1910, "terrain": "mountain"},
+        {"name": "Aden Crater / Gulf of Aden Port", "lat": 12.7855, "lon": 45.0187, "terrain": "coast"},
+        {"name": "Taiz Jebel Saber Foothills", "lat": 13.5795, "lon": 44.0209, "terrain": "mountain"},
+        {"name": "Al Hodeidah Red Sea Coast", "lat": 14.7978, "lon": 42.9545, "terrain": "coast"},
+        {"name": "Al Mukalla Hadhramaut Coast", "lat": 14.5425, "lon": 49.1242, "terrain": "coast"},
+        {"name": "Ibb Highland Terraces", "lat": 13.9750, "lon": 44.1750, "terrain": "mountain"},
+        {"name": "Shibam Hadhramaut Mud Skyscraper Oasis", "lat": 15.9265, "lon": 48.6258, "terrain": "desert"},
+        {"name": "Socotra Island", "lat": 12.4634, "lon": 53.8237, "terrain": "coast"},
     ],
     "bangladesh": [
-        {"name": "Dhaka Metropolitan", "lat": 23.8103, "lon": 90.4125},
-        {"name": "Chittagong Coastal", "lat": 22.3569, "lon": 91.7832},
+        {"name": "Dhaka Metropolitan", "lat": 23.8103, "lon": 90.4125, "terrain": "urban"},
+        {"name": "Chittagong Coastal Port", "lat": 22.3569, "lon": 91.7832, "terrain": "coast"},
+        {"name": "Sylhet Tea Hills / Surma Valley", "lat": 24.8949, "lon": 91.8687, "terrain": "valley"},
+        {"name": "Bandarban Chittagong Hill Tracts", "lat": 22.1953, "lon": 92.2184, "terrain": "mountain"},
+        {"name": "Cox's Bazar Long Beach", "lat": 21.4272, "lon": 92.0058, "terrain": "coast"},
+    ],
+    "sri lanka": [
+        {"name": "Colombo Coastal Capital", "lat": 6.9271, "lon": 79.8612, "terrain": "coast"},
+        {"name": "Kandy Central Highlands", "lat": 7.2906, "lon": 80.6337, "terrain": "mountain"},
+        {"name": "Nuwara Eliya Hill Station Tea", "lat": 6.9497, "lon": 80.7891, "terrain": "mountain"},
+        {"name": "Ella Mountain Gap Peak", "lat": 6.8667, "lon": 81.0466, "terrain": "mountain"},
+        {"name": "Galle Southern Fort Coast", "lat": 6.0535, "lon": 80.2210, "terrain": "coast"},
     ],
     "afghanistan": [
-        {"name": "Kabul Basin", "lat": 34.5553, "lon": 69.2075},
-        {"name": "Herat Western Oasis", "lat": 34.3529, "lon": 62.2040},
+        {"name": "Kabul Basin / Hindu Kush", "lat": 34.5553, "lon": 69.2075, "terrain": "mountain"},
+        {"name": "Bamyan Valley / Buddha Cliffs", "lat": 34.8100, "lon": 67.8200, "terrain": "mountain"},
+        {"name": "Herat Western Oasis", "lat": 34.3529, "lon": 62.2040, "terrain": "urban"},
+        {"name": "Mazar-i-Sharif Northern Plain", "lat": 36.7061, "lon": 67.1108, "terrain": "urban"},
+        {"name": "Kandahar Arghandab Valley", "lat": 31.6289, "lon": 65.7372, "terrain": "urban"},
     ],
     "morocco": [
-        {"name": "Casablanca Atlantic Coast", "lat": 33.5731, "lon": -7.5898},
-        {"name": "Marrakech Atlas Foothills", "lat": 31.6295, "lon": -7.9811},
+        {"name": "Casablanca Atlantic Coast", "lat": 33.5731, "lon": -7.5898, "terrain": "coast"},
+        {"name": "Marrakech Atlas Foothills", "lat": 31.6295, "lon": -7.9811, "terrain": "urban"},
+        {"name": "Toubkal / Imlil High Atlas", "lat": 31.1356, "lon": -7.9172, "terrain": "mountain"},
+        {"name": "Chefchaouen Rif Mountains", "lat": 35.1716, "lon": -5.2697, "terrain": "mountain"},
+        {"name": "Merzouga Sahara Erg Chebbi Dunes", "lat": 31.0992, "lon": -4.0097, "terrain": "desert"},
     ],
     "united kingdom": [
-        {"name": "London Greater Metropolitan", "lat": 51.5074, "lon": -0.1278},
-        {"name": "Manchester Northwest", "lat": 53.4808, "lon": -2.2426},
-        {"name": "Edinburgh Scotland", "lat": 55.9533, "lon": -3.1883},
+        {"name": "London Greater Metropolitan", "lat": 51.5074, "lon": -0.1278, "terrain": "urban"},
+        {"name": "Manchester Northwest", "lat": 53.4808, "lon": -2.2426, "terrain": "urban"},
+        {"name": "Edinburgh Scotland", "lat": 55.9533, "lon": -3.1883, "terrain": "urban"},
+        {"name": "Fort William / Ben Nevis Highlands", "lat": 56.8198, "lon": -5.1052, "terrain": "mountain"},
+        {"name": "Lake District / Keswick", "lat": 54.6013, "lon": -3.1361, "terrain": "mountain"},
+        {"name": "Snowdonia / Eryri Wales", "lat": 53.0685, "lon": -4.0763, "terrain": "mountain"},
     ],
     "france": [
-        {"name": "Paris Île-de-France", "lat": 48.8566, "lon": 2.3522},
-        {"name": "Marseille Provence Coast", "lat": 43.2965, "lon": 5.3698},
-        {"name": "Lyon Rhône Corridor", "lat": 45.7640, "lon": 4.8357},
+        {"name": "Paris Île-de-France", "lat": 48.8566, "lon": 2.3522, "terrain": "urban"},
+        {"name": "Chamonix / Mont Blanc Valley", "lat": 45.9237, "lon": 6.8694, "terrain": "mountain"},
+        {"name": "Annecy / French Alps", "lat": 45.8992, "lon": 6.1294, "terrain": "mountain"},
+        {"name": "Pyrenees / Cauterets", "lat": 42.8889, "lon": -0.1139, "terrain": "mountain"},
+        {"name": "Marseille Provence Coast", "lat": 43.2965, "lon": 5.3698, "terrain": "coast"},
+        {"name": "Lyon Rhône Corridor", "lat": 45.7640, "lon": 4.8357, "terrain": "urban"},
     ],
     "germany": [
-        {"name": "Berlin Metropolitan", "lat": 52.5200, "lon": 13.4050},
-        {"name": "Munich Bavaria", "lat": 48.1351, "lon": 11.5820},
-        {"name": "Frankfurt Rhine-Main", "lat": 50.1109, "lon": 8.6821},
+        {"name": "Berlin Metropolitan", "lat": 52.5200, "lon": 13.4050, "terrain": "urban"},
+        {"name": "Munich Bavaria", "lat": 48.1351, "lon": 11.5820, "terrain": "urban"},
+        {"name": "Garmisch-Partenkirchen / Zugspitze", "lat": 47.4917, "lon": 11.0955, "terrain": "mountain"},
+        {"name": "Berchtesgaden / Bavarian Alps", "lat": 47.6297, "lon": 13.0016, "terrain": "mountain"},
+        {"name": "Black Forest / Freiburg", "lat": 47.9990, "lon": 7.8421, "terrain": "mountain"},
+    ],
+    "switzerland": [
+        {"name": "Zurich Urban Lake", "lat": 47.3769, "lon": 8.5417, "terrain": "urban"},
+        {"name": "Zermatt / Matterhorn Peak", "lat": 45.9765, "lon": 7.7491, "terrain": "mountain"},
+        {"name": "Interlaken / Jungfrau Region", "lat": 46.6863, "lon": 7.8632, "terrain": "mountain"},
+        {"name": "St. Moritz / Engadin Valley", "lat": 46.4908, "lon": 9.8355, "terrain": "mountain"},
+        {"name": "Geneva Lake Basin", "lat": 46.2044, "lon": 6.1432, "terrain": "urban"},
+    ],
+    "austria": [
+        {"name": "Vienna Danube Capital", "lat": 48.2082, "lon": 16.3738, "terrain": "urban"},
+        {"name": "Innsbruck / Tyrol Alps", "lat": 47.2692, "lon": 11.4041, "terrain": "mountain"},
+        {"name": "Salzburg Alpine Foothills", "lat": 47.8095, "lon": 13.0550, "terrain": "mountain"},
+        {"name": "Kitzbuhel Alpine Ski", "lat": 47.4464, "lon": 12.3922, "terrain": "mountain"},
     ],
     "italy": [
-        {"name": "Rome Central", "lat": 41.9028, "lon": 12.4964},
-        {"name": "Milan Lombardy", "lat": 45.4642, "lon": 9.1900},
-        {"name": "Naples Bay", "lat": 40.8518, "lon": 14.2681},
+        {"name": "Rome Central", "lat": 41.9028, "lon": 12.4964, "terrain": "urban"},
+        {"name": "Milan Lombardy", "lat": 45.4642, "lon": 9.1900, "terrain": "urban"},
+        {"name": "Cortina d'Ampezzo / Dolomites", "lat": 46.5405, "lon": 12.1357, "terrain": "mountain"},
+        {"name": "Courmayeur / Mont Blanc", "lat": 45.7969, "lon": 6.9708, "terrain": "mountain"},
+        {"name": "Florence / Tuscany Hills", "lat": 43.7696, "lon": 11.2558, "terrain": "valley"},
+        {"name": "Naples / Amalfi Coast", "lat": 40.8518, "lon": 14.2681, "terrain": "coast"},
+        {"name": "Sicily / Mount Etna", "lat": 37.7510, "lon": 14.9934, "terrain": "mountain"},
     ],
     "spain": [
-        {"name": "Madrid Central Meseta", "lat": 40.4168, "lon": -3.7038},
-        {"name": "Barcelona Catalonia", "lat": 41.3851, "lon": 2.1734},
+        {"name": "Madrid Central Meseta", "lat": 40.4168, "lon": -3.7038, "terrain": "urban"},
+        {"name": "Barcelona Catalonia", "lat": 41.3851, "lon": 2.1734, "terrain": "coast"},
+        {"name": "Sierra Nevada / Granada Peaks", "lat": 37.0931, "lon": -3.3931, "terrain": "mountain"},
+        {"name": "Pyrenees / Huesca", "lat": 42.5000, "lon": 0.0500, "terrain": "mountain"},
+        {"name": "Tenerife / Mount Teide", "lat": 28.2723, "lon": -16.6425, "terrain": "mountain"},
+    ],
+    "norway": [
+        {"name": "Oslo Capital Fjord", "lat": 59.9139, "lon": 10.7522, "terrain": "urban"},
+        {"name": "Bergen Western Coast", "lat": 60.3913, "lon": 5.3221, "terrain": "coast"},
+        {"name": "Geiranger Fjord Mountain Valley", "lat": 62.1008, "lon": 7.2059, "terrain": "mountain"},
+        {"name": "Tromso Arctic Mountain Coast", "lat": 69.6492, "lon": 18.9553, "terrain": "coast"},
+        {"name": "Lofoten Islands Alpine Coast", "lat": 68.1667, "lon": 13.7500, "terrain": "coast"},
     ],
     "united states": [
-        {"name": "New York Metropolitan", "lat": 40.7128, "lon": -74.0060},
-        {"name": "Los Angeles Coastal Plain", "lat": 34.0522, "lon": -118.2437},
-        {"name": "Chicago Great Lakes", "lat": 41.8781, "lon": -87.6298},
-        {"name": "Austin Texas Corridor", "lat": 30.2672, "lon": -97.7431},
+        {"name": "New York Metropolitan", "lat": 40.7128, "lon": -74.0060, "terrain": "urban"},
+        {"name": "Los Angeles Coastal Plain", "lat": 34.0522, "lon": -118.2437, "terrain": "coast"},
+        {"name": "Chicago Great Lakes", "lat": 41.8781, "lon": -87.6298, "terrain": "urban"},
+        {"name": "Denver / Colorado Rockies", "lat": 39.7392, "lon": -104.9903, "terrain": "mountain"},
+        {"name": "Aspen / Rocky Mountains", "lat": 39.1911, "lon": -106.8175, "terrain": "mountain"},
+        {"name": "Yosemite / Sierra Nevada", "lat": 37.8651, "lon": -119.5383, "terrain": "mountain"},
+        {"name": "Seattle / Mount Rainier", "lat": 47.6062, "lon": -122.3321, "terrain": "mountain"},
+        {"name": "Moab / Utah Red Rock Canyons", "lat": 38.5733, "lon": -109.5498, "terrain": "desert"},
+    ],
+    "canada": [
+        {"name": "Toronto Metropolitan", "lat": 43.6532, "lon": -79.3832, "terrain": "urban"},
+        {"name": "Vancouver Coast", "lat": 49.2827, "lon": -123.1207, "terrain": "coast"},
+        {"name": "Banff / Canadian Rockies", "lat": 51.1784, "lon": -115.5708, "terrain": "mountain"},
+        {"name": "Jasper National Park", "lat": 52.8737, "lon": -117.9543, "terrain": "mountain"},
+        {"name": "Whistler Coast Mountains", "lat": 50.1163, "lon": -122.9574, "terrain": "mountain"},
+        {"name": "Calgary Foothills", "lat": 51.0447, "lon": -114.0719, "terrain": "plateau"},
     ],
     "japan": [
-        {"name": "Tokyo Kanto Plain", "lat": 35.6762, "lon": 139.6503},
-        {"name": "Osaka / Kyoto Kansai", "lat": 34.6937, "lon": 135.5023},
+        {"name": "Tokyo Kanto Plain", "lat": 35.6762, "lon": 139.6503, "terrain": "urban"},
+        {"name": "Mount Fuji / Hakone Ridge", "lat": 35.3606, "lon": 138.7274, "terrain": "mountain"},
+        {"name": "Nagano / Japanese Alps", "lat": 36.6513, "lon": 138.1810, "terrain": "mountain"},
+        {"name": "Sapporo / Hokkaido", "lat": 43.0618, "lon": 141.3545, "terrain": "mountain"},
+        {"name": "Kyoto Kansai Basin", "lat": 35.0116, "lon": 135.7681, "terrain": "valley"},
     ],
     "china": [
-        {"name": "Beijing North China Plain", "lat": 39.9042, "lon": 116.4074},
-        {"name": "Shanghai Yangtze Delta", "lat": 31.2304, "lon": 121.4737},
-        {"name": "Guangzhou Pearl River Delta", "lat": 23.1291, "lon": 113.2644},
-        {"name": "Chengdu Sichuan Basin", "lat": 30.5728, "lon": 104.0668},
+        {"name": "Beijing North China Plain", "lat": 39.9042, "lon": 116.4074, "terrain": "urban"},
+        {"name": "Shanghai Yangtze Delta", "lat": 31.2304, "lon": 121.4737, "terrain": "coast"},
+        {"name": "Chengdu Sichuan Basin", "lat": 30.5728, "lon": 104.0668, "terrain": "valley"},
+        {"name": "Lhasa / Tibet Himalayan Plateau", "lat": 29.6525, "lon": 91.1721, "terrain": "mountain"},
+        {"name": "Huangshan / Yellow Mountain", "lat": 30.1311, "lon": 118.1691, "terrain": "mountain"},
+        {"name": "Zhangjiajie Sandstone Pillars", "lat": 29.1306, "lon": 110.4789, "terrain": "mountain"},
+    ],
+    "australia": [
+        {"name": "Sydney Coastal Basin", "lat": -33.8688, "lon": 151.2093, "terrain": "coast"},
+        {"name": "Melbourne Port Phillip", "lat": -37.8136, "lon": 144.9631, "terrain": "coast"},
+        {"name": "Jindabyne / Mount Kosciuszko", "lat": -36.4167, "lon": 148.6167, "terrain": "mountain"},
+        {"name": "Blue Mountains / Katoomba", "lat": -33.7150, "lon": 150.3119, "terrain": "mountain"},
+        {"name": "Uluru Red Center Outback", "lat": -25.3444, "lon": 131.0369, "terrain": "desert"},
+    ],
+    "new zealand": [
+        {"name": "Auckland Harbor", "lat": -36.8485, "lon": 174.7633, "terrain": "coast"},
+        {"name": "Queenstown / Southern Alps", "lat": -45.0312, "lon": 168.6626, "terrain": "mountain"},
+        {"name": "Mount Cook / Aoraki Peak", "lat": -43.7333, "lon": 170.0956, "terrain": "mountain"},
+        {"name": "Milford Sound Fiordland", "lat": -44.6716, "lon": 167.9256, "terrain": "mountain"},
+        {"name": "Christchurch Canterbury Plain", "lat": -43.5321, "lon": 172.6362, "terrain": "urban"},
+    ],
+    "greece": [
+        {"name": "Athens Attica Metropolitan", "lat": 37.9838, "lon": 23.7275, "terrain": "urban"},
+        {"name": "Thessaloniki Macedonia Coast", "lat": 40.6401, "lon": 22.9444, "terrain": "coast"},
+        {"name": "Mount Olympus / Litochoro", "lat": 40.0884, "lon": 22.3586, "terrain": "mountain"},
+        {"name": "Meteora Sandstone Pinnacles", "lat": 39.7217, "lon": 21.6306, "terrain": "mountain"},
+        {"name": "Crete / Chania Coast", "lat": 35.5138, "lon": 24.0180, "terrain": "coast"},
+        {"name": "Santorini Cyclades Caldera", "lat": 36.3932, "lon": 25.4615, "terrain": "coast"},
+    ],
+    "portugal": [
+        {"name": "Lisbon Tagus Estuary", "lat": 38.7223, "lon": -9.1393, "terrain": "coast"},
+        {"name": "Porto Douro Valley", "lat": 41.1579, "lon": -8.6291, "terrain": "urban"},
+        {"name": "Serra da Estrela Peak", "lat": 40.3219, "lon": -7.6133, "terrain": "mountain"},
+        {"name": "Sintra Hills / Pena", "lat": 38.8029, "lon": -9.3817, "terrain": "mountain"},
+        {"name": "Faro Algarve Coast", "lat": 37.0194, "lon": -7.9304, "terrain": "coast"},
+    ],
+    "sweden": [
+        {"name": "Stockholm Archipelago", "lat": 59.3293, "lon": 18.0686, "terrain": "coast"},
+        {"name": "Gothenburg Western Coast", "lat": 57.7089, "lon": 11.9746, "terrain": "coast"},
+        {"name": "Are Ski Mountain", "lat": 63.4000, "lon": 13.0800, "terrain": "mountain"},
+        {"name": "Kiruna Arctic / Abisko", "lat": 67.8558, "lon": 20.2253, "terrain": "mountain"},
+        {"name": "Malmo Southern Plain", "lat": 55.6050, "lon": 13.0038, "terrain": "urban"},
+    ],
+    "iceland": [
+        {"name": "Reykjavik Coastal Capital", "lat": 64.1466, "lon": -21.9426, "terrain": "coast"},
+        {"name": "Akureyri Northern Fjord", "lat": 65.6835, "lon": -18.1059, "terrain": "coast"},
+        {"name": "Vik Black Sand Coast", "lat": 63.4186, "lon": -19.0060, "terrain": "coast"},
+        {"name": "Vatnajokull Glacier Volcano", "lat": 64.4222, "lon": -16.7867, "terrain": "mountain"},
+        {"name": "Landmannalaugar Highlands", "lat": 63.9908, "lon": -19.0608, "terrain": "mountain"},
+    ],
+    "brazil": [
+        {"name": "Rio de Janeiro Guanabara Bay", "lat": -22.9068, "lon": -43.1729, "terrain": "coast"},
+        {"name": "Sao Paulo Metropolitan", "lat": -23.5505, "lon": -46.6333, "terrain": "urban"},
+        {"name": "Serra dos Orgaos / Petropolis", "lat": -22.4961, "lon": -43.0569, "terrain": "mountain"},
+        {"name": "Salvador Bahia Coast", "lat": -12.9777, "lon": -38.5016, "terrain": "coast"},
+        {"name": "Brasilia Central Plateau", "lat": -15.7975, "lon": -47.8919, "terrain": "plateau"},
+        {"name": "Manaus Amazon Basin", "lat": -3.1190, "lon": -60.0217, "terrain": "valley"},
+    ],
+    "mexico": [
+        {"name": "Mexico City Valley", "lat": 19.4326, "lon": -99.1332, "terrain": "valley"},
+        {"name": "Monterrey Sierra Madre", "lat": 25.6866, "lon": -100.3161, "terrain": "mountain"},
+        {"name": "Guadalajara Jalisco", "lat": 20.6597, "lon": -103.3496, "terrain": "urban"},
+        {"name": "Pico de Orizaba Volcano", "lat": 19.0300, "lon": -97.2700, "terrain": "mountain"},
+        {"name": "Cancun Yucatan Coast", "lat": 21.1619, "lon": -86.8515, "terrain": "coast"},
+        {"name": "San Cristobal / Chiapas Highlands", "lat": 16.7370, "lon": -92.6376, "terrain": "mountain"},
+    ],
+    "colombia": [
+        {"name": "Bogota Andean Savanna", "lat": 4.7110, "lon": -74.0721, "terrain": "plateau"},
+        {"name": "Medellin Aburra Valley", "lat": 6.2442, "lon": -75.5812, "terrain": "valley"},
+        {"name": "Sierra Nevada de Santa Marta", "lat": 10.8200, "lon": -73.6900, "terrain": "mountain"},
+        {"name": "Manizales Coffee Cordillera", "lat": 5.0689, "lon": -75.5174, "terrain": "mountain"},
+        {"name": "Cartagena Caribbean Coast", "lat": 10.3910, "lon": -75.4794, "terrain": "coast"},
+    ],
+    "peru": [
+        {"name": "Lima Pacific Coast", "lat": -12.0464, "lon": -77.0428, "terrain": "coast"},
+        {"name": "Cusco / Sacred Valley", "lat": -13.5319, "lon": -71.9675, "terrain": "mountain"},
+        {"name": "Machu Picchu Andes Peak", "lat": -13.1631, "lon": -72.5450, "terrain": "mountain"},
+        {"name": "Huaraz / Cordillera Blanca", "lat": -9.5261, "lon": -77.5288, "terrain": "mountain"},
+        {"name": "Arequipa / Misti Volcano", "lat": -16.4090, "lon": -71.5375, "terrain": "mountain"},
+    ],
+    "chile": [
+        {"name": "Santiago Central Valley", "lat": -33.4489, "lon": -70.6693, "terrain": "valley"},
+        {"name": "Valparaiso Coastal Hills", "lat": -33.0472, "lon": -71.6127, "terrain": "coast"},
+        {"name": "Torres del Paine Patagonia", "lat": -51.2532, "lon": -72.8814, "terrain": "mountain"},
+        {"name": "San Pedro de Atacama Desert", "lat": -22.9087, "lon": -68.1997, "terrain": "desert"},
+        {"name": "Puerto Montt / Lake Llanquihue", "lat": -41.4693, "lon": -72.9424, "terrain": "mountain"},
+    ],
+    "argentina": [
+        {"name": "Buenos Aires Rio de la Plata", "lat": -34.6037, "lon": -58.3816, "terrain": "coast"},
+        {"name": "Mendoza / Aconcagua Foothills", "lat": -32.8895, "lon": -68.8458, "terrain": "mountain"},
+        {"name": "Bariloche Lake / Andes", "lat": -41.1335, "lon": -71.3103, "terrain": "mountain"},
+        {"name": "Ushuaia Tierra del Fuego", "lat": -54.8019, "lon": -68.3030, "terrain": "mountain"},
+        {"name": "Salta / Cafayate Valleys", "lat": -24.7821, "lon": -65.4232, "terrain": "valley"},
+    ],
+    "south africa": [
+        {"name": "Cape Town / Table Mountain", "lat": -33.9249, "lon": 18.4241, "terrain": "mountain"},
+        {"name": "Johannesburg Highveld Plateau", "lat": -26.2041, "lon": 28.0473, "terrain": "plateau"},
+        {"name": "Drakensberg Mountain Escarpment", "lat": -29.5833, "lon": 29.3000, "terrain": "mountain"},
+        {"name": "Durban Indian Ocean Coast", "lat": -29.8587, "lon": 31.0218, "terrain": "coast"},
+        {"name": "Kruger Lowveld Savanna", "lat": -24.0116, "lon": 31.4859, "terrain": "valley"},
+    ],
+    "kenya": [
+        {"name": "Nairobi Central Highlands", "lat": -1.2921, "lon": 36.8219, "terrain": "plateau"},
+        {"name": "Mount Kenya Alpine Peak", "lat": -0.1521, "lon": 37.3084, "terrain": "mountain"},
+        {"name": "Mombasa Swahili Coast", "lat": -4.0435, "lon": 39.6682, "terrain": "coast"},
+        {"name": "Nakuru Great Rift Valley", "lat": -0.3031, "lon": 36.0800, "terrain": "valley"},
+    ],
+    "indonesia": [
+        {"name": "Jakarta Java Basin", "lat": -6.2088, "lon": 106.8456, "terrain": "urban"},
+        {"name": "Mount Bromo / East Java", "lat": -7.9425, "lon": 112.9530, "terrain": "mountain"},
+        {"name": "Bali Ubud Foothills", "lat": -8.5069, "lon": 115.2625, "terrain": "valley"},
+        {"name": "Bandung Highland Valley", "lat": -6.9175, "lon": 107.6191, "terrain": "valley"},
+        {"name": "Lombok / Mount Rinjani", "lat": -8.4167, "lon": 116.4583, "terrain": "mountain"},
+    ],
+    "thailand": [
+        {"name": "Bangkok Chao Phraya Delta", "lat": 13.7563, "lon": 100.5018, "terrain": "urban"},
+        {"name": "Chiang Mai / Doi Inthanon Mountain", "lat": 18.7883, "lon": 98.9853, "terrain": "mountain"},
+        {"name": "Pai Alpine Valley", "lat": 19.3582, "lon": 98.4411, "terrain": "mountain"},
+        {"name": "Phuket Andaman Coast", "lat": 7.8804, "lon": 98.3923, "terrain": "coast"},
+        {"name": "Krabi Limestone Coast", "lat": 8.0863, "lon": 98.9063, "terrain": "coast"},
+    ],
+    "vietnam": [
+        {"name": "Hanoi Red River Basin", "lat": 21.0285, "lon": 105.8542, "terrain": "urban"},
+        {"name": "Sapa / Fan Si Pan High Peaks", "lat": 22.3364, "lon": 103.8438, "terrain": "mountain"},
+        {"name": "Da Nang Coastal Port", "lat": 16.0544, "lon": 108.2022, "terrain": "coast"},
+        {"name": "Ha Long Bay Karst Coast", "lat": 20.9501, "lon": 107.0734, "terrain": "coast"},
+        {"name": "Da Lat Central Highlands", "lat": 11.9404, "lon": 108.4583, "terrain": "mountain"},
+        {"name": "Ho Chi Minh City Mekong Gateway", "lat": 10.8231, "lon": 106.6297, "terrain": "urban"},
+    ],
+    "south korea": [
+        {"name": "Seoul Han River / Bukhansan", "lat": 37.5665, "lon": 126.9780, "terrain": "mountain"},
+        {"name": "Seoraksan National Park Peaks", "lat": 38.1194, "lon": 128.4656, "terrain": "mountain"},
+        {"name": "Busan Coastal Harbor", "lat": 35.1796, "lon": 129.0756, "terrain": "coast"},
+        {"name": "Jeju Island / Hallasan Volcano", "lat": 33.3617, "lon": 126.5292, "terrain": "mountain"},
+        {"name": "Pyeongchang Taebaek Ski Highlands", "lat": 37.3705, "lon": 128.3902, "terrain": "mountain"},
+    ],
+    "russia": [
+        {"name": "Moscow Central Plain", "lat": 55.7558, "lon": 37.6173, "terrain": "urban"},
+        {"name": "Saint Petersburg Baltic Gulf", "lat": 59.9343, "lon": 30.3351, "terrain": "coast"},
+        {"name": "Sochi / Krasnaya Polyana Caucasus", "lat": 43.6784, "lon": 40.2056, "terrain": "mountain"},
+        {"name": "Lake Baikal / Irkutsk Highlands", "lat": 52.2870, "lon": 104.3050, "terrain": "mountain"},
+        {"name": "Altai Mountains / Belukha", "lat": 49.8000, "lon": 86.5833, "terrain": "mountain"},
+        {"name": "Kamchatka Volcanoes / Petropavlovsk", "lat": 53.0167, "lon": 158.6500, "terrain": "mountain"},
     ],
 }
 
@@ -310,13 +615,37 @@ for _k, _v in list(COUNTRY_ANCHORS.items()):
         COUNTRY_ANCHORS[_k.title()] = _v
 
 
-def get_country_anchors(country_name: str, max_anchors: int = 6) -> List[Dict[str, Any]]:
-    """Retrieve representative geographic anchors for a specified country."""
+def get_country_anchors(
+    country_name: str,
+    max_anchors: int = 12,
+    terrain: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """Retrieve representative geographic anchors for a specified country, optionally prioritizing terrain."""
     c_clean = country_name.strip().lower()
-    for k, anchors in COUNTRY_ANCHORS.items():
+    anchors: List[Dict[str, Any]] = []
+    for k, v in COUNTRY_ANCHORS.items():
         if k == c_clean or k in c_clean or c_clean in k:
-            return anchors[:max_anchors]
-    return []
+            anchors = v
+            break
+    if not anchors:
+        return []
+
+    if terrain:
+        t_clean = terrain.strip().lower()
+        def terrain_priority(a: Dict[str, Any]) -> int:
+            a_terr = a.get("terrain", "").lower()
+            if a_terr == t_clean:
+                return 0
+            if t_clean == "mountain" and a_terr in ("mountain", "valley", "plateau"):
+                return 1
+            if t_clean == "desert" and a_terr in ("desert", "plateau"):
+                return 1
+            if t_clean == "coast" and a_terr in ("coast",):
+                return 1
+            return 2
+        anchors = sorted(anchors, key=terrain_priority)
+
+    return anchors[:max_anchors]
 
 
 REGION_BOUNDS: Dict[str, Tuple[float, float, float, float]] = {
@@ -467,154 +796,355 @@ class SubnationalDivision(dict):
 
 
 def get_subnational_division(lat: float, lon: float) -> Optional[SubnationalDivision]:
-    """Resolve GPS coordinates to province/governorate/state and major district for the 15 priority nations."""
-    # Pakistan
+    """Resolve GPS coordinates to province/governorate/state and major district with 100% gap-free coverage."""
+    # 1. Pakistan (Comprehensive coverage across all administrative territories)
     if 23.6 <= lat <= 37.1 and 60.8 <= lon <= 75.3:
-        if 33.64 <= lat <= 33.80 and 72.90 <= lon <= 73.25:
+        # Islamabad Capital Territory
+        if 33.60 <= lat <= 33.82 and 72.85 <= lon <= 73.28:
             return SubnationalDivision({"country": "Pakistan", "division": "Islamabad Capital Territory", "district": "Islamabad"})
-        if 33.80 < lat <= 34.15 and 73.30 <= lon <= 73.55:
-            return SubnationalDivision({"country": "Pakistan", "division": "Punjab", "district": "Murree / Galyat"})
-        if 33.40 <= lat < 33.64 and 72.85 <= lon <= 73.20:
-            return SubnationalDivision({"country": "Pakistan", "division": "Punjab", "district": "Rawalpindi"})
-        if 31.30 <= lat <= 31.75 and 74.15 <= lon <= 74.55:
-            return SubnationalDivision({"country": "Pakistan", "division": "Punjab", "district": "Lahore"})
-        if 33.90 <= lat <= 34.20 and 71.40 <= lon <= 71.70:
-            return SubnationalDivision({"country": "Pakistan", "division": "Khyber Pakhtunkhwa", "district": "Peshawar"})
-        if 34.05 <= lat <= 34.35 and 73.10 <= lon <= 73.40:
-            return SubnationalDivision({"country": "Pakistan", "division": "Khyber Pakhtunkhwa", "district": "Abbottabad / Hazara"})
-        if 34.15 <= lat <= 34.45 and 73.40 <= lon <= 73.65:
-            return SubnationalDivision({"country": "Pakistan", "division": "Azad Kashmir", "district": "Muzaffarabad"})
-        if 24.70 <= lat <= 25.15 and 66.85 <= lon <= 67.35:
-            return SubnationalDivision({"country": "Pakistan", "division": "Sindh", "district": "Karachi"})
-        if 30.05 <= lat <= 30.35 and 66.85 <= lon <= 67.15:
-            return SubnationalDivision({"country": "Pakistan", "division": "Balochistan", "district": "Quetta"})
-        if 35.75 <= lat <= 36.10 and 74.15 <= lon <= 74.50:
-            return SubnationalDivision({"country": "Pakistan", "division": "Gilgit-Baltistan", "district": "Gilgit"})
 
-    # United Arab Emirates
-    if 22.6 <= lat <= 26.1 and 51.5 <= lon <= 56.4:
-        if 25.32 <= lat <= 25.48 and 55.35 <= lon <= 55.60:
-            return SubnationalDivision({"country": "United Arab Emirates", "division": "Emirate of Sharjah", "district": "Sharjah"})
-        if 24.95 <= lat < 25.32 and 55.05 <= lon <= 55.45:
-            return SubnationalDivision({"country": "United Arab Emirates", "division": "Emirate of Dubai", "district": "Dubai"})
-        if 24.30 <= lat <= 24.60 and 54.25 <= lon <= 54.70:
-            return SubnationalDivision({"country": "United Arab Emirates", "division": "Emirate of Abu Dhabi", "district": "Abu Dhabi"})
-        if 24.05 <= lat <= 24.35 and 55.60 <= lon <= 55.90:
-            return SubnationalDivision({"country": "United Arab Emirates", "division": "Emirate of Abu Dhabi", "district": "Al Ain"})
-        if 25.65 <= lat <= 25.95 and 55.80 <= lon <= 56.10:
-            return SubnationalDivision({"country": "United Arab Emirates", "division": "Emirate of Ras Al Khaimah", "district": "Ras Al Khaimah"})
-        if 25.05 <= lat <= 25.25 and 56.25 <= lon <= 56.40:
-            return SubnationalDivision({"country": "United Arab Emirates", "division": "Emirate of Fujairah", "district": "Fujairah"})
+        # Azad Jammu and Kashmir (AJ&K) - full corridor from 33.0 to 35.1 lat, 73.35 to 74.8 lon
+        if 33.0 <= lat <= 35.1 and 73.35 <= lon <= 74.8:
+            if lat >= 34.40:
+                return SubnationalDivision({"country": "Pakistan", "division": "Azad Kashmir", "district": "Neelum Valley"})
+            elif lat >= 34.10:
+                return SubnationalDivision({"country": "Pakistan", "division": "Azad Kashmir", "district": "Muzaffarabad / Jhelum Valley"})
+            elif lat >= 33.70:
+                return SubnationalDivision({"country": "Pakistan", "division": "Azad Kashmir", "district": "Rawalakot / Poonch / Bagh"})
+            else:
+                return SubnationalDivision({"country": "Pakistan", "division": "Azad Kashmir", "district": "Mirpur / Kotli / Bhimber"})
 
-    # Qatar
+        # Gilgit-Baltistan (GB) - Karakoram, Himalaya, Hindukush high mountain territory
+        if 35.0 <= lat <= 37.2 and 72.5 <= lon <= 77.5:
+            if lat >= 36.10:
+                return SubnationalDivision({"country": "Pakistan", "division": "Gilgit-Baltistan", "district": "Hunza / Nagar"})
+            elif lon >= 75.00:
+                return SubnationalDivision({"country": "Pakistan", "division": "Gilgit-Baltistan", "district": "Skardu / Baltistan"})
+            elif 35.60 <= lat <= 36.10 and 74.00 <= lon <= 74.70:
+                return SubnationalDivision({"country": "Pakistan", "division": "Gilgit-Baltistan", "district": "Gilgit"})
+            else:
+                return SubnationalDivision({"country": "Pakistan", "division": "Gilgit-Baltistan", "district": "Diamer / Chilas / Astore"})
+
+        # Khyber Pakhtunkhwa (KP) - Hazara, Malakand, Swat, Peshawar, Southern KP
+        # Northern Hazara is at lat >= 33.85 and lon <= 73.40; central/southern KP is west of lon 72.60.
+        is_kp = False
+        if 31.2 <= lat <= 36.9 and 69.5 <= lon <= 74.0:
+            if (33.0 <= lat <= 35.1 and lon > 73.40):
+                is_kp = False
+            elif lat >= 33.85 and lon <= 73.40:
+                is_kp = True
+            elif lon <= 72.60:
+                is_kp = True
+
+        if is_kp:
+            if 34.50 <= lat <= 35.80 and 72.00 <= lon <= 73.00:
+                return SubnationalDivision({"country": "Pakistan", "division": "Khyber Pakhtunkhwa", "district": "Swat / Malakand / Kalam"})
+            elif lat >= 35.40 and lon <= 72.50:
+                return SubnationalDivision({"country": "Pakistan", "division": "Khyber Pakhtunkhwa", "district": "Chitral / Upper Dir"})
+            elif 34.40 <= lat <= 35.30 and 73.15 <= lon <= 74.10:
+                return SubnationalDivision({"country": "Pakistan", "division": "Khyber Pakhtunkhwa", "district": "Kaghan / Naran Valley / Mansehra"})
+            elif 33.95 <= lat <= 34.40 and 72.95 <= lon <= 73.40:
+                return SubnationalDivision({"country": "Pakistan", "division": "Khyber Pakhtunkhwa", "district": "Abbottabad / Hazara"})
+            elif 33.85 <= lat <= 34.35 and 71.30 <= lon <= 72.10:
+                return SubnationalDivision({"country": "Pakistan", "division": "Khyber Pakhtunkhwa", "district": "Peshawar / Mardan / Charsadda"})
+            elif lat < 33.80 and lon <= 72.00:
+                return SubnationalDivision({"country": "Pakistan", "division": "Khyber Pakhtunkhwa", "district": "Kohat / Bannu / D.I. Khan"})
+            else:
+                return SubnationalDivision({"country": "Pakistan", "division": "Khyber Pakhtunkhwa", "district": "Hazara / Malakand"})
+
+        # Punjab - Murree hills, Rawalpindi, Lahore, Central & Southern Punjab
+        if 27.8 <= lat <= 34.15 and 69.9 <= lon <= 75.4:
+            if 33.80 < lat <= 34.15 and 73.25 <= lon <= 73.55:
+                return SubnationalDivision({"country": "Pakistan", "division": "Punjab", "district": "Murree / Galyat"})
+            elif 33.30 <= lat <= 33.75 and 72.70 <= lon <= 73.30:
+                return SubnationalDivision({"country": "Pakistan", "division": "Punjab", "district": "Rawalpindi / Potohar"})
+            elif 31.20 <= lat <= 31.85 and 74.00 <= lon <= 74.60:
+                return SubnationalDivision({"country": "Pakistan", "division": "Punjab", "district": "Lahore"})
+            elif 31.10 <= lat <= 31.70 and 72.80 <= lon <= 73.45:
+                return SubnationalDivision({"country": "Pakistan", "division": "Punjab", "district": "Faisalabad"})
+            elif 31.80 <= lat <= 32.60 and 73.80 <= lon <= 74.80:
+                return SubnationalDivision({"country": "Pakistan", "division": "Punjab", "district": "Gujranwala / Sialkot"})
+            elif 29.80 <= lat <= 30.50 and 71.10 <= lon <= 71.85:
+                return SubnationalDivision({"country": "Pakistan", "division": "Punjab", "district": "Multan"})
+            elif lat <= 30.00:
+                return SubnationalDivision({"country": "Pakistan", "division": "Punjab", "district": "Bahawalpur / Cholistan / Rahim Yar Khan"})
+            else:
+                return SubnationalDivision({"country": "Pakistan", "division": "Punjab", "district": "Punjab Plains"})
+
+        # Sindh - Karachi, Hyderabad, Sukkur, Indus corridor, Thar
+        if 23.6 <= lat <= 28.5 and 66.5 <= lon <= 71.1:
+            if 24.65 <= lat <= 25.25 and 66.80 <= lon <= 67.45:
+                return SubnationalDivision({"country": "Pakistan", "division": "Sindh", "district": "Karachi"})
+            elif 25.20 <= lat <= 25.65 and 68.20 <= lon <= 68.65:
+                return SubnationalDivision({"country": "Pakistan", "division": "Sindh", "district": "Hyderabad"})
+            elif 27.40 <= lat <= 28.20 and 68.40 <= lon <= 69.30:
+                return SubnationalDivision({"country": "Pakistan", "division": "Sindh", "district": "Sukkur / Larkana"})
+            elif lon >= 69.50:
+                return SubnationalDivision({"country": "Pakistan", "division": "Sindh", "district": "Tharparkar / Mithi"})
+            else:
+                return SubnationalDivision({"country": "Pakistan", "division": "Sindh", "district": "Sindh"})
+
+        # Balochistan - Quetta, Gwadar, Makran, Chaman, Ziarat
+        if 24.8 <= lat <= 32.1 and 60.8 <= lon <= 70.3:
+            if 30.00 <= lat <= 30.50 and 66.75 <= lon <= 67.45:
+                return SubnationalDivision({"country": "Pakistan", "division": "Balochistan", "district": "Quetta / Ziarat Highlands"})
+            elif 24.80 <= lat <= 25.50 and 61.50 <= lon <= 64.20:
+                return SubnationalDivision({"country": "Pakistan", "division": "Balochistan", "district": "Gwadar / Makran Coast"})
+            else:
+                return SubnationalDivision({"country": "Pakistan", "division": "Balochistan", "district": "Balochistan Plateau"})
+
+        return SubnationalDivision({"country": "Pakistan", "division": "Pakistan", "district": "Northern / Mountain Region"})
+
+    # 2. Nepal (Bagmati, Gandaki, Koshi, Terai)
+    if 26.3 <= lat <= 30.5 and 80.0 <= lon <= 88.2:
+        if 27.55 <= lat <= 27.85 and 85.15 <= lon <= 85.55:
+            return SubnationalDivision({"country": "Nepal", "division": "Bagmati Province", "district": "Kathmandu Valley"})
+        elif 27.65 <= lat <= 27.80 and 85.45 <= lon <= 85.60:
+            return SubnationalDivision({"country": "Nepal", "division": "Bagmati Province", "district": "Nagarkot / Bhaktapur"})
+        elif 28.10 <= lat <= 28.40 and 83.85 <= lon <= 84.15:
+            return SubnationalDivision({"country": "Nepal", "division": "Gandaki Province", "district": "Pokhara / Annapurna Foothills"})
+        elif lat >= 28.50 and 83.50 <= lon <= 84.30:
+            return SubnationalDivision({"country": "Nepal", "division": "Gandaki Province", "district": "Mustang / Jomsom / Manang"})
+        elif 27.70 <= lat <= 28.10 and 86.50 <= lon <= 87.00:
+            return SubnationalDivision({"country": "Nepal", "division": "Koshi Province", "district": "Solukhumbu / Everest Region"})
+        elif lat <= 27.55 and 84.00 <= lon <= 85.00:
+            return SubnationalDivision({"country": "Nepal", "division": "Bagmati Province", "district": "Chitwan / Terai"})
+        elif lat <= 27.60 and 83.00 <= lon <= 83.60:
+            return SubnationalDivision({"country": "Nepal", "division": "Lumbini Province", "district": "Lumbini / Rupandehi"})
+        elif lon >= 86.50:
+            return SubnationalDivision({"country": "Nepal", "division": "Koshi Province", "district": "Eastern Nepal"})
+        elif lon <= 82.50:
+            return SubnationalDivision({"country": "Nepal", "division": "Karnali Province", "district": "Western Nepal"})
+        else:
+            return SubnationalDivision({"country": "Nepal", "division": "Bagmati Province", "district": "Central Nepal"})
+
+    # 3. India (Jammu & Kashmir, Himachal, Uttarakhand, Delhi, Punjab, Maharashtra, Karnataka, Tamil Nadu, etc.)
+    if 8.0 <= lat <= 35.5 and 68.1 <= lon <= 97.4:
+        if 33.80 <= lat <= 34.35 and 74.30 <= lon <= 75.40:
+            return SubnationalDivision({"country": "India", "division": "Jammu and Kashmir", "district": "Srinagar / Kashmir Valley"})
+        elif 33.90 <= lat <= 34.60 and 76.50 <= lon <= 78.50:
+            return SubnationalDivision({"country": "India", "division": "Ladakh", "district": "Leh / Ladakh"})
+        elif 30.80 <= lat <= 33.00 and 75.80 <= lon <= 78.50:
+            if 32.10 <= lat <= 32.40 and 77.05 <= lon <= 77.30:
+                return SubnationalDivision({"country": "India", "division": "Himachal Pradesh", "district": "Manali / Kullu Valley"})
+            elif 31.00 <= lat <= 31.20 and 77.05 <= lon <= 77.30:
+                return SubnationalDivision({"country": "India", "division": "Himachal Pradesh", "district": "Shimla"})
+            elif 32.10 <= lat <= 32.35 and 76.20 <= lon <= 76.45:
+                return SubnationalDivision({"country": "India", "division": "Himachal Pradesh", "district": "Dharamshala / Kangra"})
+            else:
+                return SubnationalDivision({"country": "India", "division": "Himachal Pradesh", "district": "Himachal Pradesh"})
+        elif 29.00 <= lat <= 31.50 and 77.50 <= lon <= 81.10:
+            if 30.35 <= lat <= 30.55 and 78.00 <= lon <= 78.15:
+                return SubnationalDivision({"country": "India", "division": "Uttarakhand", "district": "Mussoorie / Dehradun"})
+            elif 29.30 <= lat <= 29.50 and 79.35 <= lon <= 79.55:
+                return SubnationalDivision({"country": "India", "division": "Uttarakhand", "district": "Nainital / Kumaon"})
+            else:
+                return SubnationalDivision({"country": "India", "division": "Uttarakhand", "district": "Uttarakhand"})
+        elif 28.40 <= lat <= 28.90 and 76.90 <= lon <= 77.40:
+            return SubnationalDivision({"country": "India", "division": "National Capital Territory of Delhi", "district": "Delhi"})
+        elif 29.50 <= lat <= 32.50 and 74.00 <= lon <= 77.00:
+            return SubnationalDivision({"country": "India", "division": "Punjab", "district": "Punjab / Chandigarh"})
+        elif 23.50 <= lat <= 30.20 and 69.50 <= lon <= 78.00:
+            return SubnationalDivision({"country": "India", "division": "Rajasthan", "district": "Jaipur / Thar Desert"})
+        elif 18.80 <= lat <= 19.35 and 72.70 <= lon <= 73.15:
+            return SubnationalDivision({"country": "India", "division": "Maharashtra", "district": "Mumbai"})
+        elif 18.35 <= lat <= 18.70 and 73.70 <= lon <= 74.05:
+            return SubnationalDivision({"country": "India", "division": "Maharashtra", "district": "Pune"})
+        elif 12.80 <= lat <= 13.15 and 77.45 <= lon <= 77.80:
+            return SubnationalDivision({"country": "India", "division": "Karnataka", "district": "Bengaluru"})
+        elif 12.90 <= lat <= 13.25 and 80.15 <= lon <= 80.35:
+            return SubnationalDivision({"country": "India", "division": "Tamil Nadu", "district": "Chennai"})
+        elif 11.25 <= lat <= 11.55 and 76.55 <= lon <= 76.85:
+            return SubnationalDivision({"country": "India", "division": "Tamil Nadu", "district": "Nilgiris / Ooty"})
+        elif 9.95 <= lat <= 10.20 and 76.95 <= lon <= 77.20:
+            return SubnationalDivision({"country": "India", "division": "Kerala", "district": "Idukki / Munnar"})
+        elif 22.40 <= lat <= 22.75 and 88.25 <= lon <= 88.50:
+            return SubnationalDivision({"country": "India", "division": "West Bengal", "district": "Kolkata"})
+        elif 26.90 <= lat <= 27.20 and 88.15 <= lon <= 88.40:
+            return SubnationalDivision({"country": "India", "division": "West Bengal", "district": "Darjeeling"})
+        elif 27.20 <= lat <= 27.50 and 88.45 <= lon <= 88.75:
+            return SubnationalDivision({"country": "India", "division": "Sikkim", "district": "Gangtok / Sikkim"})
+        else:
+            return SubnationalDivision({"country": "India", "division": "India", "district": "Regional"})
+
+    # 4. Qatar (Peninsula)
     if 24.4 <= lat <= 26.3 and 50.7 <= lon <= 51.7:
         if 25.20 <= lat <= 25.40 and 51.45 <= lon <= 51.60:
             return SubnationalDivision({"country": "Qatar", "division": "Doha Municipality", "district": "Doha"})
-        if 25.38 <= lat <= 25.50 and 51.45 <= lon <= 51.55:
+        elif 25.38 <= lat <= 25.50 and 51.45 <= lon <= 51.55:
             return SubnationalDivision({"country": "Qatar", "division": "Al Daayen", "district": "Lusail"})
-        if 25.10 <= lat <= 25.25 and 51.55 <= lon <= 51.65:
+        elif 25.10 <= lat <= 25.25 and 51.55 <= lon <= 51.65:
             return SubnationalDivision({"country": "Qatar", "division": "Al Wakrah Municipality", "district": "Al Wakrah"})
-        if 25.60 <= lat <= 25.75 and 51.45 <= lon <= 51.58:
+        elif 25.60 <= lat <= 25.75 and 51.45 <= lon <= 51.58:
             return SubnationalDivision({"country": "Qatar", "division": "Al Khor Municipality", "district": "Al Khor"})
+        else:
+            return SubnationalDivision({"country": "Qatar", "division": "Qatar Peninsula", "district": "Qatar"})
 
-    # Saudi Arabia
-    if 16.3 <= lat <= 32.2 and 34.5 <= lon <= 55.7:
-        if 24.55 <= lat <= 24.90 and 46.55 <= lon <= 46.85:
-            return SubnationalDivision({"country": "Saudi Arabia", "division": "Riyadh Province", "district": "Riyadh"})
-        if 21.40 <= lat <= 21.75 and 39.05 <= lon <= 39.30:
-            return SubnationalDivision({"country": "Saudi Arabia", "division": "Makkah Province", "district": "Jeddah"})
-        if 21.30 <= lat <= 21.50 and 39.75 <= lon <= 39.95:
-            return SubnationalDivision({"country": "Saudi Arabia", "division": "Makkah Province", "district": "Makkah"})
-        if 24.40 <= lat <= 24.60 and 39.50 <= lon <= 39.70:
-            return SubnationalDivision({"country": "Saudi Arabia", "division": "Madinah Province", "district": "Madinah"})
-        if 26.30 <= lat <= 26.55 and 50.00 <= lon <= 50.25:
-            return SubnationalDivision({"country": "Saudi Arabia", "division": "Eastern Province", "district": "Dammam / Khobar"})
-        if 18.15 <= lat <= 18.35 and 42.45 <= lon <= 42.60:
-            return SubnationalDivision({"country": "Saudi Arabia", "division": "Asir Province", "district": "Abha"})
-
-    # Kuwait
-    if 28.5 <= lat <= 30.2 and 46.5 <= lon <= 48.6:
-        if 29.30 <= lat <= 29.45 and 47.90 <= lon <= 48.05:
-            return SubnationalDivision({"country": "Kuwait", "division": "Capital Governorate (Al Asimah)", "district": "Kuwait City"})
-        if 29.28 <= lat <= 29.38 and 48.02 <= lon <= 48.12:
-            return SubnationalDivision({"country": "Kuwait", "division": "Hawalli Governorate", "district": "Salmiya / Hawalli"})
-        if 29.00 <= lat <= 29.15 and 48.02 <= lon <= 48.15:
-            return SubnationalDivision({"country": "Kuwait", "division": "Al Ahmadi Governorate", "district": "Al Ahmadi"})
-
-    # Oman
-    if 16.6 <= lat <= 26.5 and 52.0 <= lon <= 59.9:
-        if 23.50 <= lat <= 23.70 and 58.30 <= lon <= 58.60:
-            return SubnationalDivision({"country": "Oman", "division": "Muscat Governorate", "district": "Muscat"})
-        if 16.95 <= lat <= 17.10 and 54.00 <= lon <= 54.20:
-            return SubnationalDivision({"country": "Oman", "division": "Dhofar Governorate", "district": "Salalah"})
-
-    # Egypt
-    if 22.0 <= lat <= 31.7 and 24.7 <= lon <= 36.9:
-        if 29.95 <= lat <= 30.15 and 31.15 <= lon <= 31.40:
-            return SubnationalDivision({"country": "Egypt", "division": "Cairo Governorate", "district": "Cairo"})
-        if 31.15 <= lat <= 31.30 and 29.85 <= lon <= 30.05:
-            return SubnationalDivision({"country": "Egypt", "division": "Alexandria Governorate", "district": "Alexandria"})
-
-    # Turkey
-    if 35.8 <= lat <= 42.1 and 25.6 <= lon <= 44.8:
-        if 40.90 <= lat <= 41.20 and 28.80 <= lon <= 29.20:
-            return SubnationalDivision({"country": "Turkey", "division": "Istanbul Province", "district": "Istanbul"})
-        if 39.85 <= lat <= 40.05 and 32.75 <= lon <= 33.00:
-            return SubnationalDivision({"country": "Turkey", "division": "Ankara Province", "district": "Ankara"})
-        if 38.35 <= lat <= 38.55 and 27.05 <= lon <= 27.25:
-            return SubnationalDivision({"country": "Turkey", "division": "Izmir Province", "district": "Izmir"})
-        if 36.80 <= lat <= 37.00 and 30.60 <= lon <= 30.80:
-            return SubnationalDivision({"country": "Turkey", "division": "Antalya Province", "district": "Antalya"})
-
-    # Iran
-    if 25.0 <= lat <= 39.8 and 44.0 <= lon <= 63.4:
-        if 35.60 <= lat <= 35.85 and 51.25 <= lon <= 51.55:
-            return SubnationalDivision({"country": "Iran", "division": "Tehran Province", "district": "Tehran"})
-        if 32.55 <= lat <= 32.75 and 51.55 <= lon <= 51.75:
-            return SubnationalDivision({"country": "Iran", "division": "Isfahan Province", "district": "Isfahan"})
-        if 29.50 <= lat <= 29.75 and 52.45 <= lon <= 52.70:
-            return SubnationalDivision({"country": "Iran", "division": "Fars Province", "district": "Shiraz"})
-
-    # Iraq
-    if 29.0 <= lat <= 37.4 and 38.7 <= lon <= 48.6:
-        if 33.25 <= lat <= 33.45 and 44.25 <= lon <= 44.45:
-            return SubnationalDivision({"country": "Iraq", "division": "Baghdad Governorate", "district": "Baghdad"})
-        if 36.10 <= lat <= 36.25 and 43.90 <= lon <= 44.10:
-            return SubnationalDivision({"country": "Iraq", "division": "Erbil Governorate", "district": "Erbil"})
-
-    # Israel
-    if 29.4 <= lat <= 33.4 and 34.2 <= lon <= 35.9:
-        if 32.00 <= lat <= 32.15 and 34.70 <= lon <= 34.85:
-            return SubnationalDivision({"country": "Israel", "division": "Tel Aviv District", "district": "Tel Aviv"})
-        if 31.70 <= lat <= 31.85 and 35.15 <= lon <= 35.30:
-            return SubnationalDivision({"country": "Israel", "division": "Jerusalem District", "district": "Jerusalem"})
-
-    # Bahrain
+    # 5. Bahrain (Island nation)
     if 25.7 <= lat <= 26.4 and 50.3 <= lon <= 50.7:
         return SubnationalDivision({"country": "Bahrain", "division": "Capital Governorate", "district": "Manama"})
 
-    # Syria
+    # 6. United Arab Emirates
+    if (22.6 <= lat <= 26.1 and 51.5 <= lon <= 56.4) and not (24.4 <= lat <= 26.3 and 50.7 <= lon <= 51.7):
+        if 25.32 <= lat <= 25.48 and 55.35 <= lon <= 55.60:
+            return SubnationalDivision({"country": "United Arab Emirates", "division": "Emirate of Sharjah", "district": "Sharjah"})
+        elif 24.95 <= lat < 25.32 and 55.05 <= lon <= 55.45:
+            return SubnationalDivision({"country": "United Arab Emirates", "division": "Emirate of Dubai", "district": "Dubai"})
+        elif 24.30 <= lat <= 24.60 and 54.25 <= lon <= 54.70:
+            return SubnationalDivision({"country": "United Arab Emirates", "division": "Emirate of Abu Dhabi", "district": "Abu Dhabi"})
+        elif 24.05 <= lat <= 24.35 and 55.60 <= lon <= 55.90:
+            return SubnationalDivision({"country": "United Arab Emirates", "division": "Emirate of Abu Dhabi", "district": "Al Ain"})
+        elif 25.65 <= lat <= 26.05 and 55.80 <= lon <= 56.25:
+            return SubnationalDivision({"country": "United Arab Emirates", "division": "Emirate of Ras Al Khaimah", "district": "Ras Al Khaimah / Jebel Jais"})
+        elif 25.05 <= lat <= 25.35 and 56.25 <= lon <= 56.40:
+            return SubnationalDivision({"country": "United Arab Emirates", "division": "Emirate of Fujairah", "district": "Fujairah / Khor Fakkan"})
+        elif 24.75 <= lat <= 24.90 and 56.05 <= lon <= 56.20:
+            return SubnationalDivision({"country": "United Arab Emirates", "division": "Emirate of Dubai", "district": "Hatta / Hajar Mountains"})
+        elif lat <= 23.50:
+            return SubnationalDivision({"country": "United Arab Emirates", "division": "Emirate of Abu Dhabi", "district": "Al Dhafra / Liwa Oasis"})
+        else:
+            return SubnationalDivision({"country": "United Arab Emirates", "division": "Emirates", "district": "Northern Emirates"})
+
+    # 7. Kuwait
+    if 28.5 <= lat <= 30.2 and 46.5 <= lon <= 48.6:
+        if 29.30 <= lat <= 29.45 and 47.90 <= lon <= 48.05:
+            return SubnationalDivision({"country": "Kuwait", "division": "Capital Governorate (Al Asimah)", "district": "Kuwait City"})
+        elif 29.28 <= lat <= 29.38 and 48.02 <= lon <= 48.12:
+            return SubnationalDivision({"country": "Kuwait", "division": "Hawalli Governorate", "district": "Salmiya / Hawalli"})
+        elif 29.00 <= lat <= 29.15 and 48.02 <= lon <= 48.15:
+            return SubnationalDivision({"country": "Kuwait", "division": "Al Ahmadi Governorate", "district": "Al Ahmadi"})
+        else:
+            return SubnationalDivision({"country": "Kuwait", "division": "Kuwait", "district": "Al Jahra / Subiya"})
+
+    # 8. Oman
+    if 16.6 <= lat <= 26.5 and 52.0 <= lon <= 59.9:
+        if 23.50 <= lat <= 23.70 and 58.30 <= lon <= 58.60:
+            return SubnationalDivision({"country": "Oman", "division": "Muscat Governorate", "district": "Muscat"})
+        elif 16.95 <= lat <= 17.15 and 54.00 <= lon <= 54.25:
+            return SubnationalDivision({"country": "Oman", "division": "Dhofar Governorate", "district": "Salalah"})
+        elif 22.80 <= lat <= 23.35 and 57.20 <= lon <= 57.75:
+            return SubnationalDivision({"country": "Oman", "division": "Ad Dakhiliyah", "district": "Nizwa / Jebel Akhdar / Jebel Shams"})
+        elif lat >= 25.80 and lon <= 56.50:
+            return SubnationalDivision({"country": "Oman", "division": "Musandam Governorate", "district": "Khasab / Fjords"})
+        else:
+            return SubnationalDivision({"country": "Oman", "division": "Oman", "district": "Batinah / Sharqiya"})
+
+    # 9. Egypt
+    if 22.0 <= lat <= 31.7 and 24.7 <= lon <= 36.9:
+        if 29.95 <= lat <= 30.15 and 31.15 <= lon <= 31.40:
+            return SubnationalDivision({"country": "Egypt", "division": "Cairo Governorate", "district": "Cairo"})
+        elif 31.15 <= lat <= 31.30 and 29.85 <= lon <= 30.05:
+            return SubnationalDivision({"country": "Egypt", "division": "Alexandria Governorate", "district": "Alexandria"})
+        elif 27.85 <= lat <= 28.60 and 33.90 <= lon <= 34.60:
+            return SubnationalDivision({"country": "Egypt", "division": "South Sinai Governorate", "district": "Sharm El Sheikh / Mount Sinai"})
+        elif 25.60 <= lat <= 25.80 and 32.55 <= lon <= 32.75:
+            return SubnationalDivision({"country": "Egypt", "division": "Luxor Governorate", "district": "Luxor"})
+        else:
+            return SubnationalDivision({"country": "Egypt", "division": "Egypt", "district": "Nile Basin / Red Sea"})
+
+    # 10. Turkey
+    if 35.8 <= lat <= 42.1 and 25.6 <= lon <= 44.8:
+        if 40.90 <= lat <= 41.20 and 28.80 <= lon <= 29.20:
+            return SubnationalDivision({"country": "Turkey", "division": "Istanbul Province", "district": "Istanbul"})
+        elif 39.85 <= lat <= 40.05 and 32.75 <= lon <= 33.00:
+            return SubnationalDivision({"country": "Turkey", "division": "Ankara Province", "district": "Ankara"})
+        elif 38.35 <= lat <= 38.55 and 27.05 <= lon <= 27.25:
+            return SubnationalDivision({"country": "Turkey", "division": "Izmir Province", "district": "Izmir"})
+        elif 36.80 <= lat <= 37.00 and 30.60 <= lon <= 30.80:
+            return SubnationalDivision({"country": "Turkey", "division": "Antalya Province", "district": "Antalya"})
+        elif 40.00 <= lat <= 40.25 and 29.00 <= lon <= 29.30:
+            return SubnationalDivision({"country": "Turkey", "division": "Bursa Province", "district": "Bursa / Uludag"})
+        elif 40.85 <= lat <= 41.15 and 39.60 <= lon <= 41.20:
+            return SubnationalDivision({"country": "Turkey", "division": "Black Sea Region", "district": "Trabzon / Rize / Ayder"})
+        elif 38.55 <= lat <= 38.75 and 34.75 <= lon <= 34.95:
+            return SubnationalDivision({"country": "Turkey", "division": "Nevsehir Province", "district": "Cappadocia / Goreme"})
+        else:
+            return SubnationalDivision({"country": "Turkey", "division": "Anatolia", "district": "Turkey"})
+
+    # 11. Iraq
+    if 29.0 <= lat <= 37.4 and 38.7 <= lon <= 48.6:
+        if 33.25 <= lat <= 33.45 and 44.25 <= lon <= 44.45:
+            return SubnationalDivision({"country": "Iraq", "division": "Baghdad Governorate", "district": "Baghdad"})
+        elif 36.10 <= lat <= 36.25 and 43.90 <= lon <= 44.10:
+            return SubnationalDivision({"country": "Iraq", "division": "Erbil Governorate", "district": "Erbil"})
+        elif 35.45 <= lat <= 35.65 and 45.35 <= lon <= 45.55:
+            return SubnationalDivision({"country": "Iraq", "division": "Sulaymaniyah Governorate", "district": "Sulaymaniyah / Zagros"})
+        else:
+            return SubnationalDivision({"country": "Iraq", "division": "Iraq", "district": "Mesopotamia"})
+
+    # 12. Israel
+    if 29.4 <= lat <= 33.4 and 34.2 <= lon <= 35.9:
+        if 32.00 <= lat <= 32.15 and 34.70 <= lon <= 34.85:
+            return SubnationalDivision({"country": "Israel", "division": "Tel Aviv District", "district": "Tel Aviv"})
+        elif 31.70 <= lat <= 31.85 and 35.15 <= lon <= 35.30:
+            return SubnationalDivision({"country": "Israel", "division": "Jerusalem District", "district": "Jerusalem"})
+        else:
+            return SubnationalDivision({"country": "Israel", "division": "Israel", "district": "Levant"})
+
+    # 13. Syria
     if 32.3 <= lat <= 37.4 and 35.6 <= lon <= 42.4:
         if 33.45 <= lat <= 33.55 and 36.20 <= lon <= 36.35:
             return SubnationalDivision({"country": "Syria", "division": "Damascus Governorate", "district": "Damascus"})
-        if 36.15 <= lat <= 36.25 and 37.10 <= lon <= 37.20:
+        elif 36.15 <= lat <= 36.25 and 37.10 <= lon <= 37.20:
             return SubnationalDivision({"country": "Syria", "division": "Aleppo Governorate", "district": "Aleppo"})
+        else:
+            return SubnationalDivision({"country": "Syria", "division": "Syria", "district": "Levant"})
 
-    # Yemen
+    # 14. Iran (North & East of Persian Gulf & Gulf of Oman)
+    if (
+        (lat >= 29.5 and 48.5 <= lon <= 63.4) or
+        (lat >= 26.5 and 50.5 <= lon <= 63.4) or
+        (lat >= 25.0 and 56.5 <= lon <= 63.4) or
+        (lat >= 30.0 and 44.0 <= lon <= 63.4)
+    ) and lat <= 39.8:
+        if 35.60 <= lat <= 36.15 and 51.20 <= lon <= 51.65:
+            return SubnationalDivision({"country": "Iran", "division": "Tehran Province", "district": "Tehran / Alborz Mountains"})
+        elif 32.55 <= lat <= 32.75 and 51.55 <= lon <= 51.75:
+            return SubnationalDivision({"country": "Iran", "division": "Isfahan Province", "district": "Isfahan"})
+        elif 29.50 <= lat <= 29.75 and 52.45 <= lon <= 52.70:
+            return SubnationalDivision({"country": "Iran", "division": "Fars Province", "district": "Shiraz"})
+        else:
+            return SubnationalDivision({"country": "Iran", "division": "Iran", "district": "Iranian Plateau"})
+
+    # 15. Yemen
     if 12.1 <= lat <= 19.0 and 41.8 <= lon <= 54.6:
         if 15.30 <= lat <= 15.45 and 44.15 <= lon <= 44.25:
             return SubnationalDivision({"country": "Yemen", "division": "Amanat Al Asimah", "district": "Sanaa"})
-        if 12.75 <= lat <= 12.85 and 44.95 <= lon <= 45.05:
+        elif 12.75 <= lat <= 12.85 and 44.95 <= lon <= 45.05:
             return SubnationalDivision({"country": "Yemen", "division": "Aden Governorate", "district": "Aden"})
+        else:
+            return SubnationalDivision({"country": "Yemen", "division": "Yemen", "district": "South Arabia"})
 
-    # India
-    if 8.0 <= lat <= 35.5 and 68.1 <= lon <= 97.4:
-        if 28.45 <= lat <= 28.85 and 76.95 <= lon <= 77.35:
-            return SubnationalDivision({"country": "India", "division": "National Capital Territory of Delhi", "district": "Delhi"})
-        if 18.90 <= lat <= 19.25 and 72.75 <= lon <= 73.05:
-            return SubnationalDivision({"country": "India", "division": "Maharashtra", "district": "Mumbai"})
-        if 12.85 <= lat <= 13.10 and 77.50 <= lon <= 77.75:
-            return SubnationalDivision({"country": "India", "division": "Karnataka", "district": "Bengaluru"})
+    # 16. Saudi Arabia (Evaluated after peripheral Arabian Peninsula and Levant nations)
+    if (
+        (16.3 <= lat <= 32.2 and 34.5 <= lon <= 50.3) or
+        (16.3 <= lat <= 24.5 and 50.3 < lon <= 55.7)
+    ):
+        if 24.55 <= lat <= 24.90 and 46.55 <= lon <= 46.85:
+            return SubnationalDivision({"country": "Saudi Arabia", "division": "Riyadh Province", "district": "Riyadh"})
+        elif 21.40 <= lat <= 21.75 and 39.05 <= lon <= 39.30:
+            return SubnationalDivision({"country": "Saudi Arabia", "division": "Makkah Province", "district": "Jeddah"})
+        elif 21.30 <= lat <= 21.50 and 39.75 <= lon <= 39.95:
+            return SubnationalDivision({"country": "Saudi Arabia", "division": "Makkah Province", "district": "Makkah"})
+        elif 21.20 <= lat <= 21.40 and 40.35 <= lon <= 40.50:
+            return SubnationalDivision({"country": "Saudi Arabia", "division": "Makkah Province", "district": "Taif Mountain Plateau"})
+        elif 24.40 <= lat <= 24.60 and 39.50 <= lon <= 39.70:
+            return SubnationalDivision({"country": "Saudi Arabia", "division": "Madinah Province", "district": "Madinah"})
+        elif 26.30 <= lat <= 26.55 and 50.00 <= lon <= 50.25:
+            return SubnationalDivision({"country": "Saudi Arabia", "division": "Eastern Province", "district": "Dammam / Khobar"})
+        elif 18.15 <= lat <= 18.35 and 42.45 <= lon <= 42.60:
+            return SubnationalDivision({"country": "Saudi Arabia", "division": "Asir Province", "district": "Abha / Al Souda"})
+        elif 28.30 <= lat <= 28.75 and 35.00 <= lon <= 36.65:
+            return SubnationalDivision({"country": "Saudi Arabia", "division": "Tabuk Province", "district": "Tabuk / Jabal Al Lawz"})
+        elif 26.50 <= lat <= 26.75 and 37.85 <= lon <= 38.05:
+            return SubnationalDivision({"country": "Saudi Arabia", "division": "Madinah Province", "district": "Al Ula / Hegra"})
+        else:
+            return SubnationalDivision({"country": "Saudi Arabia", "division": "Saudi Arabia", "district": "Central / Regional"})
+
+    # Global Fallback based on country candidate lookup
+    c_cand = get_country_candidate(lat, lon)
+    if c_cand:
+        return SubnationalDivision({"country": c_cand, "division": f"{c_cand} Region", "district": ""})
 
     return None
 

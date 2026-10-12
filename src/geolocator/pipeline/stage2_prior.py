@@ -353,55 +353,84 @@ class Stage2Prior:
             except Exception as e:
                 logger.warning("[stage2] Country zero-shot scoring failed: %s", e)
 
-        # 3b. High-Probability Country Anchor Injection
-        # If the visual reranker strongly predicts a country that has sparse coverage in GeoCLIP's gallery,
-        # inject regional urban/corridor anchors so the region can be actively evaluated across all evidence.
+        # 3b. High-Probability Country Anchor Injection (Terrain & Region Aware)
+        # Determine scene terrain context to bias anchors towards matching biomes (mountains, deserts, coasts)
+        desired_terrain: Optional[str] = None
+        if snow_cue or "conifer" in str(observed_clues).lower():
+            desired_terrain = "mountain"
+        elif aridity_cue >= 0.5:
+            desired_terrain = "desert"
+
+        if clues_file.exists():
+            try:
+                cdata = json.loads(clues_file.read_text(encoding="utf-8"))
+                terr_dict = cdata.get("terrain", {})
+                if terr_dict.get("relief") in ("mountainous", "hilly") or terr_dict.get("snow_present"):
+                    desired_terrain = "mountain"
+                env_m = cdata.get("environmental_meta", {})
+                if env_m.get("dominant_flora") == "conifer_forest":
+                    desired_terrain = "mountain"
+                elif env_m.get("soil_type") == "desert_sand":
+                    desired_terrain = "desert"
+            except Exception:
+                pass
+
+        existing_coords = {(round(p["lat"], 3), round(p["lon"], 3)) for p in raw_predictions}
+
         if country_zero_shot_probs:
             top_country, top_prob = next(iter(country_zero_shot_probs.items()))
-            rep_count = sum(1 for p in raw_predictions if (get_country_candidate(p["lat"], p["lon"]) or "").lower() == top_country.lower())
-            if rep_count < 3 and top_prob >= 0.05:
-                anchors = get_country_anchors(top_country, max_anchors=6)
+            if top_prob >= 0.04:
+                anchors = get_country_anchors(top_country, max_anchors=12, terrain=desired_terrain)
                 if anchors:
-                    logger.info("[stage2] Injecting %d regional anchors for top zero-shot country '%s' (prob=%.2f%%)", len(anchors), top_country, top_prob * 100)
+                    logger.info(
+                        "[stage2] Injecting %d regional anchors for top zero-shot country '%s' (prob=%.2f%%, terrain=%s)",
+                        len(anchors), top_country, top_prob * 100, desired_terrain
+                    )
                     anchor_prob = max(0.015, top_prob / len(anchors))
                     for a in anchors:
-                        raw_predictions.append({
-                            "lat": a["lat"],
-                            "lon": a["lon"],
-                            "prob": anchor_prob,
-                            "anchor_name": a["name"],
-                            "country": top_country,
-                        })
-
-            for c_name, c_prob in list(country_zero_shot_probs.items())[1:4]:
-                if c_prob >= 0.10:
-                    c_rep = sum(1 for p in raw_predictions if (get_country_candidate(p["lat"], p["lon"]) or "").lower() == c_name.lower())
-                    if c_rep < 3:
-                        anchors = get_country_anchors(c_name, max_anchors=5)
-                        anchor_prob = max(0.01, c_prob / max(1, len(anchors)))
-                        for a in anchors:
+                        c_key = (round(a["lat"], 3), round(a["lon"], 3))
+                        if c_key not in existing_coords:
+                            existing_coords.add(c_key)
                             raw_predictions.append({
                                 "lat": a["lat"],
                                 "lon": a["lon"],
                                 "prob": anchor_prob,
                                 "anchor_name": a["name"],
-                                "country": c_name,
+                                "country": top_country,
                             })
+
+            for c_name, c_prob in list(country_zero_shot_probs.items())[1:5]:
+                if c_prob >= 0.08:
+                    anchors = get_country_anchors(c_name, max_anchors=8, terrain=desired_terrain)
+                    if anchors:
+                        anchor_prob = max(0.01, c_prob / max(1, len(anchors)))
+                        for a in anchors:
+                            c_key = (round(a["lat"], 3), round(a["lon"], 3))
+                            if c_key not in existing_coords:
+                                existing_coords.add(c_key)
+                                raw_predictions.append({
+                                    "lat": a["lat"],
+                                    "lon": a["lon"],
+                                    "prob": anchor_prob,
+                                    "anchor_name": a["name"],
+                                    "country": c_name,
+                                })
 
             # Also ensure any country flagged by high-confidence discrete cues (hints, TLD, calling code, script)
             # has full anchor representation in raw_predictions
             cue_countries = list(dict.fromkeys(hint_countries + ([tld_country] if tld_country else []) + ([phone_country] if phone_country else []) + script_countries[:2]))
             for cue_c in cue_countries:
-                rep_count = sum(1 for p in raw_predictions if (get_country_candidate(p["lat"], p["lon"]) or "").lower() == cue_c.lower())
-                if rep_count < 4:
-                    cue_anchors = get_country_anchors(cue_c, max_anchors=6)
-                    if cue_anchors:
-                        logger.info("[stage2] Injecting %d anchors for discrete cue country '%s'", len(cue_anchors), cue_c)
-                        for a in cue_anchors:
+                cue_anchors = get_country_anchors(cue_c, max_anchors=10, terrain=desired_terrain)
+                if cue_anchors:
+                    logger.info("[stage2] Injecting %d anchors for discrete cue country '%s' (terrain=%s)", len(cue_anchors), cue_c, desired_terrain)
+                    for a in cue_anchors:
+                        c_key = (round(a["lat"], 3), round(a["lon"], 3))
+                        if c_key not in existing_coords:
+                            existing_coords.add(c_key)
                             raw_predictions.append({
                                 "lat": a["lat"],
                                 "lon": a["lon"],
-                                "prob": 0.05,
+                                "prob": 0.04,
                                 "anchor_name": a["name"],
                                 "country": cue_c,
                             })
