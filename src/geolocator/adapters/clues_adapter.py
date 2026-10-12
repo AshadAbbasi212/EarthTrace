@@ -172,6 +172,44 @@ def country_to_iso(name: str) -> Optional[str]:
 
 
 CC_TLD_MAP: Dict[str, str] = {
+    # 15 Prioritized Target Countries
+    "pk": "Pakistan",
+    "com.pk": "Pakistan",
+    "org.pk": "Pakistan",
+    "gov.pk": "Pakistan",
+    "edu.pk": "Pakistan",
+    "in": "India",
+    "co.in": "India",
+    "net.in": "India",
+    "gov.in": "India",
+    "ir": "Iran",
+    "co.ir": "Iran",
+    "ae": "United Arab Emirates",
+    "co.ae": "United Arab Emirates",
+    "qa": "Qatar",
+    "com.qa": "Qatar",
+    "kw": "Kuwait",
+    "com.kw": "Kuwait",
+    "sa": "Saudi Arabia",
+    "com.sa": "Saudi Arabia",
+    "ye": "Yemen",
+    "com.ye": "Yemen",
+    "eg": "Egypt",
+    "com.eg": "Egypt",
+    "om": "Oman",
+    "co.om": "Oman",
+    "iq": "Iraq",
+    "com.iq": "Iraq",
+    "il": "Israel",
+    "co.il": "Israel",
+    "sy": "Syria",
+    "com.sy": "Syria",
+    "tr": "Turkey",
+    "com.tr": "Turkey",
+    "gov.tr": "Turkey",
+    "bh": "Bahrain",
+    "com.bh": "Bahrain",
+    # Worldwide
     "de": "Germany",
     "uk": "United Kingdom",
     "co.uk": "United Kingdom",
@@ -210,13 +248,10 @@ CC_TLD_MAP: Dict[str, str] = {
     "ie": "Ireland",
     "dk": "Denmark",
     "gr": "Greece",
-    "tr": "Turkey",
     "kr": "South Korea",
     "co.kr": "South Korea",
     "id": "Indonesia",
     "co.id": "Indonesia",
-    "in": "India",
-    "co.in": "India",
     "th": "Thailand",
     "co.th": "Thailand",
     "vn": "Vietnam",
@@ -230,15 +265,32 @@ CC_TLD_MAP: Dict[str, str] = {
 }
 
 SCRIPT_PATTERNS = [
-    ("urdu_persian", re.compile(r"[\u0679\u067E\u0686\u0698\u06A9\u06AF\u06BA\u06BE\u06C1\u06D2]"), ["Pakistan", "Iran", "Afghanistan", "India"]),
-    ("arabic", re.compile(r"[\u0600-\u06FF]"), ["Pakistan", "Saudi Arabia", "United Arab Emirates", "Egypt", "Iran", "Morocco", "Jordan", "Iraq", "Algeria"]),
+    # Distinctive Urdu characters: 0679(ٹ), 0688(ڈ), 0691(ڑ), 06BA(ں), 06D2(ے)
+    ("urdu_distinctive", re.compile(r"[\u0679\u0688\u0691\u06BA\u06D2]"), ["Pakistan", "India"]),
+    # Distinctive Persian characters: 067E(پ), 0686(چ), 0698(ژ), 06AF(گ)
+    ("persian_distinctive", re.compile(r"[\u067E\u0686\u0698\u06AF]"), ["Iran", "Afghanistan", "Pakistan"]),
+    # Hebrew script: 0590-05FF
+    ("hebrew", re.compile(r"[\u0590-\u05FF]"), ["Israel"]),
+    # General Arabic script: 0600-06FF
+    ("arabic", re.compile(r"[\u0600-\u06FF]"), [
+        "Saudi Arabia", "United Arab Emirates", "Egypt", "Qatar", "Kuwait",
+        "Oman", "Yemen", "Iraq", "Syria", "Bahrain", "Jordan", "Morocco", "Pakistan", "Iran"
+    ]),
+    # Devanagari script: 0900-097F
+    ("devanagari", re.compile(r"[\u0900-\u097F]"), ["India", "Nepal"]),
+    # Other Indic scripts (Gurmukhi, Bengali, Tamil, Telugu)
+    ("gurmukhi", re.compile(r"[\u0A00-\u0A7F]"), ["India"]),
+    ("bengali", re.compile(r"[\u0980-\u09FF]"), ["India", "Bangladesh"]),
+    ("tamil", re.compile(r"[\u0B80-\u0BFF]"), ["India", "Sri Lanka"]),
+    ("telugu", re.compile(r"[\u0C00-\u0C7F]"), ["India"]),
+    # Cyrillic
     ("cyrillic", re.compile(r"[\u0400-\u04FF]"), ["Russia", "Ukraine", "Belarus", "Bulgaria", "Serbia", "Kazakhstan", "Kyrgyzstan", "Mongolia", "North Macedonia"]),
+    # Greek
     ("greek", re.compile(r"[\u0370-\u03FF]"), ["Greece", "Cyprus"]),
+    # East Asian scripts
     ("hangul", re.compile(r"[\uAC00-\uD7AF\u1100-\u11FF]"), ["South Korea"]),
     ("japanese_kana", re.compile(r"[\u3040-\u309F\u30A0-\u30FF]"), ["Japan"]),
     ("thai", re.compile(r"[\u0E00-\u0E7F]"), ["Thailand"]),
-    ("hebrew", re.compile(r"[\u0590-\u05FF]"), ["Israel"]),
-    ("devanagari", re.compile(r"[\u0900-\u097F]"), ["India", "Nepal"]),
     ("hanzi", re.compile(r"[\u4E00-\u9FFF]"), ["China", "Taiwan", "Hong Kong", "Singapore"]),
 ]
 
@@ -254,10 +306,16 @@ COMMON_STOP_WORDS = {
     "safe", "safety", "fasten", "buckle", "caution", "danger", "warning", "toll plaza",
     "vehicle", "traffic", "rules", "fine", "penalty", "camera", "km/h", "mph", "post", "check",
     "seat belt", "seat beit",
+    # Urdu / Persian / Arabic common words
     "پولیس", "کنٹرول", "سب", "چائے", "ہوٹل", "روڈ", "تھانہ", "ڈویژن", "ضلع", "تحصیل", "شہر", "مرکز",
+    "شارع", "طريق", "جادة", "دوار", "منطقة", "محافظة", "ولاية", "بلدية", "مستشفى", "صيدلية", "بنك",
+    "خیابان", "کوچه", "بزرگراه", "جاده", "بلوار", "میدان", "ایستگاه",
+    # Turkish common stop words
+    "caddesi", "cad", "sokak", "sok", "bulvarı", "bulv", "mahallesi", "mah", "ilçesi", "ili", "otoyol",
 }
 
 GEO_PHONETIC_SYNONYMS = {
+    # ---------------- Pakistan ----------------
     "پیر چناسی": "Pir Chinasi",
     "پیرچناسی": "Pir Chinasi",
     "آزاد کشمیر": "Azad Kashmir",
@@ -279,8 +337,226 @@ GEO_PHONETIC_SYNONYMS = {
     "کاغان": "Kaghan",
     "ہنزہ": "Hunza",
     "سکردو": "Skardu",
+    "شاہراہ قراقرم": "Karakoram Highway N-35, Pakistan",
+    "مری ایکسپریس وے": "Murree Expressway N-75, Pakistan",
+    "فیصل مسجد": "Faisal Mosque, Islamabad, Pakistan",
+    "مینار پاکستان": "Minar-e-Pakistan, Lahore",
+    "بادشاہی مسجد": "Badshahi Mosque, Lahore",
     "N-75": "N-75, Pakistan",
     "N75": "N-75, Pakistan",
+    "N-35": "N-35 Karakoram Highway, Pakistan",
+    "N-5": "N-5 National Highway, Pakistan",
+    "N-25": "N-25 Regional Highway, Pakistan",
+    "N-55": "N-55 Indus Highway, Pakistan",
+    "M-1": "M-1 Motorway, Pakistan",
+    "M-2": "M-2 Motorway, Pakistan",
+    "M-3": "M-3 Motorway, Pakistan",
+    "M-4": "M-4 Motorway, Pakistan",
+    "M-5": "M-5 Motorway, Pakistan",
+    "M-9": "M-9 Motorway, Pakistan",
+    "M-11": "M-11 Motorway, Pakistan",
+    "M-15": "M-15 Hazara Motorway, Pakistan",
+
+    # ---------------- United Arab Emirates ----------------
+    "دبي": "Dubai, United Arab Emirates",
+    "أبوظبي": "Abu Dhabi, United Arab Emirates",
+    "ابوظبي": "Abu Dhabi, United Arab Emirates",
+    "الشارقة": "Sharjah, United Arab Emirates",
+    "عجمان": "Ajman, United Arab Emirates",
+    "رأس الخيمة": "Ras Al Khaimah, United Arab Emirates",
+    "راس الخيمة": "Ras Al Khaimah, United Arab Emirates",
+    "الفجيرة": "Fujairah, United Arab Emirates",
+    "أم القيوين": "Umm Al Quwain, United Arab Emirates",
+    "العين": "Al Ain, Abu Dhabi, United Arab Emirates",
+    "برج خليفة": "Burj Khalifa, Dubai, United Arab Emirates",
+    "برج العرب": "Burj Al Arab, Dubai, United Arab Emirates",
+    "E11": "Sheikh Zayed Road E11, Dubai, United Arab Emirates",
+    "E-11": "Sheikh Zayed Road E11, Dubai, United Arab Emirates",
+    "E311": "Sheikh Mohammed Bin Zayed Road E311, UAE",
+    "E-311": "Sheikh Mohammed Bin Zayed Road E311, UAE",
+    "E611": "Emirates Road E611, UAE",
+    "E-611": "Emirates Road E611, UAE",
+    "E44": "Al Khail Road E44, Dubai, UAE",
+    "E66": "Dubai-Al Ain Road E66, UAE",
+
+    # ---------------- Saudi Arabia ----------------
+    "الرياض": "Riyadh, Saudi Arabia",
+    "جدة": "Jeddah, Saudi Arabia",
+    "مكة المكرمة": "Mecca, Saudi Arabia",
+    "مكة": "Mecca, Saudi Arabia",
+    "المدينة المنورة": "Medina, Saudi Arabia",
+    "المدينة": "Medina, Saudi Arabia",
+    "الدمام": "Dammam, Saudi Arabia",
+    "الخبر": "Khobar, Eastern Province, Saudi Arabia",
+    "الظهران": "Dhahran, Eastern Province, Saudi Arabia",
+    "أبها": "Abha, Asir, Saudi Arabia",
+    "تبوك": "Tabuk, Saudi Arabia",
+    "طريق الملك فهد": "King Fahd Road, Riyadh, Saudi Arabia",
+    "طريق الملك عبدالله": "King Abdullah Road, Riyadh, Saudi Arabia",
+    "Route 40": "Highway 40, Saudi Arabia",
+    "Route 65": "Highway 65, Saudi Arabia",
+    "Route 15": "Highway 15, Saudi Arabia",
+    "Route 85": "Highway 85, Saudi Arabia",
+
+    # ---------------- Qatar ----------------
+    "الدوحة": "Doha, Qatar",
+    "الوكرة": "Al Wakrah, Qatar",
+    "الخور": "Al Khor, Qatar",
+    "لوسيل": "Lusail, Qatar",
+    "طريق سلوى": "Salwa Road, Qatar",
+    "طريق الشمال": "Al Shamal Road, Qatar",
+    "Q1": "Al Shamal Road Q1, Qatar",
+    "Q2": "Dukhan Highway Q2, Qatar",
+    "Q3": "Salwa Road Q3, Qatar",
+
+    # ---------------- Kuwait ----------------
+    "الكويت": "Kuwait City, Kuwait",
+    "الأحمدي": "Al Ahmadi, Kuwait",
+    "الاحمدي": "Al Ahmadi, Kuwait",
+    "حولي": "Hawalli, Kuwait",
+    "الفروانية": "Al Farwaniyah, Kuwait",
+    "الجهراء": "Al Jahra, Kuwait",
+    "السالمية": "Salmiya, Kuwait",
+    "طريق الفحيحيل": "Fahaheel Expressway Route 30, Kuwait",
+    "Route 30": "Fahaheel Expressway Route 30, Kuwait",
+    "Route 40": "King Fahd Expressway Route 40, Kuwait",
+    "Route 50": "Riyadh Expressway Route 50, Kuwait",
+    "Route 80": "Jahra Highway Route 80, Kuwait",
+
+    # ---------------- Bahrain ----------------
+    "المنامة": "Manama, Bahrain",
+    "المحرق": "Muharraq, Bahrain",
+    "الرفاع": "Riffa, Bahrain",
+    "مدينة حمد": "Hamad Town, Bahrain",
+    "جسر الملك فهد": "King Fahd Causeway, Bahrain",
+
+    # ---------------- Oman ----------------
+    "مسقط": "Muscat, Oman",
+    "صلالة": "Salalah, Dhofar, Oman",
+    "صحار": "Sohar, Al Batinah, Oman",
+    "نزوى": "Nizwa, Ad Dakhiliyah, Oman",
+    "صور": "Sur, Ash Sharqiyah, Oman",
+    "طريق الباطنة السريع": "Al Batinah Expressway, Oman",
+    "Route 1": "Route 1, Oman",
+    "Route 15": "Route 15, Oman",
+    "Route 31": "Route 31, Oman",
+
+    # ---------------- Yemen ----------------
+    "صنعاء": "Sanaa, Yemen",
+    "عدن": "Aden, Yemen",
+    "تعز": "Taiz, Yemen",
+    "الحديدة": "Al Hudaydah, Yemen",
+    "المكلا": "Mukalla, Hadhramaut, Yemen",
+    "إب": "Ibb, Yemen",
+
+    # ---------------- Egypt ----------------
+    "القاهرة": "Cairo, Egypt",
+    "الإسكندرية": "Alexandria, Egypt",
+    "الاسكندرية": "Alexandria, Egypt",
+    "الجيزة": "Giza, Egypt",
+    "شرم الشيخ": "Sharm El Sheikh, South Sinai, Egypt",
+    "الغردقة": "Hurghada, Red Sea, Egypt",
+    "الأقصر": "Luxor, Egypt",
+    "الاقصر": "Luxor, Egypt",
+    "أسوان": "Aswan, Egypt",
+    "اسوان": "Aswan, Egypt",
+    "بور سعيد": "Port Said, Egypt",
+    "بورسعيد": "Port Said, Egypt",
+    "طريق مصر اسكندرية الصحراوي": "Cairo-Alexandria Desert Road, Egypt",
+
+    # ---------------- Iraq ----------------
+    "بغداد": "Baghdad, Iraq",
+    "البصرة": "Basra, Iraq",
+    "أربيل": "Erbil, Kurdistan, Iraq",
+    "اربيل": "Erbil, Kurdistan, Iraq",
+    "الموصل": "Mosul, Nineveh, Iraq",
+    "النجف": "Najaf, Iraq",
+    "كربلاء": "Karbala, Iraq",
+    "السليمانية": "Sulaymaniyah, Kurdistan, Iraq",
+    "كركوك": "Kirkuk, Iraq",
+    "Highway 1": "Highway 1, Iraq",
+    "Highway 6": "Highway 6, Iraq",
+
+    # ---------------- Iran ----------------
+    "تهران": "Tehran, Iran",
+    "اصفهان": "Isfahan, Iran",
+    "مشهد": "Mashhad, Razavi Khorasan, Iran",
+    "شیراز": "Shiraz, Fars, Iran",
+    "تبریز": "Tabriz, East Azerbaijan, Iran",
+    "اهواز": "Ahvaz, Khuzestan, Iran",
+    "کرج": "Karaj, Alborz, Iran",
+    "یزد": "Yazd, Iran",
+    "کرمان": "Kerman, Iran",
+    "جاده چالوس": "Chalous Road 59, Mazandaran, Iran",
+    "جاده هراز": "Haraz Road 77, Mazandaran, Iran",
+    "بزرگراه همت": "Hemmat Expressway, Tehran, Iran",
+    "Freeway 5": "Freeway 5, Iran",
+    "Freeway 7": "Freeway 7, Iran",
+    "Road 44": "Road 44, Iran",
+    "Road 65": "Road 65, Iran",
+
+    # ---------------- Israel ----------------
+    "ירושלים": "Jerusalem, Israel",
+    "תל אביב": "Tel Aviv-Yafo, Israel",
+    "חיפה": "Haifa, Israel",
+    "באר שבע": "Beersheba, Southern District, Israel",
+    "אילת": "Eilat, Southern District, Israel",
+    "נתניה": "Netanya, Central District, Israel",
+    "אשדוד": "Ashdod, Southern District, Israel",
+    "כביש 6": "Highway 6, Israel",
+    "כביש 1": "Highway 1, Israel",
+    "נתיבי איילון": "Ayalon Highway 20, Tel Aviv, Israel",
+    "Route 6": "Highway 6, Israel",
+    "Route 1": "Highway 1, Israel",
+    "Route 90": "Highway 90, Israel",
+
+    # ---------------- Syria ----------------
+    "دمشق": "Damascus, Syria",
+    "حلب": "Aleppo, Syria",
+    "حمص": "Homs, Syria",
+    "اللاذقية": "Latakia, Syria",
+    "حماة": "Hama, Syria",
+    "M5 Highway": "M5 Highway, Syria",
+
+    # ---------------- Turkey / Türkiye ----------------
+    "İstanbul": "Istanbul, Turkey",
+    "Istanbul": "Istanbul, Turkey",
+    "Ankara": "Ankara, Turkey",
+    "İzmir": "Izmir, Turkey",
+    "Izmir": "Izmir, Turkey",
+    "Bursa": "Bursa, Turkey",
+    "Antalya": "Antalya, Turkey",
+    "Adana": "Adana, Turkey",
+    "Konya": "Konya, Turkey",
+    "Gaziantep": "Gaziantep, Turkey",
+    "Trabzon": "Trabzon, Turkey",
+    "O-1": "O-1 Motorway, Istanbul, Turkey",
+    "O-2": "O-2 Motorway, Istanbul, Turkey",
+    "O-3": "O-3 Motorway, Turkey",
+    "O-4": "O-4 Anadolu Motorway, Turkey",
+    "O-5": "O-5 Motorway, Turkey",
+    "O-7": "O-7 Kuzey Marmara Motorway, Turkey",
+    "D-100": "D-100 Highway, Turkey",
+    "D-400": "D-400 Highway, Turkey",
+
+    # ---------------- India ----------------
+    "Mumbai": "Mumbai, Maharashtra, India",
+    "Delhi": "Delhi, India",
+    "Bengaluru": "Bengaluru, Karnataka, India",
+    "Bangalore": "Bengaluru, Karnataka, India",
+    "Hyderabad": "Hyderabad, Telangana, India",
+    "Chennai": "Chennai, Tamil Nadu, India",
+    "Kolkata": "Kolkata, West Bengal, India",
+    "Ahmedabad": "Ahmedabad, Gujarat, India",
+    "Pune": "Pune, Maharashtra, India",
+    "Jaipur": "Jaipur, Rajasthan, India",
+    "NH-44": "National Highway 44, India",
+    "NH-48": "National Highway 48, India",
+    "NH-19": "National Highway 19, India",
+    "NH-53": "National Highway 53, India",
+    "NH-66": "National Highway 66, India",
+    "NH-16": "National Highway 16, India",
+    "NH-27": "National Highway 27, India",
 }
 
 
@@ -322,24 +598,27 @@ def detect_script(text: str) -> Optional[Dict[str, Any]]:
 
 
 def detect_tld(text: str) -> Optional[Dict[str, str]]:
-    """Detect country-code Top Level Domain (.de, .fr, .co.uk, .com.br, etc.) in text."""
+    """Detect country-code Top Level Domain (.de, .fr, .co.uk, .com.br, .ac.ir, etc.) in text."""
     if not text:
         return None
     text_lower = text.lower()
-    # Check compound TLDs first (.co.uk, .com.br, etc.)
-    compound_pattern = re.compile(r"\b[a-z0-9\-_]+\.(co\.uk|com\.br|co\.jp|com\.au|co\.nz|co\.za|com\.mx|com\.ar|co\.kr|co\.id|co\.in|co\.th|com\.sg|com\.my)\b")
-    match = compound_pattern.search(text_lower)
-    if match:
-        tld = match.group(1)
-        if tld in CC_TLD_MAP:
-            return {"tld": tld, "country": CC_TLD_MAP[tld], "matched_token": match.group(0)}
 
-    # Check 2-letter ccTLDs
-    simple_pattern = re.compile(r"\b[a-z0-9\-_]+\.([a-z]{2})\b")
-    for m in simple_pattern.finditer(text_lower):
-        tld = m.group(1)
+    # 1. Check compound 2nd-level domains (.com.pk, .ac.ir, .co.uk, etc.)
+    compound_match = re.search(r"\b([a-z0-9\-_]+\.(com|co|org|gov|edu|net|ac)\.([a-z]{2}))\b", text_lower)
+    if compound_match:
+        full_token = compound_match.group(1)
+        sub_tld = f"{compound_match.group(2)}.{compound_match.group(3)}"
+        cc_tld = compound_match.group(3)
+        if sub_tld in CC_TLD_MAP:
+            return {"tld": sub_tld, "country": CC_TLD_MAP[sub_tld], "matched_token": full_token}
+        if cc_tld in CC_TLD_MAP:
+            return {"tld": cc_tld, "country": CC_TLD_MAP[cc_tld], "matched_token": full_token}
+
+    # 2. Check 2-letter ccTLDs at word boundary (.de, .pk, .ir, etc.)
+    for m in re.finditer(r"\b([a-z0-9\-_]+\.([a-z]{2}))\b", text_lower):
+        tld = m.group(2)
         if tld in CC_TLD_MAP:
-            return {"tld": tld, "country": CC_TLD_MAP[tld], "matched_token": m.group(0)}
+            return {"tld": tld, "country": CC_TLD_MAP[tld], "matched_token": m.group(1)}
     return None
 
 
@@ -391,8 +670,8 @@ def extract_candidate_place_phrases(text: str) -> List[str]:
             elif (w[0].isupper() or any(c.isupper() for c in w)) and len(wl) >= 4:
                 candidates.append(w)
 
-    # 2. Highway / Route codes (e.g. A-10, US-101, I-80, M4, RN7, BR-101, Ruta 40, N-35, N-75)
-    route_match = re.search(r"\b(US|I|M|A|B|D|N|RN|BR|Ruta|Route)\s*[\-\.]?\s*(\d{1,4}[A-Z]?)\b", text, re.IGNORECASE)
+    # 2. Highway / Route codes (e.g. A-10, US-101, I-80, M4, RN7, BR-101, Ruta 40, N-35, N-75, E11, NH-44, O-4)
+    route_match = re.search(r"\b(US|I|M|A|B|D|N|RN|BR|NH|SH|E|Q|O|Ruta|Route|Hwy|Highway)\s*[\-\.]?\s*(\d{1,4}[A-Z]?)\b", text, re.IGNORECASE)
     if route_match:
         candidates.append(route_match.group(0))
 

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from geolocator.pipeline.board import CandidateBoard
+from geolocator.pipeline.geo_utils import get_subnational_division
 
 logger = logging.getLogger("geolocator.report.generator")
 
@@ -304,6 +305,8 @@ class ReportGenerator:
                 "rationale": alt_meta.get("rationale") or f"Alternative hypothesis #{i+2}: {alt['name']} (Score: {a_score:.2f})",
             })
 
+        best_subdiv = (meta.get("subnational_division") if best_candidate else None) or (get_subnational_division(coordinates[0], coordinates[1]) if coordinates else None)
+
         report_data = {
             "version": "1.0.0",
             "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -316,6 +319,7 @@ class ReportGenerator:
                     "longitude": coordinates[1] if coordinates else None,
                 },
                 "confidence_tier": tier,
+                "subnational_division": best_subdiv,
                 "error_radius_m": (calibrated_radius_km * 1000.0) if calibrated_radius_km else 500000.0,
                 "heading_deg": heading_deg,
                 "rationale": f"Determined via multimodal evidence. Hypothesis: {top_name}",
@@ -323,6 +327,7 @@ class ReportGenerator:
             "best_location": {
                 "name": top_name,
                 "coordinates": coordinates,
+                "subnational_division": best_subdiv,
                 "calibrated_radius_km": calibrated_radius_km,
                 "confidence_tier": tier,
                 "camera_heading_deg": heading_deg,

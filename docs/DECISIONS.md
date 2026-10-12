@@ -249,5 +249,32 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
   - **Multi-Crop High-Resolution OCR:** Scanned full image, bottom/center edge crops, and a high-resolution center zoom patch directly from `original.jpg` when image dimensions exceed 1200px.
   - **Tightened Spatial Corroboration:** Reduced point candidate distance threshold from 800 km to **150 km**, with strict cross-country contradiction rejection.
 
+---
+
+## 24. Regional Specialization, Arabian Peninsula Disambiguation & Subnational Division Hierarchy
+- **Context & Requirement:**
+  - Fine-tune and specialize the pipeline for 15 prioritized countries across South Asia and MENA (`Pakistan`, `India`, `Iran`, `UAE`, `Qatar`, `Kuwait`, `Saudi Arabia`, `Yemen`, `Egypt`, `Oman`, `Iraq`, `Israel`, `Syria`, `Turkiye`, `Bahrain`) while strictly preserving worldwide capability and the 8 GB local VRAM budget.
+- **Problems Identified:**
+  1. **Arabian Peninsula & Persian Gulf Border Collisions:** Simple rectangular bounding boxes caused high overlap in the Persian Gulf (e.g. Eastern Province of Saudi Arabia overlapping Iran and Qatar, Bahrain enclosed within Saudi Arabian lat/lon bounds).
+  2. **Coarse Country-Level Results:** Predictions in large nations lacked administrative context (e.g. returning only "Pakistan" or "India" without specifying Punjab, Sindh, Maharashtra, etc.).
+  3. **Regional Road & Script Blind Spots:** Highway identifiers (`E11`, `E311`, `N-5`, `NH-44`, `O-1`, `Route 30`, `Route 80`) and multi-level ccTLDs (`.com.pk`, `.ac.ir`, `.gov.qa`) were ignored or mistreated by generic 2-letter ccTLD regexes.
+- **Solution & Decisions:**
+  1. **Disambiguated Spatial Polygons (`geo_utils.py`):**
+     - Implemented coordinate-based boundaries for the Persian Gulf and Arabian Peninsula. Enforced Iranian coastal constraints (`lat >= 26.5, lon >= 50.5` across the gulf, `lat >= 29.5, lon >= 48.5` near Khuzestan) checked before Saudi Arabia, and capped Saudi Arabia at `lon <= 50.3` north of `lat 24.5`.
+     - Explicitly isolated Qatar (`lat: [24.5, 26.2]`, `lon: [50.7, 51.7]`), Bahrain (`lat: [25.8, 26.35]`, `lon: [50.45, 50.7]`), and Kuwait (`lat: [28.5, 30.1]`, `lon: [46.5, 48.5]`).
+  2. **Subnational Division Resolver (`SubnationalDivision`):**
+     - Implemented `get_subnational_division(lat, lon, country)` mapping coordinates to provinces, governorates, and districts across all 15 prioritized nations.
+     - Dual-interface implementation allows dictionary access (`div["division"]`) and seamless formatting as human-readable string (`"Punjab (Rawalpindi)"`).
+     - Exposed in candidate cell metadata, candidate board names, and the top hypothesis report JSON.
+  3. **Regional Road Gazetteer & Phonetic Synonyms (`clues_adapter.py`):**
+     - Added highway/route code patterns matching `E11`, `E311`, `E611`, `E44` (UAE), `M-1`..`M-15`, `N-5`..`N-75` (Pakistan), `NH-44`, `NH-48` (India), `O-1`..`O-7`, `D-100`, `D-400` (Turkiye), `Route 30`, `Route 40`, `Route 65`, `Route 80` (Kuwait/Saudi Arabia), and `Route 6` (Israel).
+     - Expanded `GEO_PHONETIC_SYNONYMS` with native Arabic, Urdu, Persian, and Turkish place names and highway shields.
+  4. **Multi-Level ccTLDs & Script Differentiation:**
+     - Updated domain regexes to detect multi-tier country domains (`(com|co|org|gov|edu|net|ac)\.([a-z]{2})`).
+     - Enhanced script detection with separate patterns for Urdu (character set with `ٹ`, `ڈ`, `ڑ`, `ں`, `ے`), Persian (`پ`, `چ`, `ژ`, `گ`), Hebrew, Arabic, and Devanagari.
+  5. **Visual Meta-Feature Prompts (`stage1_clues.py`):**
+     - Enriched zero-shot CLIP meta-prompts with regional architectural cues: modern Gulf glass skyscrapers, arid desert highways, Iranian adobe brick, Nile valley red-brick masonry, Turkish townscapes, and Levantine stone masonry.
+
+
 
 

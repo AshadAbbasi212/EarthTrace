@@ -256,7 +256,7 @@ class Stage1Clues:
         for phrase in filtered_phrases:
             try:
                 query_str = GEO_PHONETIC_SYNONYMS.get(phrase, phrase).strip()
-                is_route_code = bool(re.search(r"\b(US|I|M|A|B|D|N|RN|BR|Ruta|Route)\s*[\-\.]?\s*(\d{1,4}[A-Z]?)\b", query_str, re.IGNORECASE))
+                is_route_code = bool(re.search(r"\b(US|I|M|A|B|D|N|RN|BR|NH|SH|E|Q|O|Ruta|Route|Hwy|Highway)\s*[\-\.]?\s*(\d{1,4}[A-Z]?)\b", query_str, re.IGNORECASE))
                 
                 # Rule: Only query Nominatim if the token is a recognized route code, a known phonetic synonym,
                 # a multi-word phrase, or a capitalized proper noun of at least 5 letters.
@@ -467,10 +467,17 @@ class Stage1Clues:
                 horizon_visible = top_cat[3]
                 architecture = top_cat[4]
 
-            # Geoguessr Meta-Feature Classification (Vehicles, road markings, architecture)
+            # Geoguessr Meta-Feature Classification (Vehicles, road infrastructure, regional architecture)
             meta_prompts = [
                 ("rickshaw", "an auto rickshaw, three-wheeled vehicle, or motorized tuk tuk in traffic"),
+                ("truck_art", "a brightly painted Bedford truck or commercial lorry with vibrant South Asian truck art patterns"),
                 ("south_asian_arch", "flat roof red brick or concrete South Asian architecture"),
+                ("gulf_arch", "a modern white residential villa, high boundary wall, and palm tree avenue in the Arabian Gulf or UAE"),
+                ("desert_highway", "a long straight multi-lane asphalt highway through open desert with light sand or dunes"),
+                ("iranian_plateau_arch", "traditional Iranian plateau mudbrick architecture, Persian dome tilework, or adobe"),
+                ("nile_brick_masonry", "red clay unplastered brick apartment blocks with exposed concrete pillars and rebar in Egypt"),
+                ("turkish_townscape", "red clay tile pitched roofs on hillside residential apartments and minarets in Turkey"),
+                ("levantine_stone", "pale limestone clad buildings on hilly Mediterranean terrain with olive trees"),
                 ("concrete_ladder_pole", "concrete ladder utility pole with rungs and electrical wires"),
             ]
             meta_texts = [m[1] for m in meta_prompts]
@@ -481,7 +488,7 @@ class Stage1Clues:
 
             for m_idx, (m_key, m_desc) in enumerate(meta_prompts):
                 m_prob = float(meta_probs[m_idx])
-                if m_key == "rickshaw" and m_prob >= 0.40:
+                if m_key == "rickshaw" and m_prob >= 0.35:
                     if board:
                         board.add_clue(
                             text="Auto-rickshaw / three-wheeled vehicle observed in scene",
@@ -490,10 +497,22 @@ class Stage1Clues:
                             source="clip_meta",
                             confidence=round(m_prob, 2),
                         )
-                    for c_rk in ["Pakistan", "India", "Bangladesh", "Thailand", "Egypt"]:
+                    for c_rk in ["Pakistan", "India", "Bangladesh", "Egypt"]:
                         if c_rk not in visual_country_candidates:
                             visual_country_candidates.append(c_rk)
-                elif m_key == "south_asian_arch" and m_prob >= 0.35:
+                elif m_key == "truck_art" and m_prob >= 0.30:
+                    if board:
+                        board.add_clue(
+                            text="Vibrant painted truck art vehicle observed in scene",
+                            kind="vehicle_type",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    for c_ta in ["Pakistan", "India"]:
+                        if c_ta not in visual_country_candidates:
+                            visual_country_candidates.append(c_ta)
+                elif m_key == "south_asian_arch" and m_prob >= 0.30:
                     if board:
                         board.add_clue(
                             text="Flat concrete / red brick South Asian architecture observed",
@@ -505,7 +524,76 @@ class Stage1Clues:
                     for c_sa in ["Pakistan", "India", "Bangladesh"]:
                         if c_sa not in visual_country_candidates:
                             visual_country_candidates.append(c_sa)
-                elif m_key == "concrete_ladder_pole" and m_prob >= 0.35:
+                elif m_key == "gulf_arch" and m_prob >= 0.30:
+                    if board:
+                        board.add_clue(
+                            text="Arabian Gulf residential villa compound architecture observed",
+                            kind="architecture",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    for c_gulf in ["United Arab Emirates", "Saudi Arabia", "Qatar", "Kuwait", "Bahrain", "Oman"]:
+                        if c_gulf not in visual_country_candidates:
+                            visual_country_candidates.append(c_gulf)
+                elif m_key == "desert_highway" and m_prob >= 0.30:
+                    if board:
+                        board.add_clue(
+                            text="Long-distance arid desert highway corridor observed",
+                            kind="infrastructure",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    for c_dh in ["Saudi Arabia", "United Arab Emirates", "Oman", "Qatar", "Kuwait", "Egypt"]:
+                        if c_dh not in visual_country_candidates:
+                            visual_country_candidates.append(c_dh)
+                elif m_key == "iranian_plateau_arch" and m_prob >= 0.30:
+                    if board:
+                        board.add_clue(
+                            text="Iranian plateau / Persian architectural elements observed",
+                            kind="architecture",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    if "Iran" not in visual_country_candidates:
+                        visual_country_candidates.append("Iran")
+                elif m_key == "nile_brick_masonry" and m_prob >= 0.30:
+                    if board:
+                        board.add_clue(
+                            text="Nile valley red-brick concrete pillar masonry observed",
+                            kind="architecture",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    if "Egypt" not in visual_country_candidates:
+                        visual_country_candidates.append("Egypt")
+                elif m_key == "turkish_townscape" and m_prob >= 0.30:
+                    if board:
+                        board.add_clue(
+                            text="Turkish / Mediterranean pitched red tile townscape observed",
+                            kind="architecture",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    if "Turkey" not in visual_country_candidates:
+                        visual_country_candidates.append("Turkey")
+                elif m_key == "levantine_stone" and m_prob >= 0.30:
+                    if board:
+                        board.add_clue(
+                            text="Levantine pale limestone masonry observed",
+                            kind="architecture",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    for c_lev in ["Israel", "Jordan", "Syria"]:
+                        if c_lev not in visual_country_candidates:
+                            visual_country_candidates.append(c_lev)
+                elif m_key == "concrete_ladder_pole" and m_prob >= 0.30:
                     if board:
                         board.add_clue(
                             text="Concrete ladder utility pole observed",

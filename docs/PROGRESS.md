@@ -501,3 +501,25 @@
   - Added `test_country_gated_nominatim_search` and `test_landmark_country_rejection` to `tests/test_stage0_stage1.py`.
   - All **44/44 unit and integration tests passing** (`pytest tests/`).
 
+### Regional Specialization & Fine-Tuning for 15 South Asia & MENA Nations
+- [x] **Priority Nations Scope**:
+  - Deepened gazetteer, spatial anchors, subnational divisions, and visual perception across 15 target nations: **Pakistan, India, Iran, United Arab Emirates, Qatar, Kuwait, Saudi Arabia, Yemen, Egypt, Oman, Iraq, Israel, Syria, Turkiye, Bahrain**.
+- [x] **Dense Regional Anchor Grids & Arabian Peninsula Disambiguation (`geo_utils.py`)**:
+  - Populated dense multi-tier regional anchor grids (6–14 anchors each) for major metropolitan areas, transport corridors, agricultural basins, and coastal hubs across all 15 nations.
+  - Implemented geometric coastal and territorial constraints separating Saudi Arabia, Iran, Qatar, Bahrain, Kuwait, UAE, and Oman to eliminate false bounding box overlap in naive rectangular queries.
+- [x] **Subnational Administrative Boundary Resolution (`geo_utils.py`)**:
+  - Implemented `SubnationalDivision(dict)` and `get_subnational_division()` resolving GPS coordinates to provinces, governorates, and districts (e.g. Punjab, Sindh, Khyber Pakhtunkhwa, Balochistan, Dubai, Abu Dhabi, Tehran, Riyadh, Cairo, Istanbul).
+  - Wired subnational administrative divisions directly into candidate generation, telemetry readouts, and final report JSON (`top_hypothesis["subnational_division"]`).
+- [x] **High-Density Road & Highway Gazetteer (`clues_adapter.py`)**:
+  - Added support for regional highway and route prefixes: `E11`, `E311`, `E611`, `E44` (UAE), `M-1` through `M-15` and `N-5`, `N-25`, `N-35`, `N-55`, `N-75` (Pakistan), `NH-44`, `NH-48` (India), `O-1` through `O-7`, `D-100`, `D-400` (Turkiye), `Route 30`, `Route 40`, `Route 65`, `Route 80` (Kuwait/Saudi Arabia), `Route 6` (Israel), and `Q1`..`Q3` (Qatar).
+  - Populated native Arabic, Urdu, Persian, and Turkish phonetic synonyms and landmark names in `GEO_PHONETIC_SYNONYMS`.
+- [x] **Multi-Level ccTLDs & Script Differentiation (`clues_adapter.py`)**:
+  - Expanded `detect_tld` to recognize complex multi-level domains (`.com.pk`, `.ac.ir`, `.gov.pk`, `.com.qa`, `.co.ae`, `.com.sa`, `.co.il`, `.com.tr`, `.gov.eg`, etc.).
+  - Upgraded `SCRIPT_PATTERNS` to differentiate distinct character sets: Urdu (`ٹ`, `ڈ`, `ڑ`, `ں`, `ے`), Persian (`پ`, `چ`, `ژ`, `گ`), Hebrew (`0590-05FF`), Arabic (`0600-06FF`), and Devanagari (`0900-097F`).
+- [x] **Visual Geoguessr Meta-Prompts (`stage1_clues.py`)**:
+  - Integrated zero-shot CLIP meta-prompts for Gulf glass skyscrapers, arid desert highways, Iranian adobe architecture, Nile valley red-brick masonry, Turkish townscapes, Levantine stone masonry, rickshaws, and South Asian truck art.
+- [x] **Automated Testing Suite**:
+  - Created `tests/test_regional_specialization.py` validating ccTLD recognition, script differentiation, highway gazetteer lookups, subnational administrative division resolution, and Arabian Peninsula coordinate disambiguation (7/7 tests passing).
+  - All test suites passing (`pytest tests/`).
+
+

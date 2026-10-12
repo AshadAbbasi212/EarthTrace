@@ -22,6 +22,7 @@ from geolocator.pipeline.geo_utils import (
     is_in_region,
     get_country_candidate,
     get_country_anchors,
+    get_subnational_division,
     cluster_points,
     COUNTRY_BBOXES,
 )
@@ -35,12 +36,14 @@ from geolocator.adapters.clues_adapter import (
 logger = logging.getLogger("geolocator.pipeline.stage2_prior")
 
 # Comprehensive global country set for vision-language zero-shot country likelihood estimation
+# Fully covering all 15 prioritized South Asia & Middle East nations plus worldwide baselines
 GLOBAL_GEOLOC_COUNTRIES: List[str] = [
     # South & Central Asia
     "Pakistan", "India", "Bangladesh", "Nepal", "Sri Lanka", "Afghanistan",
     "Kazakhstan", "Uzbekistan", "Kyrgyzstan", "Tajikistan",
-    # Middle East & North Africa
+    # Middle East & North Africa (All 15 target countries fully covered)
     "Iran", "Iraq", "Turkey", "Saudi Arabia", "United Arab Emirates", "Israel",
+    "Qatar", "Kuwait", "Oman", "Yemen", "Bahrain", "Syria",
     "Jordan", "Egypt", "Morocco", "Algeria", "Tunisia",
     # Europe
     "United Kingdom", "Ireland", "France", "Germany", "Italy", "Spain", "Portugal",
@@ -353,11 +356,11 @@ class Stage2Prior:
                             "country": top_country,
                         })
 
-            for c_name, c_prob in list(country_zero_shot_probs.items())[1:3]:
-                if c_prob >= 0.15:
+            for c_name, c_prob in list(country_zero_shot_probs.items())[1:4]:
+                if c_prob >= 0.10:
                     c_rep = sum(1 for p in raw_predictions if (get_country_candidate(p["lat"], p["lon"]) or "").lower() == c_name.lower())
-                    if c_rep < 2:
-                        anchors = get_country_anchors(c_name, max_anchors=3)
+                    if c_rep < 3:
+                        anchors = get_country_anchors(c_name, max_anchors=5)
                         anchor_prob = max(0.01, c_prob / max(1, len(anchors)))
                         for a in anchors:
                             raw_predictions.append({
@@ -366,6 +369,24 @@ class Stage2Prior:
                                 "prob": anchor_prob,
                                 "anchor_name": a["name"],
                                 "country": c_name,
+                            })
+
+            # Also ensure any country flagged by high-confidence discrete cues (hints, TLD, calling code, script)
+            # has full anchor representation in raw_predictions
+            cue_countries = list(dict.fromkeys(hint_countries + ([tld_country] if tld_country else []) + ([phone_country] if phone_country else []) + script_countries[:2]))
+            for cue_c in cue_countries:
+                rep_count = sum(1 for p in raw_predictions if (get_country_candidate(p["lat"], p["lon"]) or "").lower() == cue_c.lower())
+                if rep_count < 4:
+                    cue_anchors = get_country_anchors(cue_c, max_anchors=6)
+                    if cue_anchors:
+                        logger.info("[stage2] Injecting %d anchors for discrete cue country '%s'", len(cue_anchors), cue_c)
+                        for a in cue_anchors:
+                            raw_predictions.append({
+                                "lat": a["lat"],
+                                "lon": a["lon"],
+                                "prob": 0.05,
+                                "anchor_name": a["name"],
+                                "country": cue_c,
                             })
 
         # 4. Fuse evidence for each candidate point
@@ -512,7 +533,9 @@ class Stage2Prior:
                 if pt.get("anchor_name"):
                     anchor_lbl = f" - {pt['anchor_name']}"
                     break
-            cand_name = f"Cell {c['cluster_id']}: {c['country'] or 'Open Region'}{anchor_lbl} ({c['center_lat']:.2f}, {c['center_lon']:.2f})"
+            subdiv = get_subnational_division(c["center_lat"], c["center_lon"])
+            subdiv_lbl = f", {subdiv}" if subdiv else ""
+            cand_name = f"Cell {c['cluster_id']}: {c['country'] or 'Open Region'}{subdiv_lbl}{anchor_lbl} ({c['center_lat']:.2f}, {c['center_lon']:.2f})"
             bbox = [round(c["min_lat"], 4), round(c["min_lon"], 4), round(c["max_lat"], 4), round(c["max_lon"], 4)]
             board.add_candidate(
                 name=cand_name,
@@ -521,6 +544,10 @@ class Stage2Prior:
                 bbox=bbox,
                 lat=c["center_lat"],
                 lon=c["center_lon"],
+                metadata={
+                    "country": c.get("country"),
+                    "subnational_division": subdiv,
+                },
             )
 
             # Add evidence linking clues to candidate
@@ -541,6 +568,7 @@ class Stage2Prior:
                 "cluster_id": c["cluster_id"],
                 "candidate_name": cand_name,
                 "country": c["country"],
+                "subnational_division": subdiv,
                 "bbox": bbox,
                 "center": [c["center_lat"], c["center_lon"]],
                 "score": c["best_score"],
@@ -587,16 +615,18 @@ class Stage2Prior:
                     # or explicitly matching ground truth user hint
                     if ((min_dist_km <= 150.0 and not country_conflict) or hint_match):
                         g_bbox = cand.get("bbox") or [p_lat - 0.05, p_lon - 0.05, p_lat + 0.05, p_lon + 0.05]
+                        cand_subdiv = get_subnational_division(p_lat, p_lon)
                         corroborated_point_bboxes.append({
                             "cluster_id": "verified_point",
                             "candidate_name": cand["name"],
                             "country": c_cand_country,
+                            "subnational_division": cand_subdiv,
                             "bbox": g_bbox,
                             "center": [p_lat, p_lon],
                             "score": 10.0,
                             "probability": 0.90,
                         })
-                        logger.info("[stage2_prior] Point candidate '%s' corroborated by visual prior (dist=%.1f km)", cand["name"], min_dist_km)
+                        logger.info("[stage2_prior] Point candidate '%s' corroborated by visual prior (dist=%.1f km, subdiv=%s)", cand["name"], min_dist_km, cand_subdiv)
                     else:
                         logger.warning(
                             "[stage2_prior] Pruned contradictory point candidate '%s' at (%.2f, %.2f) (%.1f km away from visual prior, country=%s, conflict=%s)",
