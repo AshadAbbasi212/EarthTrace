@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+import numpy as np
 from PIL import Image
 
 from geolocator.adapters import (
@@ -20,12 +22,14 @@ from geolocator.adapters import (
     extract_candidate_place_phrases,
     GEO_PHONETIC_SYNONYMS,
     COMMON_STOP_WORDS,
+    country_to_iso,
 )
 from geolocator.providers.nominatim import NominatimProvider
 from geolocator.pipeline.board import CandidateBoard
 from geolocator.pipeline.hint_parser import HintParser
 from geolocator.pipeline.schema import ClueExtractionResult, TextSignItem, RegionGuessItem
 from geolocator.pipeline.landmarks import LandmarkMatcher
+from geolocator.pipeline.stage2_prior import GLOBAL_GEOLOC_COUNTRIES
 
 logger = logging.getLogger("geolocator.pipeline.stage1")
 
@@ -51,23 +55,81 @@ class Stage1Clues:
         if not working_image_path.exists():
             working_image_path = Path(board.photo_path)
 
-        # 1. OCR Extraction (Full 1024px Image)
+        # 1. Parse User Hints FIRST (ground-truth user cues take immediate precedence)
+        user_hint_countries: List[str] = []
+        if user_hint_text and user_hint_text.strip():
+            parsed_hints = self.hint_parser.parse(user_hint_text)
+            board.data["user_hints"] = parsed_hints
+            
+            for country in parsed_hints.get("countries", []):
+                user_hint_countries.append(country)
+                clue_id = board.add_clue(
+                    text=f"User stated location is in {country}",
+                    kind="user_hint_country",
+                    status="inferred",
+                    source="user_hint",
+                    confidence=0.85,
+                )
+                board.add_candidate(country, level="country", prior=4.0)
+
+            for continent in parsed_hints.get("continents", []):
+                board.add_clue(
+                    text=f"User stated continent is {continent}",
+                    kind="user_hint_continent",
+                    status="inferred",
+                    source="user_hint",
+                    confidence=0.8,
+                )
+
+            if parsed_hints.get("season"):
+                board.add_clue(
+                    text=f"User hinted season: {parsed_hints['season']}",
+                    kind="user_hint_season",
+                    status="inferred",
+                    source="user_hint",
+                    confidence=0.75,
+                )
+
+        # 2. Multi-Crop High-Resolution OCR Extraction
         ocr_snippets: List[Dict[str, Any]] = []
         try:
+            # 2a. Global view (1024px)
             ocr_snippets.extend(self.ocr.read_text(working_image_path, min_conf=0.25))
             
-            # If text is detected, also check bottom crops where signs and plates reside
+            # 2b. Edge and boundary crops (bottom half, bottom corners, center if available)
             edges_dir = job_path / "edges"
-            if edges_dir.exists() and ocr_snippets:
-                for crop_path in list(edges_dir.glob("*bottom*.jpg"))[:2]:
-                    crop_snippets = self.ocr.read_text(crop_path, min_conf=0.25)
+            if edges_dir.exists():
+                crop_candidates = list(edges_dir.glob("edge_bottom*.jpg")) + list(edges_dir.glob("edge_center*.jpg"))
+                for crop_path in crop_candidates[:3]:
+                    crop_snippets = self.ocr.read_text(crop_path, min_conf=0.20)
                     for snip in crop_snippets:
                         snip["file_ref"] = str(crop_path.relative_to(job_path))
                         ocr_snippets.append(snip)
+
+            # 2c. High-resolution center zoom from original image for distance highway signs
+            original_path = job_path / "original.jpg"
+            if not original_path.exists():
+                for p in job_path.glob("original.*"):
+                    original_path = p
+                    break
+            if original_path.exists():
+                try:
+                    with Image.open(original_path) as orig_im:
+                        W, H = orig_im.size
+                        if W > 1200 or H > 1200:
+                            center_box = (int(W * 0.25), int(H * 0.25), int(W * 0.75), int(H * 0.75))
+                            center_patch = orig_im.crop(center_box)
+                            patch_snips = self.ocr.read_text(center_patch, min_conf=0.20)
+                            for snip in patch_snips:
+                                snip["file_ref"] = "original_center_zoom"
+                                ocr_snippets.append(snip)
+                except Exception as e:
+                    logger.debug("[stage1] High-res center patch OCR skipped: %s", e)
         except Exception as e:
             logger.warning("[stage1] OCR pass encountered error: %s", e)
 
-        # Record unique OCR text onto the board
+        # 3. Discrete Knowledge Lookups & Country Cues
+        text_country_candidates: List[str] = []
         seen_texts = set()
         for snip in ocr_snippets:
             t = snip["text"]
@@ -82,7 +144,7 @@ class Stage1Clues:
                     file_ref=snip.get("file_ref", "working_1024.jpg"),
                 )
 
-                # 1a. Plate lookup check (first 2 chars)
+                # 3a. License Plate Lookup
                 if len(t) >= 2:
                     plate_hit = lookup_plate(t[:2])
                     if plate_hit:
@@ -97,7 +159,7 @@ class Stage1Clues:
                         if cand_name:
                             board.add_candidate(cand_name, level="city", prior=5.0)
 
-                # 1b. Non-Latin writing script detection (Cyrillic, Greek, Arabic, Hangul, Kana, etc.)
+                # 3b. Script detection
                 script_hit = detect_script(t)
                 if script_hit:
                     s_name = script_hit["script"]
@@ -110,9 +172,11 @@ class Stage1Clues:
                         confidence=0.90,
                     )
                     for c_country in cands[:3]:
+                        if c_country not in text_country_candidates:
+                            text_country_candidates.append(c_country)
                         board.add_candidate(c_country, level="country", prior=4.5)
 
-                # 1c. Country-code Top Level Domain detection (.de, .fr, .co.uk, .com.br, etc.)
+                # 3c. TLD detection
                 tld_hit = detect_tld(t)
                 if tld_hit:
                     tld_country = tld_hit["country"]
@@ -124,9 +188,11 @@ class Stage1Clues:
                         source="ocr_meta",
                         confidence=0.98,
                     )
+                    if tld_country not in text_country_candidates:
+                        text_country_candidates.append(tld_country)
                     board.add_candidate(tld_country, level="country", prior=8.0)
 
-                # 1d. International dialing code detection (+XX, 00XX)
+                # 3d. International Calling Code detection
                 calling_hit = detect_calling_code(t)
                 if calling_hit:
                     code_country = calling_hit["country"]
@@ -138,34 +204,102 @@ class Stage1Clues:
                             source="ocr_meta",
                             confidence=0.92,
                         )
+                        if code_country not in text_country_candidates:
+                            text_country_candidates.append(code_country)
                         board.add_candidate(code_country, level="country", prior=7.0)
 
-        # 1e. Autonomous Place-Name & Route Geocoding via Nominatim
-        # Collect candidate place phrases across all detected text
+        # 4. Visual Clue Extraction (VLM / Heuristic Perception)
+        early_country_context = list(dict.fromkeys(user_hint_countries + text_country_candidates))
+        if vlm_override:
+            clues_result = vlm_override
+            visual_country_candidates = []
+        else:
+            clues_result, visual_country_candidates = self._extract_visual_clues_heuristic(
+                working_image_path,
+                ocr_snippets,
+                board=board,
+                candidate_countries=early_country_context,
+            )
+
+        # 5. Compile Prioritized Candidate Countries & ISO-2 codes
+        all_candidate_countries = list(dict.fromkeys(user_hint_countries + text_country_candidates + visual_country_candidates))
+        candidate_country_iso_codes: List[str] = []
+        for c in all_candidate_countries:
+            iso = country_to_iso(c)
+            if iso and iso not in candidate_country_iso_codes:
+                candidate_country_iso_codes.append(iso)
+
+        logger.info(
+            "[stage1] Candidate country context: %s (ISO codes: %s)",
+            all_candidate_countries, candidate_country_iso_codes
+        )
+
+        # 6. Country-Gated Place-Name & Route Geocoding via Nominatim
         all_place_phrases = []
         for snip in ocr_snippets:
             all_place_phrases.extend(extract_candidate_place_phrases(snip["text"]))
         unique_phrases = list(dict.fromkeys(all_place_phrases))
         known_synonyms = set(GEO_PHONETIC_SYNONYMS.values())
 
-        # Filter out obvious false positives and stop words
         filtered_phrases = []
         for p in unique_phrases:
             pl = p.strip().lower()
-            if pl not in COMMON_STOP_WORDS and len(pl) >= 3:
+            if pl not in COMMON_STOP_WORDS and len(pl) >= 2:
                 filtered_phrases.append(p)
 
-        # Prioritize recognized gazetteer place names and route codes
         filtered_phrases.sort(key=lambda p: (0 if p in known_synonyms else 1, len(p) < 4))
-        filtered_phrases = filtered_phrases[:6]  # Polite limit of 6 lookups
+        filtered_phrases = filtered_phrases[:6]
+
+        primary_cc = candidate_country_iso_codes[0] if candidate_country_iso_codes else None
+        country_codes_param = ",".join(candidate_country_iso_codes[:3]) if candidate_country_iso_codes else None
 
         for phrase in filtered_phrases:
             try:
-                # Query with known synonym expansion if available
-                query_str = GEO_PHONETIC_SYNONYMS.get(phrase, phrase)
-                nom_results = self.nominatim.search(query_str, limit=1)
+                query_str = GEO_PHONETIC_SYNONYMS.get(phrase, phrase).strip()
+                is_route_code = bool(re.search(r"\b(US|I|M|A|B|D|N|RN|BR|Ruta|Route)\s*[\-\.]?\s*(\d{1,4}[A-Z]?)\b", query_str, re.IGNORECASE))
+                
+                # Rule: Only query Nominatim if the token is a recognized route code, a known phonetic synonym,
+                # a multi-word phrase, or a capitalized proper noun of at least 5 letters.
+                # Never query arbitrary 3-4 letter abbreviations/fragments (e.g. BEIT, NYOK, STOP).
+                is_proper_place_query = (
+                    is_route_code
+                    or (query_str in GEO_PHONETIC_SYNONYMS.values())
+                    or (len(query_str.split()) >= 2)
+                    or (len(query_str) >= 5 and query_str[0].isupper() and query_str.lower() not in COMMON_STOP_WORDS)
+                )
+
+                if not is_proper_place_query:
+                    logger.debug("[stage1] Skipping ambiguous/fragmentary token '%s'", query_str)
+                    continue
+
+                # Disallow global unconstrained searches on short tokens or route numbers
+                if not country_codes_param and is_route_code:
+                    logger.debug("[stage1] Skipping unconstrained route query '%s' without country gating", query_str)
+                    continue
+
+                nom_results = []
+                # First try with primary candidate country for maximum geographic fidelity
+                if primary_cc:
+                    nom_results = self.nominatim.search(query_str, country_codes=primary_cc, limit=1)
+
+                # Then fallback to all candidate countries if primary had no match
+                if not nom_results and country_codes_param:
+                    nom_results = self.nominatim.search(query_str, country_codes=country_codes_param, limit=1)
+
+                # Fallback to global query ONLY for distinct multi-word proper nouns
+                if not nom_results and not is_route_code and len(query_str.split()) >= 2:
+                    nom_results = self.nominatim.search(query_str, limit=1)
+
                 if nom_results:
                     hit = nom_results[0]
+                    hit_address = hit.get("address", {})
+                    hit_cc = hit_address.get("country_code", "").lower()
+
+                    # Geographic consistency check: Reject if search returned an unexpected foreign country
+                    if candidate_country_iso_codes and hit_cc and hit_cc not in candidate_country_iso_codes:
+                        logger.info("[stage1] Geocoded hit '%s' in '%s' rejected (mismatch with %s)", query_str, hit_cc, candidate_country_iso_codes)
+                        continue
+
                     p_lat = float(hit["lat"])
                     p_lon = float(hit["lon"])
                     display_name = hit.get("display_name", phrase)
@@ -206,45 +340,6 @@ class Stage1Clues:
                     logger.info("[stage1] Successfully geocoded sign '%s' -> (%f, %f) %s", phrase, p_lat, p_lon, display_name)
             except Exception as e:
                 logger.debug("[stage1] Geocoding lookup skipped for '%s': %s", phrase, e)
-
-        # 2. Parse User Hints
-        if user_hint_text and user_hint_text.strip():
-            parsed_hints = self.hint_parser.parse(user_hint_text)
-            board.data["user_hints"] = parsed_hints
-            
-            for country in parsed_hints.get("countries", []):
-                clue_id = board.add_clue(
-                    text=f"User stated location is in {country}",
-                    kind="user_hint_country",
-                    status="inferred",
-                    source="user_hint",
-                    confidence=0.85,
-                )
-                board.add_candidate(country, level="country", prior=4.0)
-
-            for continent in parsed_hints.get("continents", []):
-                board.add_clue(
-                    text=f"User stated continent is {continent}",
-                    kind="user_hint_continent",
-                    status="inferred",
-                    source="user_hint",
-                    confidence=0.8,
-                )
-
-            if parsed_hints.get("season"):
-                board.add_clue(
-                    text=f"User hinted season: {parsed_hints['season']}",
-                    kind="user_hint_season",
-                    status="inferred",
-                    source="user_hint",
-                    confidence=0.75,
-                )
-
-        # 3. Visual Clue Extraction (VLM / Schema Validation)
-        if vlm_override:
-            clues_result = vlm_override
-        else:
-            clues_result = self._extract_visual_clues_heuristic(working_image_path, ocr_snippets, board=board)
 
         # Merge extracted cues onto board
         board.data["visual_cues"] = clues_result.model_dump()
@@ -306,13 +401,13 @@ class Stage1Clues:
         image_path: Path,
         ocr_snippets: List[Dict[str, Any]],
         board: Optional[CandidateBoard] = None,
-    ) -> ClueExtractionResult:
+        candidate_countries: Optional[List[str]] = None,
+    ) -> Tuple[ClueExtractionResult, List[str]]:
         """Visual cue extraction using local CLIP zero-shot classification with algorithmic fallback."""
         im = Image.open(image_path).convert("RGB")
         W, H = im.size
         
         # Color distribution analysis
-        import numpy as np
         arr = np.asarray(im, dtype=np.float32)
         r, g, b = arr[..., 0], arr[..., 1], arr[..., 2]
 
@@ -329,6 +424,7 @@ class Stage1Clues:
         horizon_visible = False
         architecture = "unknown"
         region_guesses: List[RegionGuessItem] = []
+        visual_country_candidates: List[str] = []
 
         # Attempt high-accuracy local CLIP zero-shot scene & landmark classification
         try:
@@ -371,7 +467,55 @@ class Stage1Clues:
                 horizon_visible = top_cat[3]
                 architecture = top_cat[4]
 
-            # Direct Contour Skyline Analysis: Check image directly for genuine mountain/hill relief
+            # Geoguessr Meta-Feature Classification (Vehicles, road markings, architecture)
+            meta_prompts = [
+                ("rickshaw", "an auto rickshaw, three-wheeled vehicle, or motorized tuk tuk in traffic"),
+                ("south_asian_arch", "flat roof red brick or concrete South Asian architecture"),
+                ("concrete_ladder_pole", "concrete ladder utility pole with rungs and electrical wires"),
+            ]
+            meta_texts = [m[1] for m in meta_prompts]
+            meta_inputs = clip_proc(text=meta_texts, images=im, return_tensors="pt", padding=True).to(device)
+            with torch.no_grad():
+                meta_out = clip_model(**meta_inputs)
+                meta_probs = meta_out.logits_per_image.softmax(dim=-1).cpu().numpy()[0]
+
+            for m_idx, (m_key, m_desc) in enumerate(meta_prompts):
+                m_prob = float(meta_probs[m_idx])
+                if m_key == "rickshaw" and m_prob >= 0.40:
+                    if board:
+                        board.add_clue(
+                            text="Auto-rickshaw / three-wheeled vehicle observed in scene",
+                            kind="vehicle_type",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    for c_rk in ["Pakistan", "India", "Bangladesh", "Thailand", "Egypt"]:
+                        if c_rk not in visual_country_candidates:
+                            visual_country_candidates.append(c_rk)
+                elif m_key == "south_asian_arch" and m_prob >= 0.35:
+                    if board:
+                        board.add_clue(
+                            text="Flat concrete / red brick South Asian architecture observed",
+                            kind="architecture",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    for c_sa in ["Pakistan", "India", "Bangladesh"]:
+                        if c_sa not in visual_country_candidates:
+                            visual_country_candidates.append(c_sa)
+                elif m_key == "concrete_ladder_pole" and m_prob >= 0.35:
+                    if board:
+                        board.add_clue(
+                            text="Concrete ladder utility pole observed",
+                            kind="infrastructure",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+
+            # Direct Contour Skyline Analysis
             try:
                 from geolocator.pipeline.skyline_extractor import SkylineExtractor
                 extractor = SkylineExtractor(target_width=120)
@@ -385,31 +529,58 @@ class Stage1Clues:
             except Exception as e:
                 logger.debug("[stage1_skyline] Direct contour check error: %s", e)
 
-            # Informational landmark perception (Only if explicitly hinted or high confidence; never force-snap)
+            # Zero-shot Country Perception Sweep
+            country_prompts = [f"a street or landscape in {c}" for c in GLOBAL_GEOLOC_COUNTRIES]
+            c_inputs = clip_proc(text=country_prompts, images=im, return_tensors="pt", padding=True).to(device)
+            with torch.no_grad():
+                c_out = clip_model(**c_inputs)
+                c_probs = c_out.logits_per_image.softmax(dim=-1).cpu().numpy()[0]
+
+            top_c_indices = np.argsort(c_probs)[::-1]
+            top_c1_idx = int(top_c_indices[0])
+            top_c1_country = GLOBAL_GEOLOC_COUNTRIES[top_c1_idx]
+            top_c1_prob = float(c_probs[top_c1_idx])
+            logger.info(
+                "[stage1_country] Top zero-shot countries: %s (%.3f), %s (%.3f), %s (%.3f)",
+                top_c1_country, top_c1_prob,
+                GLOBAL_GEOLOC_COUNTRIES[int(top_c_indices[1])], float(c_probs[top_c_indices[1]]),
+                GLOBAL_GEOLOC_COUNTRIES[int(top_c_indices[2])], float(c_probs[top_c_indices[2]]),
+            )
+            for idx in top_c_indices[:3]:
+                c_name = GLOBAL_GEOLOC_COUNTRIES[int(idx)]
+                if float(c_probs[idx]) >= 0.08 and c_name not in visual_country_candidates:
+                    visual_country_candidates.append(c_name)
+
+            if top_c1_prob >= 0.18 and not region_guesses:
+                region_guesses.append(RegionGuessItem(place=top_c1_country, confidence=round(top_c1_prob, 3), reason="Vision-language country prior"))
+
+            # Informational landmark perception (with candidate countries consistency filter)
             user_requested_landmark = bool(board and board.data.get("user_hints", {}).get("landmarks"))
+            all_known_countries = list(dict.fromkeys((candidate_countries or []) + visual_country_candidates))
             if user_requested_landmark:
                 lm_matcher = LandmarkMatcher()
-                lm_res = lm_matcher.match(im, clip_model, clip_proc, device=device)
-                if lm_res and lm_res.get("confidence", 0.0) >= 0.65:
+                lm_res = lm_matcher.match(im, clip_model, clip_proc, device=device, candidate_countries=all_known_countries)
+                if lm_res and lm_res.get("confidence", 0.0) >= 0.60:
                     l_name = lm_res["name"]
                     l_lat = lm_res["latitude"]
                     l_lon = lm_res["longitude"]
                     l_conf = lm_res["confidence"]
                     region_guesses.append(RegionGuessItem(place=l_name, confidence=l_conf, reason="User-requested landmark perception"))
                     cand_name = f"Landmark: {l_name}"
-                    board.add_candidate(
-                        name=cand_name,
-                        level="point",
-                        lat=l_lat,
-                        lon=l_lon,
-                        prior=2.0,
-                        metadata={
-                            "landmark": l_name,
-                            "tier": "T2",
-                            "radius_km": lm_res.get("radius_km", 2.0),
-                            "source": "landmark_hint",
-                        }
-                    )
+                    if board:
+                        board.add_candidate(
+                            name=cand_name,
+                            level="point",
+                            lat=l_lat,
+                            lon=l_lon,
+                            prior=2.5,
+                            metadata={
+                                "landmark": l_name,
+                                "tier": "T2",
+                                "radius_km": lm_res.get("radius_km", 2.0),
+                                "source": "landmark_hint",
+                            }
+                        )
 
             # Offload CLIP model to CPU and purge VRAM for subsequent stages
             if clip_model is not None:
@@ -454,4 +625,5 @@ class Stage1Clues:
             distinctive_features=[],
             overall_confidence=0.85 if region_guesses else 0.65,
         )
-        return result
+        return result, visual_country_candidates
+

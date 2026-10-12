@@ -224,4 +224,30 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
     - Added a "Next Location" action button inside the active marker's popup on the map for seamless map-based exploration.
     - Updates 3D Earth globe target orientation, coordinate telemetry readouts, error radii, and tier badges in lockstep.
 
+---
+
+## 22. Hierarchical Bayesian Country Prior & Visual Gallery Debiasing
+- **Problem:**
+  - GeoCLIP's gallery of ~20,000 Flickr GPS coordinates suffers from high sampling disparity across nations (dense in Western Europe and coastal India, but sparse in Pakistan and Central Asia).
+  - Ordinary GeoCLIP queries biased heavily towards dense clusters, misclassifying Pakistani locations as India or France.
+- **Decision:**
+  - Inverted the hierarchy: evaluated candidate countries against a global universe of 53 countries using fine-tuned `StreetCLIP` / `CLIP ViT-Large` *first*, generating true vision-language prior probabilities ($P(\text{country} \mid \text{image})$).
+  - Formulated principled conditional probability: $P(\text{point} \mid \text{image}) = P(\text{country} \mid \text{image}) \times \frac{P_{\text{GeoCLIP}}(\text{point})}{P_{\text{GeoCLIP}}(\text{country})}$, debiasing Flickr gallery density while preserving fine-grained spatial gradients.
+  - Injected regional anchor points for top zero-shot countries with sparse coverage in GeoCLIP, ensuring fair multimodal evaluation.
+
+---
+
+## 23. Country-Gated Nominatim Geocoding, Strict Landmark Consistency & Multi-Crop OCR
+- **Problem:**
+  - Unconstrained Nominatim queries for short route identifiers (e.g. `N-75`) matched roads overseas (e.g. `Rue Conrad Kilian, Narbonne, France`).
+  - Spurious closed-set landmark matching forced ordinary photos onto distant landmarks (e.g. `Great Rift Valley Viewpoint, Kenya`), which cadastral OSM scoring amplified with weight 180.0 to an overpowering score lock of 2500.0.
+  - Downsampled images caused OCR to miss small distance markers and road signs.
+  - Point candidates located in neighboring countries (e.g. New Delhi, 689 km away) survived loose 800 km distance checks and outscored regional clusters.
+- **Solution & Decision:**
+  - **Country-Gated Nominatim Queries:** Derived ISO-3166-1 alpha-2 codes from user hints, text clues, and vision-language country priors. Restricted route codes (`N-75`, `M-2`, `A-1`) to `country_codes` within candidate nations. Disallowed geocoding queries on arbitrary 3-4 letter acronyms or fragments (`BEIT`, `NYOK`).
+  - **Strict Landmark Negative Margins & Country Rejection:** Required `neg_margin >= 0.20` and discarded any landmark candidate situated in a foreign nation conflicting with candidate country priors unless visual confidence $\ge 0.90$. Reduced cadastral landmark weight from 180.0 to 8.0.
+  - **Multi-Crop High-Resolution OCR:** Scanned full image, bottom/center edge crops, and a high-resolution center zoom patch directly from `original.jpg` when image dimensions exceed 1200px.
+  - **Tightened Spatial Corroboration:** Reduced point candidate distance threshold from 800 km to **150 km**, with strict cross-country contradiction rejection.
+
+
 

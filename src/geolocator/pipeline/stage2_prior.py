@@ -569,19 +569,28 @@ class Stage2Prior:
                         min_dist_km = 0.0
 
                     # Check user hints for country match
+                    c_cand_country = cand.get("metadata", {}).get("country") or get_country_candidate(p_lat, p_lon)
                     hint_match = False
                     if hint_countries:
-                        c_cand_country = cand.get("metadata", {}).get("country") or get_country_candidate(p_lat, p_lon)
                         if c_cand_country and any(hc.lower() in c_cand_country.lower() for hc in hint_countries):
                             hint_match = True
 
-                    # Only accept point candidates within 800 km of visual prior clusters or matching user hint
-                    if min_dist_km <= 800.0 or hint_match:
+                    top_cluster_country = clusters[0]["country"] if clusters else None
+                    top_cluster_prob = clusters[0].get("cluster_prob", 0.0) if clusters else 0.0
+
+                    country_conflict = False
+                    if top_cluster_country and c_cand_country and top_cluster_prob >= 0.50:
+                        if top_cluster_country.lower() != c_cand_country.lower():
+                            country_conflict = True
+
+                    # Only accept point candidates within 150 km of visual prior clusters without cross-country contradiction,
+                    # or explicitly matching ground truth user hint
+                    if ((min_dist_km <= 150.0 and not country_conflict) or hint_match):
                         g_bbox = cand.get("bbox") or [p_lat - 0.05, p_lon - 0.05, p_lat + 0.05, p_lon + 0.05]
                         corroborated_point_bboxes.append({
                             "cluster_id": "verified_point",
                             "candidate_name": cand["name"],
-                            "country": cand.get("metadata", {}).get("country") or get_country_candidate(p_lat, p_lon),
+                            "country": c_cand_country,
                             "bbox": g_bbox,
                             "center": [p_lat, p_lon],
                             "score": 10.0,
@@ -590,8 +599,8 @@ class Stage2Prior:
                         logger.info("[stage2_prior] Point candidate '%s' corroborated by visual prior (dist=%.1f km)", cand["name"], min_dist_km)
                     else:
                         logger.warning(
-                            "[stage2_prior] Pruned contradictory point candidate '%s' at (%.2f, %.2f) (%.1f km away from visual prior)",
-                            cand["name"], p_lat, p_lon, min_dist_km
+                            "[stage2_prior] Pruned contradictory point candidate '%s' at (%.2f, %.2f) (%.1f km away from visual prior, country=%s, conflict=%s)",
+                            cand["name"], p_lat, p_lon, min_dist_km, c_cand_country, country_conflict
                         )
                         # Penalize candidate on board so it does not win
                         cand["prior"] = 0.0001

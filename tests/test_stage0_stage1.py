@@ -1,5 +1,6 @@
 """Unit and integration tests for Stage 0 (Intake) and Stage 1 (Clues/Perception)."""
 import json
+from typing import Optional
 import pytest
 from pathlib import Path
 from PIL import Image
@@ -131,3 +132,115 @@ def test_stage0_and_stage1_pipeline(tmp_path):
     assert "stage1_clues" in board.data["stages_run"]
     assert "United Kingdom" in board.data["candidates"]
     assert (job_dir / "clues.json").exists()
+
+
+def test_country_gated_nominatim_search(tmp_path):
+    """Verify that route numbers like N-75 are country-gated and do not drift overseas."""
+    class MockNominatim:
+        def __init__(self):
+            self.calls = []
+
+        def search(self, query: str, country_codes: Optional[str] = None, limit: int = 10):
+            self.calls.append({"query": query, "country_codes": country_codes})
+            if country_codes and "pk" in country_codes and "N-75" in query:
+                return [{
+                    "lat": "33.72",
+                    "lon": "73.15",
+                    "display_name": "Murree Expressway, N-75, Punjab, Pakistan",
+                    "boundingbox": ["33.70", "33.74", "73.10", "73.20"],
+                    "address": {"country_code": "pk"},
+                }]
+            return []
+
+    mock_nom = MockNominatim()
+    stage1 = Stage1Clues(nominatim=mock_nom)
+
+    job_dir = tmp_path / "job_nom"
+    job_dir.mkdir(parents=True)
+    test_photo = tmp_path / "photo.jpg"
+    Image.new("RGB", (200, 200), (50, 50, 50)).save(test_photo)
+
+    board = CandidateBoard(photo_path=test_photo, board_path=job_dir / "board.json")
+
+    # Mock OCR returning N-75
+    class MockOCR:
+        def read_text(self, *args, **kwargs):
+            return [{"text": "N-75", "confidence": 0.95}]
+        def unload(self):
+            pass
+
+    stage1.ocr = MockOCR()
+
+    # Case 1: User hints Pakistan -> query MUST pass country_codes containing "pk"
+    _, board1 = stage1.process(job_dir, board, user_hint_text="Driving in Pakistan")
+    pk_calls = [c for c in mock_nom.calls if c["country_codes"] and "pk" in c["country_codes"]]
+    assert len(pk_calls) > 0
+    assert any("N-75" in c["query"] for c in pk_calls)
+    assert any("Murree Expressway" in name for name in board1.data["candidates"])
+
+    # Case 2: No country hints and short query -> MUST NOT make unconstrained global queries for N-75
+    mock_nom.calls.clear()
+    job_dir2 = tmp_path / "job_nom2"
+    job_dir2.mkdir(parents=True)
+    board2 = CandidateBoard(photo_path=test_photo, board_path=job_dir2 / "board.json")
+    vlm_override = ClueExtractionResult(
+        scene_type="rural_road",
+        terrain={"relief": "flat", "landforms": [], "rock_soil_color": "unknown", "horizon_visible": False},
+        vegetation={"type": "unknown", "density": "unknown", "notable_species": []},
+        climate_cues={"season_guess": "unknown", "snow": False, "aridity": "unknown"},
+        built_environment={"road_markings": "unknown", "driving_side": "unknown", "utility_poles": "unknown", "architecture": "unknown", "vehicles": "unknown"},
+        text_and_signs=[],
+        sun_shadow={"shadows_visible": False, "time_of_day_guess": "unknown"},
+        water={"type": "none", "notes": ""},
+        region_guesses=[],
+        distinctive_features=[],
+        overall_confidence=0.5,
+    )
+    _, board2 = stage1.process(job_dir2, board2, vlm_override=vlm_override)
+    unconstrained_n75 = [c for c in mock_nom.calls if c["country_codes"] is None and "N-75" in c["query"]]
+    assert len(unconstrained_n75) == 0, "Short route code must not be searched globally without country gating"
+
+
+def test_landmark_country_rejection():
+    """Verify that landmark matching enforces candidate country consistency."""
+    from geolocator.pipeline.landmarks import LandmarkMatcher, LANDMARK_DATABASE
+    matcher = LandmarkMatcher()
+
+    kenya_idx = None
+    for i, lm in enumerate(LANDMARK_DATABASE):
+        if "Kenya" in lm[0]:
+            kenya_idx = i
+            break
+    assert kenya_idx is not None
+
+    class MockModelOutput:
+        def __init__(self, top_i, n_classes):
+            import torch
+            logits = torch.zeros(1, n_classes)
+            # Give Kenya top logit (prob ~ 0.86, above significant threshold but below 0.90 exception)
+            logits[0, top_i] = 7.0
+            self.logits_per_image = logits
+
+    class MockModel:
+        device = "cpu"
+        def __call__(self, **kwargs):
+            return MockModelOutput(kenya_idx, len(matcher._prompts))
+
+    class MockProc:
+        def __call__(self, **kwargs):
+            class Inputs(dict):
+                def to(self, d):
+                    return self
+            return Inputs()
+
+    im = Image.new("RGB", (224, 224), (100, 100, 100))
+    # 1. When candidate country is Pakistan, Kenya landmark MUST be rejected
+    res = matcher.match(im, MockModel(), MockProc(), candidate_countries=["Pakistan"])
+    assert res is None, "Kenya landmark must be rejected when candidate country is Pakistan"
+
+    # 2. When candidate country is Kenya, Kenya landmark is accepted
+    res_ke = matcher.match(im, MockModel(), MockProc(), candidate_countries=["Kenya"])
+    assert res_ke is not None
+    assert "Kenya" in res_ke["name"]
+
+

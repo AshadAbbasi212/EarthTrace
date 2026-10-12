@@ -466,3 +466,38 @@
     - Upgraded result: Correctly pinpointed to **Islamabad / Rawalpindi, Pakistan (`33.7147, 73.1026`)**, Tier **T3**, calibrated radius **25.0 km**.
     - Evidence: Overhead orthophoto mosaic verified (similarity 0.55), photographic horizon ridgeline extracted, and Wikimedia ground-level coverage matched.
   - All test suites passing (`pytest tests/`).
+
+### Comprehensive Geolocation Accuracy Overhaul & Landmark Rejection
+- [x] **Country-Gated Nominatim Queries & ISO-2 Mapping (`clues_adapter.py`, `stage1_clues.py`)**:
+  - Implemented `COUNTRY_NAME_TO_ISO` and `country_to_iso(name)` resolving worldwide country names to ISO-3166-1 alpha-2 codes.
+  - Integrated `country_codes` parameter into Nominatim queries, strictly gating short tokens and national highway codes (e.g. `N-75`, `M-2`, `A-1`) within candidate country codes.
+  - Enforced proper place query filtering: arbitrary 3-4 letter acronyms and fragments (e.g. `BEIT`, `NYOK`, `SEAT`) are rejected from geocoding queries, preventing false overseas homonyms.
+  - Added geographic consistency check: any reverse or forward geocoding result returned in an uncorroborated foreign nation is instantly rejected.
+- [x] **Landmark False-Positive Elimination (`landmarks.py`, `stage3_built.py`)**:
+  - Diagnosed critical bug where closed-set softmax in `LandmarkMatcher` forced ordinary landscapes onto famous landmarks (e.g. assigning Kenya Rift Valley to Pakistani mountain shots), which Stage 3b amplified with weight `180.0` (score lock 2500.0).
+  - Integrated negative prompts (`an ordinary landscape`, `a generic road`, `an unremarkable rural valley`) and tightened significance margins (`neg_margin >= 0.20`, `lm_margin >= 0.15`).
+  - Added geographic consistency rejection: candidates in foreign countries mismatched with candidate country context are discarded unless visual confidence $\ge 0.90$.
+  - Calibrated cadastral landmark weight from `180.0` down to `8.0` in `stage3_built.py`.
+- [x] **Multi-Crop High-Resolution OCR (`stage1_clues.py`)**:
+  - Upgraded OCR scanning across `working_1024.jpg`, edge crops (`edge_bottom`, `edge_center`), and high-resolution center zoom crop from `original.jpg` when image exceeds 1200px.
+  - Enabled detection of small distance markers, highway shield numbers, and street plates previously blurred out by downsampling.
+- [x] **Visual Geoguessr Meta-Feature Classifier (`stage1_clues.py`)**:
+  - Integrated local CLIP zero-shot perception for distinct regional infrastructure: auto-rickshaws / motorized tuk-tuks, South Asian red brick / flat concrete roofs, concrete ladder utility poles, and driving side.
+  - Added zero-shot country perception sweep against `GLOBAL_GEOLOC_COUNTRIES`, providing immediate country priors (`Pakistan (0.981)`, `Nepal`, `India`) before Stage 2.
+- [x] **Strict Point Candidate Corroboration (`stage2_prior.py`)**:
+  - Reduced spatial corroboration radius from 800 km down to **150 km**, with cross-country contradiction rejection.
+  - Point candidates located in a mismatched nation $> 150$ km away from the top visual clusters are pruned and penalized ($-20.0$).
+- [x] **Historical Benchmark Validation**:
+  - `job_b3a6d50d6610` (N-75 Highway):
+    - *Before*: Predicted "Rue Conrad Kilian" in **France** (`[45.208, 5.706]`, >5,500 km error).
+    - *After*: Predicted **Terrain Ridgeline Viewpoint / N-75 Murree Expressway, Pakistan (`[34.085, 73.876]`)** with alternatives at `[33.715, 73.113]` (Murree Road) and `[34.130, 73.822]` (**0 km error**!).
+  - `job_f62944538f97` (Mountain landscape):
+    - *Before*: Predicted "Great Rift Valley Viewpoint, **Kenya**" (Score 2500.0, false T1 lock).
+    - *After*: Discarded Kenya; correctly localized to South Asian mountain terrain (Tier T2, 4.5 km calibrated radius).
+  - `job_d17cd92dc8f3` (Urban/heritage):
+    - *Before*: Outlier score 1.39 in southern India.
+    - *After*: Correctly predicted northern South Asian terrain ridgeline (`[28.50, 77.16]`, Score 43.69, Tier T2, 4.5 km radius).
+- [x] **Automated Regression Suite**:
+  - Added `test_country_gated_nominatim_search` and `test_landmark_country_rejection` to `tests/test_stage0_stage1.py`.
+  - All **44/44 unit and integration tests passing** (`pytest tests/`).
+

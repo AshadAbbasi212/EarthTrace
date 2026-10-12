@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -126,7 +127,49 @@ def lookup_territory(country_name: str, continent: Optional[str] = None) -> List
 # Geoguessr Meta & Visual Clue Lookups (Scripts, TLDs, Calling Codes)
 # ---------------------------------------------------------------------------
 
-import re
+COUNTRY_NAME_TO_ISO: Dict[str, str] = {
+    "afghanistan": "af", "albania": "al", "algeria": "dz", "argentina": "ar",
+    "armenia": "am", "australia": "au", "austria": "at", "azerbaijan": "az",
+    "bahrain": "bh", "bangladesh": "bd", "belarus": "by", "belgium": "be",
+    "bolivia": "bo", "bosnia and herzegovina": "ba", "brazil": "br", "bulgaria": "bg",
+    "cambodia": "kh", "canada": "ca", "chile": "cl", "china": "cn",
+    "colombia": "co", "croatia": "hr", "cuba": "cu", "cyprus": "cy",
+    "czech republic": "cz", "czechia": "cz", "denmark": "dk", "ecuador": "ec",
+    "egypt": "eg", "estonia": "ee", "ethiopia": "et", "finland": "fi",
+    "france": "fr", "georgia": "ge", "germany": "de", "ghana": "gh",
+    "greece": "gr", "hungary": "hu", "iceland": "is", "india": "in",
+    "indonesia": "id", "iran": "ir", "iraq": "iq", "ireland": "ie",
+    "israel": "il", "italy": "it", "japan": "jp", "jordan": "jo",
+    "kazakhstan": "kz", "kenya": "ke", "kuwait": "kw", "kyrgyzstan": "kg",
+    "latvia": "lv", "lebanon": "lb", "libya": "ly", "lithuania": "lt",
+    "luxembourg": "lu", "malaysia": "my", "mexico": "mx", "mongolia": "mn",
+    "morocco": "ma", "nepal": "np", "netherlands": "nl", "new zealand": "nz",
+    "nigeria": "ng", "norway": "no", "oman": "om", "pakistan": "pk",
+    "peru": "pe", "philippines": "ph", "poland": "pl", "portugal": "pt",
+    "qatar": "qa", "romania": "ro", "russia": "ru", "saudi arabia": "sa",
+    "serbia": "rs", "singapore": "sg", "slovakia": "sk", "slovenia": "si",
+    "south africa": "za", "south korea": "kr", "korea, south": "kr", "korea": "kr",
+    "spain": "es", "sri lanka": "lk", "sweden": "se", "switzerland": "ch",
+    "taiwan": "tw", "tajikistan": "tj", "thailand": "th", "tunisia": "tn",
+    "turkey": "tr", "türkiye": "tr", "ukraine": "ua", "united arab emirates": "ae",
+    "uae": "ae", "united kingdom": "gb", "uk": "gb", "great britain": "gb",
+    "united states": "us", "usa": "us", "united states of america": "us",
+    "uzbekistan": "uz", "venezuela": "ve", "vietnam": "vn",
+}
+
+
+def country_to_iso(name: str) -> Optional[str]:
+    """Convert country name or alias to 2-letter ISO 3166-1 alpha-2 code."""
+    if not name:
+        return None
+    clean = name.strip().lower()
+    if clean in COUNTRY_NAME_TO_ISO:
+        return COUNTRY_NAME_TO_ISO[clean]
+    for k, iso in COUNTRY_NAME_TO_ISO.items():
+        if k in clean or clean in k:
+            return iso
+    return None
+
 
 CC_TLD_MAP: Dict[str, str] = {
     "de": "Germany",
@@ -207,9 +250,10 @@ COMMON_STOP_WORDS = {
     "drive", "lane", "way", "highway", "expressway", "toll", "free", "city", "center",
     "north", "south", "east", "west", "the", "and", "for", "with", "from", "service",
     "wc", "info", "information", "ticket", "tickets", "fast", "food", "express", "auto",
-    "seat", "belt", "seatbelt", "seatbeit", "nyok", "nyoi", "speed", "limit", "slow",
+    "seat", "belt", "seatbelt", "seatbeit", "beit", "nyok", "nyoi", "speed", "limit", "slow",
     "safe", "safety", "fasten", "buckle", "caution", "danger", "warning", "toll plaza",
-    "vehicle", "traffic", "rules", "fine", "penalty", "camera", "km/h", "mph",
+    "vehicle", "traffic", "rules", "fine", "penalty", "camera", "km/h", "mph", "post", "check",
+    "seat belt", "seat beit",
     "پولیس", "کنٹرول", "سب", "چائے", "ہوٹل", "روڈ", "تھانہ", "ڈویژن", "ضلع", "تحصیل", "شہر", "مرکز",
 }
 

@@ -219,6 +219,7 @@ class LandmarkMatcher:
         clip_proc: Any,
         device: Optional[str] = None,
         min_confidence: float = 0.35,
+        candidate_countries: Optional[List[str]] = None,
     ) -> Optional[Dict[str, Any]]:
         """Run batched zero-shot classification against landmark database.
         
@@ -259,12 +260,25 @@ class LandmarkMatcher:
         )
 
         # A real landmark must:
-        # 1. Substantially beat the highest negative class (neg_margin >= 0.15)
+        # 1. Substantially beat the highest negative class (neg_margin >= 0.20)
         # 2. Have clear lead over other landmarks and substantial absolute probability
-        is_significant = (top_prob >= 0.50 and neg_margin >= 0.15) or (top_prob >= 0.35 and lm_margin >= 0.12 and neg_margin >= 0.20)
+        is_significant = (top_prob >= 0.55 and neg_margin >= 0.20) or (top_prob >= 0.40 and lm_margin >= 0.15 and neg_margin >= 0.25)
 
         if not is_significant:
+            logger.info("[landmark_matcher] Match '%s' rejected (failed significance thresholds)", top_lm[1])
             return None
+
+        # Country consistency verification: Reject if candidate country is strongly known and doesn't match landmark
+        if candidate_countries:
+            lm_text = f"{top_lm[0]} {top_lm[1]}".lower()
+            norm_cand_countries = [c.strip().lower() for c in candidate_countries if c.strip()]
+            country_matched = any(c in lm_text for c in norm_cand_countries)
+            if not country_matched and top_prob < 0.90:
+                logger.info(
+                    "[landmark_matcher] Match '%s' rejected due to country mismatch with candidate countries %s (conf=%.4f < 0.90)",
+                    top_lm[1], candidate_countries, top_prob
+                )
+                return None
 
         prompt_text, canonical_name, lat, lon, category = top_lm
         if category in ("monument", "national_monument", "fortress", "unesco_world_heritage", "world_landmark", "landmark_building", "cathedral", "grand_mosque", "national_mosque", "historical_mosque", "palace", "museum", "university_campus", "hospital_complex", "civic_building", "civic_market"):

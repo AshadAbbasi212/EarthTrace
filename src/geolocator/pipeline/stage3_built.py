@@ -251,7 +251,7 @@ class Stage3Built:
                     )
                     board.add_evidence(
                         clue_id=cid_osm,
-                        candidate_weights={landmark_cand["name"]: 180.0},
+                        candidate_weights={landmark_cand["name"]: 8.0},
                         rationale=f"OpenStreetMap cadastral building geometry confirmed for {lm_name}",
                         artifact_path=str(job_dir / "osm_corridor_results.json"),
                     )
