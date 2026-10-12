@@ -44,7 +44,18 @@ class NominatimProvider(BaseProvider):
             self.__class__._last_request_time = time.time()
 
     def search(self, query: str, country_codes: Optional[str] = None, limit: int = 10) -> List[Dict[str, Any]]:
-        """Search places by text query."""
+        """Search places by text query, checking offline gazetteer first."""
+        # 1. Fast-path: Check local offline SQLite gazetteer for instant match
+        try:
+            from geolocator.data.gazetteer import query_offline_gazetteer
+            first_cc = country_codes.split(",")[0].strip() if country_codes else None
+            offline_hits = query_offline_gazetteer(query, country_iso=first_cc)
+            if offline_hits:
+                logger.info("[nominatim] Resolved '%s' via offline local gazetteer (%d hits)", query, len(offline_hits))
+                return offline_hits[:limit]
+        except Exception as e:
+            logger.debug("[nominatim] Offline gazetteer check bypass: %s", e)
+
         params = {
             "q": query,
             "format": "jsonv2",

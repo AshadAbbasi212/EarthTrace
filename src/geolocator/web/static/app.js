@@ -277,6 +277,15 @@
     passphraseInput.value = localStorage.getItem('geo_passphrase');
   }
 
+  // --- Tactical Co-Pilot Terrain Pill Toggles ---
+  document.querySelectorAll('.copilot-pill').forEach(pill => {
+    pill.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('.copilot-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+    });
+  });
+
   // --- Add Timeline Item ---
   function addTimelineItem(msg, status = 'info') {
     const item = document.createElement('div');
@@ -317,6 +326,16 @@
     const hints = hintInput.value.trim();
     if (hints) {
       formData.append('hints', hints);
+    }
+
+    const copilotExclude = document.getElementById('copilot-exclude');
+    if (copilotExclude && copilotExclude.value.trim()) {
+      formData.append('excluded_countries', copilotExclude.value.trim());
+    }
+
+    const activePill = document.querySelector('.copilot-pill.active');
+    if (activePill && activePill.dataset.terrain) {
+      formData.append('terrain_filter', activePill.dataset.terrain);
     }
 
     try {

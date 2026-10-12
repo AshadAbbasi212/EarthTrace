@@ -73,6 +73,29 @@
           <textarea id="hint-input" rows="2" placeholder="e.g. Country, season, 'near a railway bridge', 'hiking in Alps'"></textarea>
         </div>
 
+        <details class="copilot-details">
+          <summary style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--cyan); cursor: pointer; user-select: none; font-weight: 600; display: flex; align-items: center; gap: 0.4rem;">
+            <span>🎯</span> Tactical Accuracy Co-Pilot (Optional Filters)
+          </summary>
+          <div style="margin-top: 0.6rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <div>
+              <label class="input-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Terrain Bias</label>
+              <div class="terrain-pills" id="terrain-pills" style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                <button type="button" class="copilot-pill active" data-terrain="">Auto / Any</button>
+                <button type="button" class="copilot-pill" data-terrain="mountain">🏔️ Mountain</button>
+                <button type="button" class="copilot-pill" data-terrain="desert">🏜️ Desert</button>
+                <button type="button" class="copilot-pill" data-terrain="urban">🏙️ Urban</button>
+                <button type="button" class="copilot-pill" data-terrain="coast">🌊 Coast</button>
+              </div>
+            </div>
+            <div>
+              <label for="copilot-exclude" class="input-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Exclude Countries</label>
+              <input type="text" id="copilot-exclude" placeholder="e.g. India, France (comma-separated)" style="font-size: 0.8rem; padding: 0.35rem 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 4px; color: #fff; width: 100%;">
+            </div>
+          </div>
+        </details>
+
+
         <div class="input-group" id="passphrase-group" style="margin-top: 0.75rem;">
           <label for="passphrase-input" class="input-label">Passphrase (if enabled)</label>
           <input type="password" id="passphrase-input" placeholder="Access passphrase">

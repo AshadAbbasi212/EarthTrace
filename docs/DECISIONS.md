@@ -275,6 +275,32 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
   5. **Visual Meta-Feature Prompts (`stage1_clues.py`):**
      - Enriched zero-shot CLIP meta-prompts with regional architectural cues: modern Gulf glass skyscrapers, arid desert highways, Iranian adobe brick, Nile valley red-brick masonry, Turkish townscapes, and Levantine stone masonry.
 
+---
+
+## 25. Multi-Tier Accuracy Architecture: Native SQLite Gazetteer, Multi-Crop Pooling, Solar Physics, Environmental Taxonomies, Cross-View Alignment & Co-Pilot
+- **Context & Requirement:**
+  - Maximize pipeline accuracy without regression, adhering strictly to offline execution, keyless open data, and the 8 GB local VRAM budget.
+- **Problems Identified:**
+  1. **Overpass Network Flakiness:** Public OpenStreetMap Overpass mirrors occasionally returned HTTP 504 gateway timeouts when queried under high traffic.
+  2. **Crop Dilution in Visual Embeddings:** Single-image embeddings frequently diluted decisive ground textures or mountain ridges when expansive sky or vehicle hoods occupied the frame.
+  3. **Hemispheric Ambiguity:** Arid scrublands in the Southern and Northern Hemispheres (e.g. South Africa vs. Middle East) exhibited visual overlap under unconditioned CLIP scoring.
+  4. **Satellite Nadir vs. Ground View Gap:** Nadir satellite orthophotos and horizontal ground views have an intrinsic perspective mismatch when compared purely by texture.
+- **Solutions & Architectural Decisions:**
+  1. **Native Offline SQLite Transport & Settlement Gazetteer (`gazetteer.py`):**
+     - Implemented an embedded SQLite database (`gazetteer.sqlite`) pre-loaded with 100+ national routes and 150+ regional settlement anchors across the 15 priority nations and major global corridors.
+     - Hooked into `NominatimProvider.search` fast-path to deliver sub-millisecond, 100% reliable cadastral route resolution without network requests.
+  2. **Multi-Crop Spatial Prior Pooling (`stage2_prior.py`):**
+     - Extracted 3 complementary spatial crops (Full 50%, Horizon/Skyline 25%, Ground/Road 25%) and pooled predictions in batched GPU inference for StreetCLIP and GeoCLIP, ensuring both skyline and ground textures contribute to country/cell rankings.
+  3. **Solar Azimuth & Cooper Declination Check (`solar_utils.py`):**
+     - Computed solar declination from EXIF capture dates and calculated directional shadow gradient profiles to establish hemispheric consistency, applying a $-12.0$ penalty to counter-hemispheric candidates.
+  4. **Environmental Meta-Taxonomy & Vehicle Infrastructure Perception (`stage1_clues.py`):**
+     - Deployed zero-shot CLIP probes for soil types (red laterite, pale limestone, desert sand), dominant regional flora (date palms, olive groves, conifer forests), license plate geometry (yellow rear, EU blue band, commercial yellow), and curb paint styles (black/yellow, red/white), integrating directly into Bayesian candidate log-likelihood fusion.
+  5. **Cross-View Road Bearing & Orientation Alignment (`stage4_verification.py`):**
+     - Detected road vanishing axes from ground photos using probabilistic Hough transforms and compared them with overhead satellite road vector headings ($\Delta \theta \le 25^\circ$), awarding structural alignment verification bonuses.
+  6. **Interactive Tactical Co-Pilot Filters (UI & API):**
+     - Enhanced `HintParser` and the Web UI with interactive terrain selection pills and negative country exclusion filters (`"not India"` / `excluded_countries`), giving users granular control to eliminate false hypothesis branches.
+
+
 
 
 

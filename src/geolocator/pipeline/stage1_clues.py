@@ -467,7 +467,7 @@ class Stage1Clues:
                 horizon_visible = top_cat[3]
                 architecture = top_cat[4]
 
-            # Geoguessr Meta-Feature Classification (Vehicles, road infrastructure, regional architecture)
+            # Geoguessr Meta-Feature Classification (Vehicles, road infrastructure, regional architecture, soil, flora)
             meta_prompts = [
                 ("rickshaw", "an auto rickshaw, three-wheeled vehicle, or motorized tuk tuk in traffic"),
                 ("truck_art", "a brightly painted Bedford truck or commercial lorry with vibrant South Asian truck art patterns"),
@@ -479,12 +479,28 @@ class Stage1Clues:
                 ("turkish_townscape", "red clay tile pitched roofs on hillside residential apartments and minarets in Turkey"),
                 ("levantine_stone", "pale limestone clad buildings on hilly Mediterranean terrain with olive trees"),
                 ("concrete_ladder_pole", "concrete ladder utility pole with rungs and electrical wires"),
+                ("yellow_rear_plate", "a vehicle with a yellow rear license plate"),
+                ("eu_blue_strip_plate", "a white vehicle license plate with a blue vertical stripe on the left edge"),
+                ("commercial_yellow_plate", "a commercial vehicle with yellow number plate"),
+                ("yellow_road_lines", "yellow center lane lines or double yellow lines on asphalt road"),
+                ("black_yellow_curb", "concrete road curb painted with alternating black and yellow stripes"),
+                ("red_white_curb", "concrete road curb painted with alternating red and white stripes"),
+                ("wooden_utility_pole", "a wooden utility pole with crossarms along a roadside"),
+                ("red_laterite_soil", "red clay soil, red dirt road, or laterite earth"),
+                ("pale_limestone_rock", "pale limestone rock outcrop, chalky dry soil, or karst terrain"),
+                ("desert_sand", "golden desert sand dunes, light desert gravel reg, or arid sand"),
+                ("date_palm_groves", "date palm trees, desert oasis palms, or fan palms"),
+                ("olive_groves", "an olive tree grove or Mediterranean cypress trees"),
+                ("conifer_forest", "coniferous pine, spruce, or deodar cedar mountain forest"),
+                ("tropical_banyan_neem", "tropical banyan tree, neem tree, or dense lush subtropical foliage"),
             ]
             meta_texts = [m[1] for m in meta_prompts]
             meta_inputs = clip_proc(text=meta_texts, images=im, return_tensors="pt", padding=True).to(device)
             with torch.no_grad():
                 meta_out = clip_model(**meta_inputs)
                 meta_probs = meta_out.logits_per_image.softmax(dim=-1).cpu().numpy()[0]
+
+            env_meta: Dict[str, Any] = {}
 
             for m_idx, (m_key, m_desc) in enumerate(meta_prompts):
                 m_prob = float(meta_probs[m_idx])
@@ -602,6 +618,154 @@ class Stage1Clues:
                             source="clip_meta",
                             confidence=round(m_prob, 2),
                         )
+                    env_meta["pole_type"] = "concrete_ladder"
+                elif m_key == "yellow_rear_plate" and m_prob >= 0.28:
+                    if board:
+                        board.add_clue(
+                            text="Yellow rear vehicle license plate format detected",
+                            kind="license_plate",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    for c_yp in ["United Kingdom", "Israel", "Netherlands", "Cyprus"]:
+                        if c_yp not in visual_country_candidates:
+                            visual_country_candidates.append(c_yp)
+                    env_meta["plate_style"] = "yellow_rear"
+                elif m_key == "eu_blue_strip_plate" and m_prob >= 0.28:
+                    if board:
+                        board.add_clue(
+                            text="European Union standard blue-band license plate format detected",
+                            kind="license_plate",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    for c_eu in ["Germany", "France", "Italy", "Spain", "Turkey"]:
+                        if c_eu not in visual_country_candidates:
+                            visual_country_candidates.append(c_eu)
+                    env_meta["plate_style"] = "eu_blue_band"
+                elif m_key == "commercial_yellow_plate" and m_prob >= 0.28:
+                    if board:
+                        board.add_clue(
+                            text="South Asian commercial yellow license plate detected",
+                            kind="license_plate",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    for c_cyp in ["India", "Pakistan"]:
+                        if c_cyp not in visual_country_candidates:
+                            visual_country_candidates.append(c_cyp)
+                    env_meta["plate_style"] = "commercial_yellow"
+                elif m_key == "yellow_road_lines" and m_prob >= 0.28:
+                    if board:
+                        board.add_clue(
+                            text="Yellow center line road markings observed",
+                            kind="road_infrastructure",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    env_meta["road_marking"] = "yellow_center"
+                elif m_key == "black_yellow_curb" and m_prob >= 0.28:
+                    if board:
+                        board.add_clue(
+                            text="Black and yellow striped curb marking observed",
+                            kind="road_infrastructure",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    for c_by in ["Pakistan", "India", "United Kingdom"]:
+                        if c_by not in visual_country_candidates:
+                            visual_country_candidates.append(c_by)
+                    env_meta["curb_style"] = "black_yellow"
+                elif m_key == "red_laterite_soil" and m_prob >= 0.28:
+                    if board:
+                        board.add_clue(
+                            text="Red laterite clay soil / terrain observed",
+                            kind="soil_type",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    for c_ls in ["India", "Brazil", "Australia"]:
+                        if c_ls not in visual_country_candidates:
+                            visual_country_candidates.append(c_ls)
+                    env_meta["soil_type"] = "red_laterite"
+                elif m_key == "desert_sand" and m_prob >= 0.30:
+                    if board:
+                        board.add_clue(
+                            text="Arid desert sand / dunes terrain observed",
+                            kind="soil_type",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    for c_ds in ["Saudi Arabia", "United Arab Emirates", "Egypt", "Oman", "Qatar", "Kuwait"]:
+                        if c_ds not in visual_country_candidates:
+                            visual_country_candidates.append(c_ds)
+                    env_meta["soil_type"] = "desert_sand"
+                elif m_key == "date_palm_groves" and m_prob >= 0.30:
+                    if board:
+                        board.add_clue(
+                            text="Date palm trees / desert oasis grove observed",
+                            kind="flora",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    for c_dp in ["United Arab Emirates", "Saudi Arabia", "Egypt", "Oman", "Iraq", "Pakistan"]:
+                        if c_dp not in visual_country_candidates:
+                            visual_country_candidates.append(c_dp)
+                    env_meta["dominant_flora"] = "date_palm"
+                elif m_key == "olive_groves" and m_prob >= 0.30:
+                    if board:
+                        board.add_clue(
+                            text="Olive tree grove / Mediterranean vegetation observed",
+                            kind="flora",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    for c_og in ["Greece", "Italy", "Spain", "Turkey", "Israel", "Syria"]:
+                        if c_og not in visual_country_candidates:
+                            visual_country_candidates.append(c_og)
+                    env_meta["dominant_flora"] = "olive_groves"
+                elif m_key == "conifer_forest" and m_prob >= 0.30:
+                    if board:
+                        board.add_clue(
+                            text="Coniferous pine / alpine forest observed",
+                            kind="flora",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    env_meta["dominant_flora"] = "conifer_forest"
+
+            if board:
+                board.data["environmental_meta"] = env_meta
+
+            # Solar Hemispheric Latitude Estimation
+            try:
+                from geolocator.pipeline.solar_utils import estimate_solar_hemisphere
+                exif_meta = board.data.get("exif", {}) if board else {}
+                solar_res = estimate_solar_hemisphere(im, exif_data=exif_meta)
+                if board:
+                    board.data["solar_meta"] = solar_res
+                if solar_res.get("hemisphere") in ("northern", "southern") and solar_res.get("confidence", 0.0) >= 0.65:
+                    h_name = solar_res["hemisphere"].title()
+                    if board:
+                        board.add_clue(
+                            text=f"Solar / shadow geometry indicates {h_name} Hemisphere ({solar_res['reason']})",
+                            kind="solar_hemisphere",
+                            status="computed",
+                            source="solar_math",
+                            confidence=solar_res["confidence"],
+                        )
+            except Exception as e:
+                logger.debug("[stage1_solar] Solar estimation bypass: %s", e)
 
             # Direct Contour Skyline Analysis
             try:

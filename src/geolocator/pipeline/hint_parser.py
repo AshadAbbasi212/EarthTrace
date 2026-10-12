@@ -60,18 +60,36 @@ class HintParser:
                 if continent not in extracted["continents"]:
                     extracted["continents"].append(continent)
 
-        # 3. Country detection
+        # 3. Country detection (with negative exclusion awareness)
+        # Check negative phrases first: "not India", "not in France", "exclude Pakistan"
+        negative_country_matches = re.findall(
+            r"\b(?:not|exclude|except|never)\s+(?:in\s+)?([a-zA-Z\s]+?)(?:[,.]|\band\b|$)",
+            cleaned,
+        )
+        excluded_raw = [m.strip() for m in negative_country_matches]
+        extracted["excluded_countries"] = []
+
         for country in COMMON_COUNTRIES:
+            is_excluded = any(country in exc for exc in excluded_raw)
             pattern = rf"\b{re.escape(country)}\b"
             if re.search(pattern, cleaned):
-                # Standardize
                 standard_name = "United States" if country in ("usa", "united states") else (
                     "United Kingdom" if country in ("uk", "united kingdom") else country.title()
                 )
-                if standard_name not in extracted["countries"]:
-                    extracted["countries"].append(standard_name)
+                if is_excluded:
+                    if standard_name not in extracted["excluded_countries"]:
+                        extracted["excluded_countries"].append(standard_name)
+                else:
+                    if standard_name not in extracted["countries"]:
+                        extracted["countries"].append(standard_name)
 
-        # 4. Landmark indicators ("near X", "by X", "around X")
+        # 4. Terrain filter detection
+        terrain_match = re.search(r"\b(mountain|desert|urban|coast|coastal|beach|forest|farmland|rural)\b", cleaned)
+        if terrain_match:
+            t_word = terrain_match.group(1)
+            extracted["terrain_filter"] = "coast" if t_word in ("coastal", "beach") else t_word
+
+        # 5. Landmark indicators ("near X", "by X", "around X")
         landmark_matches = re.findall(r"\b(?:near|around|close to|by|at)\s+([A-Z][a-zA-Z\s]+?)(?:[,.]|\band\b|\bin\b|\bduring\b|$)", text)
         for lm in landmark_matches:
             cand = lm.strip()

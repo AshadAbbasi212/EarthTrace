@@ -158,15 +158,32 @@ class Stage2Prior:
                     if max(im.size) > 672:
                         im.thumbnail((672, 672), Image.LANCZOS)
                     
+                    w, h = im.size
                     prompts = [f"a photo taken in {c}" for c in unique_countries]
-                    inputs = processor(text=prompts, images=im, return_tensors="pt", padding=True).to(device)
+
+                    if w >= 224 and h >= 224:
+                        crop_full = im
+                        crop_horizon = im.crop((0, int(h * 0.05), w, int(h * 0.70)))
+                        crop_ground = im.crop((0, int(h * 0.40), w, h))
+                        crops = [crop_full, crop_horizon, crop_ground]
+                        weights = [0.50, 0.25, 0.25]
+                    else:
+                        crops = [im]
+                        weights = [1.0]
+
+                    inputs = processor(text=prompts, images=crops, return_tensors="pt", padding=True).to(device)
                     with torch.no_grad():
                         outputs = model(**inputs)
-                        probs = outputs.logits_per_image.softmax(dim=-1).cpu().numpy()[0]
-                    
-                    scored = {c: float(p) for c, p in zip(unique_countries, probs)}
+                        probs_mat = outputs.logits_per_image.softmax(dim=-1).cpu().numpy()
+                        # Weighted sum across crops
+                        combined_probs = np.zeros(len(unique_countries), dtype=np.float32)
+                        for cr_idx, w_cr in enumerate(weights):
+                            combined_probs += w_cr * probs_mat[cr_idx]
+                        combined_probs = combined_probs / np.sum(combined_probs)
+
+                    scored = {c: float(p) for c, p in zip(unique_countries, combined_probs)}
                     sorted_scored = dict(sorted(scored.items(), key=lambda kv: kv[1], reverse=True))
-                    logger.info("[stage2] Zero-shot geographic ranking: %s", 
+                    logger.info("[stage2] Zero-shot multi-crop geographic ranking: %s", 
                                 {k: f"{v*100:.1f}%" for k, v in list(sorted_scored.items())[:5]})
                     return sorted_scored
         except Exception as e:
@@ -194,12 +211,12 @@ class Stage2Prior:
                     w, h = im.size
 
                     if multi_crop and w >= 224 and h >= 224:
-                        # Multi-crop ensemble: full, center 80%, left 65%, right 65%
+                        # Multi-crop ensemble: full, center, horizon, and ground
                         crop_full = im
                         crop_center = im.crop((int(w * 0.1), int(h * 0.1), int(w * 0.9), int(h * 0.9)))
-                        crop_left = im.crop((0, 0, int(w * 0.65), h))
-                        crop_right = im.crop((int(w * 0.35), 0, w, h))
-                        crops = [crop_full, crop_center, crop_left, crop_right]
+                        crop_horizon = im.crop((0, int(h * 0.05), w, int(h * 0.70)))
+                        crop_ground = im.crop((0, int(h * 0.40), w, h))
+                        crops = [crop_full, crop_center, crop_horizon, crop_ground]
                     else:
                         crops = [im]
 
@@ -471,7 +488,82 @@ class Stage2Prior:
                 else:
                     meta_lr -= 3.0
 
-            combined_score = base_log_prior + climate_lr + hint_lr + driving_lr + meta_lr + reranker_lr
+            # 4b. Solar Hemispheric Likelihood Adjustment
+            solar_meta = board.data.get("solar_meta", {})
+            solar_lr = 0.0
+            if solar_meta and solar_meta.get("confidence", 0.0) >= 0.65:
+                sh = solar_meta.get("hemisphere")
+                if sh == "northern":
+                    if lat < -12.0:
+                        solar_lr = -12.0
+                    elif lat >= 15.0:
+                        solar_lr = 1.0
+                elif sh == "southern":
+                    if lat > 12.0:
+                        solar_lr = -12.0
+                    elif lat <= -15.0:
+                        solar_lr = 1.0
+
+            # 4c. Environmental Meta (Soil, Flora, Plates, Road infrastructure)
+            env_meta = board.data.get("environmental_meta", {})
+            env_lr = 0.0
+            if env_meta:
+                soil = env_meta.get("soil_type")
+                flora = env_meta.get("dominant_flora")
+                plate = env_meta.get("plate_style")
+                curb = env_meta.get("curb_style")
+
+                if soil == "red_laterite":
+                    if country in ("India", "Brazil", "Australia") or lat < 25.0:
+                        env_lr += 2.0
+                    elif lat > 45.0:
+                        env_lr -= 4.0
+                elif soil == "desert_sand":
+                    if country in ("Saudi Arabia", "United Arab Emirates", "Egypt", "Oman", "Qatar", "Kuwait"):
+                        env_lr += 2.5
+                    elif climate_info.get("group") in ("D", "E", "C"):
+                        env_lr -= 3.0
+
+                if flora == "date_palm":
+                    if country in ("United Arab Emirates", "Saudi Arabia", "Egypt", "Oman", "Iraq", "Pakistan"):
+                        env_lr += 2.0
+                    elif lat > 42.0:
+                        env_lr -= 4.0
+                elif flora == "olive_groves":
+                    if country in ("Greece", "Italy", "Spain", "Turkey", "Israel", "Syria"):
+                        env_lr += 2.5
+                    elif lat > 46.0 or lat < 20.0:
+                        env_lr -= 3.0
+
+                if curb == "black_yellow" and country in ("Pakistan", "India", "United Kingdom"):
+                    env_lr += 2.0
+                if plate == "yellow_rear" and country in ("United Kingdom", "Israel", "Netherlands", "Cyprus"):
+                    env_lr += 3.5
+                elif plate == "eu_blue_band" and country in ("Germany", "France", "Italy", "Spain", "Turkey"):
+                    env_lr += 3.0
+                elif plate == "commercial_yellow" and country in ("India", "Pakistan"):
+                    env_lr += 3.0
+
+            # 4d. Co-Pilot / User Hints Constraints (Exclusions & Terrain filters)
+            uh = board.data.get("user_hints", {})
+            excluded_countries = board.data.get("co_pilot", {}).get("excluded_countries") or uh.get("excluded_countries", [])
+            terrain_filter = board.data.get("co_pilot", {}).get("terrain_filter") or uh.get("terrain_filter")
+
+            copilot_lr = 0.0
+            if country and excluded_countries:
+                if any(ec.lower() in country.lower() for ec in excluded_countries):
+                    copilot_lr = -999.0
+
+            if terrain_filter:
+                tf = str(terrain_filter).lower()
+                if tf == "mountain" and (climate_info.get("group") == "E" or abs(lat) > 30.0):
+                    copilot_lr += 2.5
+                elif tf == "desert" and climate_info.get("group") == "B":
+                    copilot_lr += 3.0
+                elif tf == "coast" and country:
+                    copilot_lr += 1.5
+
+            combined_score = base_log_prior + climate_lr + hint_lr + driving_lr + meta_lr + reranker_lr + solar_lr + env_lr + copilot_lr
 
             scored_points.append({
                 "lat": lat,
@@ -484,6 +576,9 @@ class Stage2Prior:
                 "hint_lr": hint_lr,
                 "driving_lr": driving_lr,
                 "meta_lr": meta_lr,
+                "solar_lr": solar_lr,
+                "env_lr": env_lr,
+                "copilot_lr": copilot_lr,
                 "reranker_lr": reranker_lr,
                 "country_zero_shot_prob": country_zero_shot_probs.get(country, 0.0) if country else 0.0,
                 "anchor_name": p.get("anchor_name"),

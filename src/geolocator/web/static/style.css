@@ -1404,3 +1404,46 @@ footer {
   background: var(--cyan);
 }
 
+/* ==========================================================================
+   TACTICAL ACCURACY CO-PILOT
+   ========================================================================== */
+.copilot-details {
+  margin-top: 0.75rem;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  background: rgba(15, 23, 42, 0.45);
+  transition: all 0.2s ease;
+}
+
+.copilot-details[open] {
+  border-color: rgba(0, 240, 255, 0.45);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+}
+
+.copilot-pill {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: var(--text-muted);
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.copilot-pill:hover {
+  border-color: var(--cyan);
+  color: #fff;
+}
+
+.copilot-pill.active {
+  background: rgba(0, 240, 255, 0.15);
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+  font-weight: 600;
+}
+
+

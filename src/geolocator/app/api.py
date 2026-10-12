@@ -86,8 +86,10 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     async def submit_job(
         photo: UploadFile = File(...),
         hints: Optional[str] = Form(None),
+        excluded_countries: Optional[str] = Form(None),
+        terrain_filter: Optional[str] = Form(None),
     ):
-        """Upload photo and optional user hints, enqueueing job for processing."""
+        """Upload photo and optional user hints/co-pilot constraints, enqueueing job for processing."""
         job_id = f"job_{uuid.uuid4().hex[:12]}"
         jobs_dir = Path(cfg.storage.jobs_dir) / job_id
         jobs_dir.mkdir(parents=True, exist_ok=True)
@@ -102,16 +104,29 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
 
         photo_path.write_bytes(content)
 
+        # Compose co-pilot hint string
+        hint_parts = []
+        if hints and hints.strip():
+            hint_parts.append(hints.strip())
+        if excluded_countries and excluded_countries.strip():
+            for ec in excluded_countries.split(","):
+                ec_clean = ec.strip()
+                if ec_clean:
+                    hint_parts.append(f"exclude {ec_clean}")
+        if terrain_filter and terrain_filter.strip():
+            hint_parts.append(terrain_filter.strip())
+        combined_hints = " ".join(hint_parts) if hint_parts else None
+
         # Create record in DB
         db.create_job(
             job_id=job_id,
             photo_filename=filename,
             job_dir=jobs_dir,
-            user_hint=hints,
+            user_hint=combined_hints,
         )
 
         # Enqueue for sequential processing
-        await queue_mgr.enqueue(job_id=job_id, photo_path=photo_path, user_hint=hints)
+        await queue_mgr.enqueue(job_id=job_id, photo_path=photo_path, user_hint=combined_hints)
 
         return {
             "job_id": job_id,

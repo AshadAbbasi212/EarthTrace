@@ -13,6 +13,8 @@ build/
 .geo-cache/
 models/
 data/
+!src/geolocator/data/
+*.sqlite
 jobs/
 logs/
 eval/photos/

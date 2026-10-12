@@ -120,6 +120,71 @@ class Stage4Verification:
             logger.warning("SIFT feature matching failed: %s", e)
             return {"inliers": 0, "total_matches": 0, "match_ratio": 0.0}
 
+    def _compute_road_bearing_alignment(self, ground_img: Image.Image, sat_img: Image.Image) -> Dict[str, Any]:
+        """Compute geometric alignment between ground perspective road axis and satellite corridor heading."""
+        try:
+            g_arr = np.asarray(ground_img.convert("L"))
+            h_g, w_g = g_arr.shape
+            # Bottom 45% (road perspective)
+            road_patch = g_arr[int(h_g * 0.55):, :]
+            edges_g = cv2.Canny(road_patch, 50, 150)
+            lines_g = cv2.HoughLinesP(edges_g, 1, np.pi / 180, threshold=40, minLineLength=30, maxLineGap=10)
+
+            if lines_g is None or len(lines_g) < 2:
+                return {"aligned": False, "delta_deg": None, "boost": 0.0}
+
+            # Perspective angles relative to vertical line of sight
+            angles_g = []
+            for line in lines_g[:20]:
+                x1, y1, x2, y2 = line[0]
+                dx = x2 - x1
+                dy = y2 - y1
+                if abs(dy) > 10:
+                    ang = math.degrees(math.atan2(dx, -dy))
+                    angles_g.append(ang)
+
+            if not angles_g:
+                return {"aligned": False, "delta_deg": None, "boost": 0.0}
+
+            mean_g_ang = float(np.mean(angles_g))
+
+            # Satellite road corridors
+            s_arr = np.asarray(sat_img.convert("L"))
+            edges_s = cv2.Canny(s_arr, 60, 180)
+            lines_s = cv2.HoughLinesP(edges_s, 1, np.pi / 180, threshold=40, minLineLength=35, maxLineGap=15)
+
+            if lines_s is None or len(lines_s) < 2:
+                return {"aligned": False, "delta_deg": None, "boost": 0.0}
+
+            angles_s = []
+            for line in lines_s[:20]:
+                x1, y1, x2, y2 = line[0]
+                dx = x2 - x1
+                dy = y2 - y1
+                ang = math.degrees(math.atan2(dx, -dy)) % 180
+                angles_s.append(ang)
+
+            if not angles_s:
+                return {"aligned": False, "delta_deg": None, "boost": 0.0}
+
+            best_delta = 999.0
+            for as_ang in angles_s:
+                diff = abs((mean_g_ang % 180) - as_ang)
+                diff = min(diff, 180 - diff)
+                if diff < best_delta:
+                    best_delta = diff
+
+            aligned = best_delta <= 25.0
+            boost = 0.08 if aligned else 0.0
+            return {
+                "aligned": aligned,
+                "delta_deg": round(best_delta, 1),
+                "boost": boost,
+            }
+        except Exception as e:
+            logger.debug("[stage4] Road bearing alignment error: %s", e)
+            return {"aligned": False, "delta_deg": None, "boost": 0.0}
+
     def process(
         self,
         job_dir: Path,
@@ -178,19 +243,24 @@ class Stage4Verification:
 
         sat_sift = self._compute_sift_similarity(query_img, sat_img)
         sat_dinov2_sim = self._compute_dinov2_similarity(query_img, sat_img)
-        sift_boost = min(0.3, sat_sift["inliers"] * 0.05)
-        # Composite calibrated similarity: blend DINOv2 representation and SIFT geometry
-        sat_similarity = round(max(0.2, min(0.98, 0.70 * sat_dinov2_sim + 0.30 * 0.5 + sift_boost)), 3)
+        road_geom = self._compute_road_bearing_alignment(query_img, sat_img)
 
+        sift_boost = min(0.3, sat_sift["inliers"] * 0.05)
+        geom_boost = road_geom["boost"]
+
+        # Composite calibrated similarity: blend DINOv2 representation, SIFT geometry, and cross-view road alignment
+        sat_similarity = round(max(0.2, min(0.98, 0.70 * sat_dinov2_sim + 0.30 * 0.5 + sift_boost + geom_boost)), 3)
+
+        geom_text = f", road bearing alignment Δ={road_geom['delta_deg']}°" if road_geom.get("aligned") else ""
         cid_sat = board.add_clue(
-            text=f"Satellite verification (DINOv2 visual sim={sat_dinov2_sim:.3f}, SIFT inliers={sat_sift['inliers']})",
+            text=f"Satellite verification (DINOv2 visual sim={sat_dinov2_sim:.3f}, SIFT inliers={sat_sift['inliers']}{geom_text})",
             kind="satellite",
             status="computed",
         )
         board.add_evidence(
             clue_id=cid_sat,
             candidate_weights={cand_name: 1.6 if sat_similarity > 0.65 else (1.2 if sat_similarity > 0.50 else 0.8)},
-            rationale=f"Overhead satellite orthoimagery visual consistency via DINOv2 foundation embeddings ({sat_dinov2_sim:.3f}) and SIFT",
+            rationale=f"Overhead satellite orthoimagery visual consistency via DINOv2 foundation embeddings ({sat_dinov2_sim:.3f}), SIFT{geom_text}",
             artifact_path=str(sat_path),
         )
 

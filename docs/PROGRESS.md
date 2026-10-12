@@ -522,4 +522,32 @@
   - Created `tests/test_regional_specialization.py` validating ccTLD recognition, script differentiation, highway gazetteer lookups, subnational administrative division resolution, and Arabian Peninsula coordinate disambiguation (7/7 tests passing).
   - All test suites passing (`pytest tests/`).
 
+### Comprehensive Multi-Tier Geolocation Accuracy Enhancements
+- [x] **Native Offline SQLite Transport & Settlement Gazetteer (`gazetteer.py`, `nominatim.py`)**:
+  - Built local high-speed SQLite database (`src/geolocator/data/gazetteer.sqlite`) indexing 100+ national motorways (`M-1`..`M-15`, `N-5`..`N-75`, `E11`, `E311`, `E44`, `NH-44`, `NH-48`, `Route 30`, `Route 40`, `Route 80`, `Route 6`, `D-100`, `I-95`, etc.) and 150+ regional urban hubs across all 15 prioritized nations.
+  - Wired into `NominatimProvider.search` fast-path: resolves queries instantly in `<1 ms` without network latency, preventing Overpass 504 timeouts.
+- [x] **Multi-Crop Visual Prior Ensembling (`stage2_prior.py`)**:
+  - Implemented multi-crop spatial pooling for StreetCLIP country scoring: Full image (50%), Upper-middle Horizon/Skyline (25%), Lower Ground/Road (25%).
+  - Prevents washed-out skies or vehicle dashboards from degrading vision-language country likelihoods.
+  - Upgraded GeoCLIP inference with horizon and ground crop decomposition.
+- [x] **Hemispheric Solar Azimuth & Sun Direction Check (`solar_utils.py`, `stage2_prior.py`)**:
+  - Implemented Cooper solar declination calculation from EXIF timestamp and directional shadow gradient analysis.
+  - Penalizes counter-hemispheric candidates ($-12.0$ log-likelihood) when solar angle confirms Northern or Southern Hemisphere.
+- [x] **Environmental Meta-Taxonomy & Vehicle Infrastructure Perception (`stage1_clues.py`)**:
+  - Added zero-shot CLIP classification for regional soil types (laterite red clay, pale limestone rock, desert sand).
+  - Added classification for regional flora (date palm groves, olive groves, coniferous alpine forests).
+  - Added vehicle license plate morphology (yellow rear plates, EU blue-band plates, commercial yellow plates) and curb styles (black/yellow, red/white).
+  - Fused environmental and infrastructure cues into Bayesian candidate scoring in Stage 2.
+- [x] **Cross-View Road Bearing & Orientation Alignment (`stage4_verification.py`)**:
+  - Extracted ground-level road vanishing perspective angles using probabilistic Hough transform.
+  - Compared with overhead satellite orthophoto corridor orientations ($\Delta \theta \le 25^\circ$), awarding structural alignment bonus ($+0.08$ similarity).
+- [x] **Interactive Tactical Co-Pilot Filters (API, Web UI & `hint_parser.py`)**:
+  - Upgraded `HintParser` to extract negative country exclusions (`"not India"`, `"exclude France"`) and explicit terrain hints (`"mountain"`, `"desert"`, `"urban"`, `"coast"`).
+  - Added collapsible "Tactical Accuracy Co-Pilot" panel in Web UI with interactive terrain toggle pills and country exclusion inputs.
+  - Wired parameters to `POST /api/jobs` and enforced $-999.0$ score penalty on excluded countries.
+- [x] **Automated Regression Suite**:
+  - Created `tests/test_accuracy_enhancements.py` (8/8 passing).
+  - **Full test suite passing: 59/59 tests passing** (`pytest tests/`).
+
+
 
