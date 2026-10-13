@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import math
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 def haversine_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -85,6 +85,20 @@ COUNTRY_BBOXES: Dict[str, Tuple[float, float, float, float]] = {
     "south africa": (-34.8, 16.4, -22.1, 32.9),
     "kenya": (-4.7, 33.9, 4.6, 41.9),
     "russia": (41.2, 19.6, 81.9, 180.0),
+    # Additional global country bounding boxes
+    "jordan": (29.2, 34.9, 33.4, 39.3),
+    "czech republic": (48.5, 12.1, 51.1, 18.9),
+    "czechia": (48.5, 12.1, 51.1, 18.9),
+    "hungary": (45.7, 16.1, 48.6, 22.9),
+    "romania": (43.6, 20.2, 48.3, 29.7),
+    "bulgaria": (41.2, 22.3, 44.2, 28.6),
+    "taiwan": (21.8, 119.9, 25.3, 122.1),
+    "kazakhstan": (40.5, 46.5, 55.4, 87.3),
+    "uzbekistan": (37.1, 56.0, 45.6, 73.2),
+    "kyrgyzstan": (39.1, 69.2, 43.3, 80.3),
+    "tajikistan": (36.6, 67.3, 41.1, 75.2),
+    "nigeria": (4.2, 2.6, 13.9, 14.7),
+    "ukraine": (44.3, 22.1, 52.4, 40.2),
 }
 
 # Curated regional anchors for high-probability country hypothesis candidate synthesis
@@ -98,6 +112,8 @@ COUNTRY_ANCHORS: Dict[str, List[Dict[str, Any]]] = {
         {"name": "Patriata / New Murree", "lat": 33.8821, "lon": 73.4562, "terrain": "mountain"},
         {"name": "Bhurban Pine Valley", "lat": 33.9556, "lon": 73.4514, "terrain": "mountain"},
         {"name": "Abbottabad / Hazara Valley", "lat": 34.1688, "lon": 73.2215, "terrain": "valley"},
+        {"name": "Haripur / Hazara Margalla Foothills", "lat": 33.9942, "lon": 72.9333, "terrain": "valley"},
+        {"name": "Khanpur / Tarbela Foothills Basin", "lat": 33.8058, "lon": 72.9328, "terrain": "valley"},
         {"name": "Mansehra / Karakoram Highway", "lat": 34.3333, "lon": 73.2000, "terrain": "valley"},
         {"name": "Shogran / Siri Paye Meadows", "lat": 34.6292, "lon": 73.4903, "terrain": "mountain"},
         {"name": "Kaghan / Naran Valley", "lat": 34.9080, "lon": 73.6520, "terrain": "mountain"},
@@ -373,6 +389,16 @@ COUNTRY_ANCHORS: Dict[str, List[Dict[str, Any]]] = {
         {"name": "Toubkal / Imlil High Atlas", "lat": 31.1356, "lon": -7.9172, "terrain": "mountain"},
         {"name": "Chefchaouen Rif Mountains", "lat": 35.1716, "lon": -5.2697, "terrain": "mountain"},
         {"name": "Merzouga Sahara Erg Chebbi Dunes", "lat": 31.0992, "lon": -4.0097, "terrain": "desert"},
+        {"name": "Ouarzazate / Dades Valley South Atlas", "lat": 30.9167, "lon": -6.9167, "terrain": "desert"},
+        {"name": "Ait Benhaddou / Ksar Valley Atlas", "lat": 31.0470, "lon": -7.1317, "terrain": "mountain"},
+        {"name": "Tinghir / Todra Gorge High Atlas", "lat": 31.5147, "lon": -5.5328, "terrain": "mountain"},
+        {"name": "Zagora / Draa Valley Oasis", "lat": 30.3324, "lon": -5.8383, "terrain": "desert"},
+        {"name": "Taroudant / Souss Valley", "lat": 30.4703, "lon": -8.8770, "terrain": "valley"},
+        {"name": "Agadir / Atlantic Souss Coast", "lat": 30.4278, "lon": -9.5981, "terrain": "coast"},
+        {"name": "Fes / Saiss Basin Historic", "lat": 34.0181, "lon": -5.0078, "terrain": "urban"},
+        {"name": "Meknes / Zerhoun Foothills", "lat": 33.8938, "lon": -5.5473, "terrain": "urban"},
+        {"name": "Tangier / Strait of Gibraltar Coast", "lat": 35.7595, "lon": -5.8340, "terrain": "coast"},
+        {"name": "Rabat / Bouregreg Estuary Capital", "lat": 34.0209, "lon": -6.8416, "terrain": "coast"},
     ],
     "united kingdom": [
         {"name": "London Greater Metropolitan", "lat": 51.5074, "lon": -0.1278, "terrain": "urban"},
@@ -380,7 +406,20 @@ COUNTRY_ANCHORS: Dict[str, List[Dict[str, Any]]] = {
         {"name": "Edinburgh Scotland", "lat": 55.9533, "lon": -3.1883, "terrain": "urban"},
         {"name": "Fort William / Ben Nevis Highlands", "lat": 56.8198, "lon": -5.1052, "terrain": "mountain"},
         {"name": "Lake District / Keswick", "lat": 54.6013, "lon": -3.1361, "terrain": "mountain"},
-        {"name": "Snowdonia / Eryri Wales", "lat": 53.0685, "lon": -4.0763, "terrain": "mountain"},
+        {"name": "Snowdonia / Eryri North Wales", "lat": 53.0685, "lon": -4.0763, "terrain": "mountain"},
+        {"name": "Brecon / Bannau Brycheiniog South Wales", "lat": 51.9480, "lon": -3.3910, "terrain": "mountain"},
+        {"name": "Cardiff / South Wales Glamorgan", "lat": 51.4816, "lon": -3.1791, "terrain": "coast"},
+        {"name": "Swansea / Gower Peninsula Wales", "lat": 51.6214, "lon": -3.9436, "terrain": "coast"},
+        {"name": "Aberystwyth / Cardigan Bay West Wales", "lat": 52.4153, "lon": -4.0829, "terrain": "coast"},
+        {"name": "Bristol / Severn Estuary South West", "lat": 51.4545, "lon": -2.5879, "terrain": "urban"},
+        {"name": "Exeter / Devon South West", "lat": 50.7184, "lon": -3.5339, "terrain": "valley"},
+        {"name": "Truro / Cornwall South West", "lat": 50.2632, "lon": -5.0510, "terrain": "coast"},
+        {"name": "Birmingham / West Midlands Hub", "lat": 52.4862, "lon": -1.8904, "terrain": "urban"},
+        {"name": "Leeds / West Yorkshire Valley", "lat": 53.8008, "lon": -1.5491, "terrain": "urban"},
+        {"name": "Newcastle upon Tyne / North East", "lat": 54.9783, "lon": -1.6178, "terrain": "coast"},
+        {"name": "Glasgow / Clyde Valley Scotland", "lat": 55.8642, "lon": -4.2518, "terrain": "urban"},
+        {"name": "Inverness / Scottish Highlands", "lat": 57.4778, "lon": -4.2247, "terrain": "mountain"},
+        {"name": "Belfast / Northern Ireland Antrim", "lat": 54.5973, "lon": -5.9301, "terrain": "coast"},
     ],
     "france": [
         {"name": "Paris Île-de-France", "lat": 48.8566, "lon": 2.3522, "terrain": "urban"},
@@ -420,10 +459,23 @@ COUNTRY_ANCHORS: Dict[str, List[Dict[str, Any]]] = {
         {"name": "Sicily / Mount Etna", "lat": 37.7510, "lon": 14.9934, "terrain": "mountain"},
     ],
     "spain": [
+        {"name": "Moros / Calatayud / Manubles Valley Aragon", "lat": 41.4000, "lon": -1.8167, "terrain": "mountain"},
+        {"name": "Calatayud / Jiloca Valley Aragon", "lat": 41.3533, "lon": -1.6432, "terrain": "valley"},
+        {"name": "Zaragoza / Ebro River Valley Aragon", "lat": 41.6488, "lon": -0.8891, "terrain": "urban"},
+        {"name": "Teruel / Southern Aragon Highlands", "lat": 40.3456, "lon": -1.1072, "terrain": "mountain"},
+        {"name": "Huesca / Pyrenees Foothills Aragon", "lat": 42.1361, "lon": -0.4087, "terrain": "mountain"},
+        {"name": "Pyrenees / Huesca High Peaks", "lat": 42.5000, "lon": 0.0500, "terrain": "mountain"},
         {"name": "Madrid Central Meseta", "lat": 40.4168, "lon": -3.7038, "terrain": "urban"},
-        {"name": "Barcelona Catalonia", "lat": 41.3851, "lon": 2.1734, "terrain": "coast"},
+        {"name": "Barcelona Catalonia Coast", "lat": 41.3851, "lon": 2.1734, "terrain": "coast"},
+        {"name": "Valencia / Levantine Coast", "lat": 39.4699, "lon": -0.3763, "terrain": "coast"},
+        {"name": "Seville / Guadalquivir Basin Andalusia", "lat": 37.3891, "lon": -5.9845, "terrain": "urban"},
+        {"name": "Cordoba / Sierra Morena Andalusia", "lat": 37.8882, "lon": -4.7794, "terrain": "valley"},
         {"name": "Sierra Nevada / Granada Peaks", "lat": 37.0931, "lon": -3.3931, "terrain": "mountain"},
-        {"name": "Pyrenees / Huesca", "lat": 42.5000, "lon": 0.0500, "terrain": "mountain"},
+        {"name": "Malaga / Costa del Sol Andalusia", "lat": 36.7213, "lon": -4.4214, "terrain": "coast"},
+        {"name": "Bilbao / Basque Country Coast", "lat": 43.2630, "lon": -2.9350, "terrain": "coast"},
+        {"name": "Santiago de Compostela / Galicia", "lat": 42.8782, "lon": -8.5448, "terrain": "mountain"},
+        {"name": "Valladolid / Castile and Leon Meseta", "lat": 41.6523, "lon": -4.7245, "terrain": "plateau"},
+        {"name": "Toledo / Tagus Gorge Central", "lat": 39.8628, "lon": -4.0273, "terrain": "urban"},
         {"name": "Tenerife / Mount Teide", "lat": 28.2723, "lon": -16.6425, "terrain": "mountain"},
     ],
     "norway": [
@@ -437,11 +489,31 @@ COUNTRY_ANCHORS: Dict[str, List[Dict[str, Any]]] = {
         {"name": "New York Metropolitan", "lat": 40.7128, "lon": -74.0060, "terrain": "urban"},
         {"name": "Los Angeles Coastal Plain", "lat": 34.0522, "lon": -118.2437, "terrain": "coast"},
         {"name": "Chicago Great Lakes", "lat": 41.8781, "lon": -87.6298, "terrain": "urban"},
+        {"name": "Datil / Plains of San Agustin / Catron NM", "lat": 34.1422, "lon": -107.8425, "terrain": "desert"},
+        {"name": "Socorro / Chihuahuan Desert NM", "lat": 34.0584, "lon": -106.8914, "terrain": "desert"},
+        {"name": "Albuquerque / Rio Grande Valley NM", "lat": 35.0844, "lon": -106.6504, "terrain": "plateau"},
+        {"name": "Santa Fe / Sangre de Cristo Hills NM", "lat": 35.6870, "lon": -105.9378, "terrain": "mountain"},
+        {"name": "Phoenix / Sonoran Desert AZ", "lat": 33.4484, "lon": -112.0740, "terrain": "desert"},
+        {"name": "Flagstaff / Coconino Plateau AZ", "lat": 35.1983, "lon": -111.6513, "terrain": "mountain"},
+        {"name": "Tucson / Santa Catalina Foothills AZ", "lat": 32.2226, "lon": -110.9747, "terrain": "desert"},
         {"name": "Denver / Colorado Rockies", "lat": 39.7392, "lon": -104.9903, "terrain": "mountain"},
         {"name": "Aspen / Rocky Mountains", "lat": 39.1911, "lon": -106.8175, "terrain": "mountain"},
+        {"name": "Moab / Utah Red Rock Canyons", "lat": 38.5733, "lon": -109.5498, "terrain": "desert"},
+        {"name": "Salt Lake City / Wasatch Front UT", "lat": 40.7608, "lon": -111.8910, "terrain": "mountain"},
+        {"name": "Las Vegas / Mojave Desert NV", "lat": 36.1699, "lon": -115.1398, "terrain": "desert"},
+        {"name": "El Paso / Franklin Mountains TX", "lat": 31.7619, "lon": -106.4850, "terrain": "desert"},
+        {"name": "Dallas-Fort Worth North Texas", "lat": 32.7767, "lon": -96.7970, "terrain": "urban"},
+        {"name": "Houston Gulf Coast TX", "lat": 29.7604, "lon": -95.3698, "terrain": "coast"},
+        {"name": "Austin / Texas Hill Country", "lat": 30.2672, "lon": -97.7431, "terrain": "plateau"},
+        {"name": "San Francisco Bay Area CA", "lat": 37.7749, "lon": -122.4194, "terrain": "coast"},
         {"name": "Yosemite / Sierra Nevada", "lat": 37.8651, "lon": -119.5383, "terrain": "mountain"},
         {"name": "Seattle / Mount Rainier", "lat": 47.6062, "lon": -122.3321, "terrain": "mountain"},
-        {"name": "Moab / Utah Red Rock Canyons", "lat": 38.5733, "lon": -109.5498, "terrain": "desert"},
+        {"name": "Portland / Willamette Valley OR", "lat": 45.5152, "lon": -122.6784, "terrain": "valley"},
+        {"name": "Boise / Snake River Plain ID", "lat": 43.6150, "lon": -116.2023, "terrain": "plateau"},
+        {"name": "Billings / Yellowstone Basin MT", "lat": 45.7833, "lon": -108.5007, "terrain": "plateau"},
+        {"name": "Atlanta / Piedmont Plateau GA", "lat": 33.7490, "lon": -84.3880, "terrain": "urban"},
+        {"name": "Miami / South Florida Coast", "lat": 25.7617, "lon": -80.1918, "terrain": "coast"},
+        {"name": "Minneapolis / Upper Midwest MN", "lat": 44.9778, "lon": -93.2650, "terrain": "urban"},
     ],
     "canada": [
         {"name": "Toronto Metropolitan", "lat": 43.6532, "lon": -79.3832, "terrain": "urban"},
@@ -452,11 +524,24 @@ COUNTRY_ANCHORS: Dict[str, List[Dict[str, Any]]] = {
         {"name": "Calgary Foothills", "lat": 51.0447, "lon": -114.0719, "terrain": "plateau"},
     ],
     "japan": [
+        {"name": "Aobe / Oi River Valley / Kawanehon Shizuoka", "lat": 35.0894, "lon": 138.1156, "terrain": "mountain"},
+        {"name": "Shizuoka / Suruga Bay Coast", "lat": 34.9756, "lon": 138.3828, "terrain": "coast"},
+        {"name": "Hamamatsu / Lake Hamana Tokaido", "lat": 34.7108, "lon": 137.7261, "terrain": "coast"},
+        {"name": "Nagoya / Nobi Plain Chubu", "lat": 35.1815, "lon": 136.9066, "terrain": "urban"},
         {"name": "Tokyo Kanto Plain", "lat": 35.6762, "lon": 139.6503, "terrain": "urban"},
+        {"name": "Yokohama / Kanagawa Harbor", "lat": 35.4437, "lon": 139.6380, "terrain": "coast"},
         {"name": "Mount Fuji / Hakone Ridge", "lat": 35.3606, "lon": 138.7274, "terrain": "mountain"},
         {"name": "Nagano / Japanese Alps", "lat": 36.6513, "lon": 138.1810, "terrain": "mountain"},
-        {"name": "Sapporo / Hokkaido", "lat": 43.0618, "lon": 141.3545, "terrain": "mountain"},
         {"name": "Kyoto Kansai Basin", "lat": 35.0116, "lon": 135.7681, "terrain": "valley"},
+        {"name": "Osaka / Kansai Basin", "lat": 34.6937, "lon": 135.5023, "terrain": "urban"},
+        {"name": "Kobe / Rokko Mountains Hyogo", "lat": 34.6901, "lon": 135.1955, "terrain": "coast"},
+        {"name": "Hiroshima / Seto Inland Sea", "lat": 34.3853, "lon": 132.4553, "terrain": "coast"},
+        {"name": "Fukuoka / Northern Kyushu", "lat": 33.5904, "lon": 130.4017, "terrain": "coast"},
+        {"name": "Kagoshima / Sakurajima Volcano", "lat": 31.5966, "lon": 130.5571, "terrain": "mountain"},
+        {"name": "Sendai / Tohoku Miyagi", "lat": 38.2682, "lon": 140.8694, "terrain": "valley"},
+        {"name": "Aomori / Tsugaru Peninsula", "lat": 40.8222, "lon": 140.7474, "terrain": "coast"},
+        {"name": "Sapporo / Hokkaido", "lat": 43.0618, "lon": 141.3545, "terrain": "mountain"},
+        {"name": "Matsuyama / Shikoku Inland Sea", "lat": 33.8392, "lon": 132.7656, "terrain": "coast"},
     ],
     "china": [
         {"name": "Beijing North China Plain", "lat": 39.9042, "lon": 116.4074, "terrain": "urban"},
@@ -467,11 +552,30 @@ COUNTRY_ANCHORS: Dict[str, List[Dict[str, Any]]] = {
         {"name": "Zhangjiajie Sandstone Pillars", "lat": 29.1306, "lon": 110.4789, "terrain": "mountain"},
     ],
     "australia": [
+        {"name": "Narrabri / Namoi Valley Inland NSW", "lat": -30.3167, "lon": 149.7667, "terrain": "valley"},
+        {"name": "Tamworth / New England NSW", "lat": -31.0927, "lon": 150.9320, "terrain": "valley"},
+        {"name": "Dubbo / Central West Plains NSW", "lat": -32.2569, "lon": 148.6011, "terrain": "valley"},
+        {"name": "Wagga Wagga / Riverina NSW", "lat": -35.1082, "lon": 147.3598, "terrain": "valley"},
+        {"name": "Armidale / Northern Tablelands NSW", "lat": -30.5016, "lon": 151.6662, "terrain": "mountain"},
         {"name": "Sydney Coastal Basin", "lat": -33.8688, "lon": 151.2093, "terrain": "coast"},
+        {"name": "Blue Mountains / Katoomba", "lat": -33.7150, "lon": 150.3119, "terrain": "mountain"},
+        {"name": "Newcastle / Hunter Coast NSW", "lat": -32.9283, "lon": 151.7817, "terrain": "coast"},
+        {"name": "Canberra / Capital Territory ACT", "lat": -35.2809, "lon": 149.1300, "terrain": "valley"},
         {"name": "Melbourne Port Phillip", "lat": -37.8136, "lon": 144.9631, "terrain": "coast"},
         {"name": "Jindabyne / Mount Kosciuszko", "lat": -36.4167, "lon": 148.6167, "terrain": "mountain"},
-        {"name": "Blue Mountains / Katoomba", "lat": -33.7150, "lon": 150.3119, "terrain": "mountain"},
+        {"name": "Brisbane / Moreton Bay QLD", "lat": -27.4698, "lon": 153.0251, "terrain": "coast"},
+        {"name": "Toowoomba / Darling Downs QLD", "lat": -27.5598, "lon": 151.9507, "terrain": "plateau"},
+        {"name": "Rockhampton / Capricorn Coast QLD", "lat": -23.3791, "lon": 150.5100, "terrain": "coast"},
+        {"name": "Townsville / North Queensland", "lat": -19.2590, "lon": 146.8169, "terrain": "coast"},
+        {"name": "Cairns / Tropical North QLD", "lat": -16.9186, "lon": 145.7781, "terrain": "coast"},
+        {"name": "Adelaide / Mount Lofty Ranges SA", "lat": -34.9285, "lon": 138.6007, "terrain": "coast"},
+        {"name": "Perth / Swan Coastal Plain WA", "lat": -31.9505, "lon": 115.8605, "terrain": "coast"},
+        {"name": "Kalgoorlie / Goldfields WA", "lat": -30.7489, "lon": 121.4658, "terrain": "desert"},
+        {"name": "Broome / Kimberley Coast WA", "lat": -17.9614, "lon": 122.2359, "terrain": "coast"},
+        {"name": "Darwin / Top End NT", "lat": -12.4634, "lon": 130.8456, "terrain": "coast"},
+        {"name": "Alice Springs / Red Centre NT", "lat": -23.6980, "lon": 133.8807, "terrain": "desert"},
         {"name": "Uluru Red Center Outback", "lat": -25.3444, "lon": 131.0369, "terrain": "desert"},
+        {"name": "Hobart / Mount Wellington TAS", "lat": -42.8821, "lon": 147.3272, "terrain": "mountain"},
     ],
     "new zealand": [
         {"name": "Auckland Harbor", "lat": -36.8485, "lon": 174.7633, "terrain": "coast"},
@@ -502,6 +606,104 @@ COUNTRY_ANCHORS: Dict[str, List[Dict[str, Any]]] = {
         {"name": "Kiruna Arctic / Abisko", "lat": 67.8558, "lon": 20.2253, "terrain": "mountain"},
         {"name": "Malmo Southern Plain", "lat": 55.6050, "lon": 13.0038, "terrain": "urban"},
     ],
+    "finland": [
+        {"name": "Somero / Hame Foothills / Southwest Finland", "lat": 60.6333, "lon": 23.5167, "terrain": "valley"},
+        {"name": "Turku / Southwest Archipelago", "lat": 60.4518, "lon": 22.2666, "terrain": "coast"},
+        {"name": "Helsinki / Capital Uusimaa", "lat": 60.1699, "lon": 24.9384, "terrain": "coast"},
+        {"name": "Espoo / Nuuksio Lakes", "lat": 60.2052, "lon": 24.6522, "terrain": "valley"},
+        {"name": "Tampere / Pirkanmaa Lakes", "lat": 61.4978, "lon": 23.7610, "terrain": "valley"},
+        {"name": "Lahti / Salpausselka Ridge", "lat": 60.9827, "lon": 25.6612, "terrain": "mountain"},
+        {"name": "Pori / Satakunta West Coast", "lat": 61.4851, "lon": 21.7974, "terrain": "coast"},
+        {"name": "Vaasa / Ostrobothnia Gulf of Bothnia", "lat": 63.0951, "lon": 21.6165, "terrain": "coast"},
+        {"name": "Jyvaskyla / Central Finland Lakes", "lat": 62.2426, "lon": 25.7473, "terrain": "valley"},
+        {"name": "Kuopio / North Savo Lakes", "lat": 62.8924, "lon": 27.6770, "terrain": "valley"},
+        {"name": "Joensuu / North Karelia", "lat": 62.6010, "lon": 29.7636, "terrain": "valley"},
+        {"name": "Oulu / Northern Ostrobothnia Coast", "lat": 65.0121, "lon": 25.4651, "terrain": "coast"},
+        {"name": "Rovaniemi / Lapland Gateway", "lat": 66.5039, "lon": 25.7294, "terrain": "mountain"},
+        {"name": "Inari / Northern Lapland Tundra", "lat": 68.9056, "lon": 27.0289, "terrain": "mountain"},
+    ],
+    "ireland": [
+        {"name": "Dublin Capital / East Coast", "lat": 53.3498, "lon": -6.2603, "terrain": "coast"},
+        {"name": "Cork / South Coast Port", "lat": 51.8985, "lon": -8.4756, "terrain": "coast"},
+        {"name": "Galway / West Atlantic Coast", "lat": 53.2707, "lon": -9.0568, "terrain": "coast"},
+        {"name": "Killarney / MacGillycuddy Reeks Kerry", "lat": 52.0599, "lon": -9.5044, "terrain": "mountain"},
+        {"name": "Donegal / Wild Atlantic Way", "lat": 54.6549, "lon": -8.1105, "terrain": "mountain"},
+        {"name": "Limerick / Shannon Basin", "lat": 52.6638, "lon": -8.6267, "terrain": "valley"},
+    ],
+    "poland": [
+        {"name": "Warsaw / Mazovia Vistula", "lat": 52.2297, "lon": 21.0122, "terrain": "urban"},
+        {"name": "Krakow / Southern Vistula Historic", "lat": 50.0647, "lon": 19.9450, "terrain": "urban"},
+        {"name": "Zakopane / High Tatra Mountains", "lat": 49.2992, "lon": 19.9496, "terrain": "mountain"},
+        {"name": "Wroclaw / Lower Silesia Oder", "lat": 51.1079, "lon": 17.0385, "terrain": "urban"},
+        {"name": "Gdansk / Baltic Coast Pomerania", "lat": 54.3520, "lon": 18.6466, "terrain": "coast"},
+        {"name": "Poznan / Greater Poland Warta", "lat": 52.4064, "lon": 16.9252, "terrain": "urban"},
+        {"name": "Bialystok / Podlasie East", "lat": 53.1325, "lon": 23.1688, "terrain": "valley"},
+        {"name": "Bieszczady / Southeastern Mountains", "lat": 49.2789, "lon": 22.5694, "terrain": "mountain"},
+    ],
+    "czech republic": [
+        {"name": "Prague / Vltava Basin Capital", "lat": 50.0755, "lon": 14.4378, "terrain": "urban"},
+        {"name": "Brno / South Moravian Basin", "lat": 49.1951, "lon": 16.6068, "terrain": "valley"},
+        {"name": "Ostrava / Silesian Beskids", "lat": 49.8209, "lon": 18.2625, "terrain": "urban"},
+        {"name": "Krkonose / Snezka Alpine Peak", "lat": 50.7360, "lon": 15.7397, "terrain": "mountain"},
+        {"name": "Cesky Krumlov / South Bohemian Hills", "lat": 48.8127, "lon": 14.3175, "terrain": "valley"},
+        {"name": "Plzen / Western Bohemia", "lat": 49.7384, "lon": 13.3736, "terrain": "valley"},
+    ],
+    "czechia": [
+        {"name": "Prague / Vltava Basin Capital", "lat": 50.0755, "lon": 14.4378, "terrain": "urban"},
+        {"name": "Brno / South Moravian Basin", "lat": 49.1951, "lon": 16.6068, "terrain": "valley"},
+        {"name": "Krkonose / Snezka Alpine Peak", "lat": 50.7360, "lon": 15.7397, "terrain": "mountain"},
+    ],
+    "netherlands": [
+        {"name": "Amsterdam / North Holland Polder", "lat": 52.3676, "lon": 4.9041, "terrain": "coast"},
+        {"name": "Rotterdam / Rhine-Meuse Delta", "lat": 51.9244, "lon": 4.4777, "terrain": "coast"},
+        {"name": "Utrecht / Central Lowlands", "lat": 52.0907, "lon": 5.1214, "terrain": "urban"},
+        {"name": "Groningen / Northern Plains", "lat": 53.2194, "lon": 6.5665, "terrain": "valley"},
+        {"name": "Maastricht / Limburg Southern Hills", "lat": 50.8514, "lon": 5.6910, "terrain": "valley"},
+        {"name": "Eindhoven / North Brabant", "lat": 51.4416, "lon": 5.4697, "terrain": "urban"},
+    ],
+    "belgium": [
+        {"name": "Brussels / Central Brabant", "lat": 50.8503, "lon": 4.3517, "terrain": "urban"},
+        {"name": "Antwerp / Scheldt Port", "lat": 51.2194, "lon": 4.4025, "terrain": "coast"},
+        {"name": "Ghent / Flanders Lowlands", "lat": 51.0543, "lon": 3.7174, "terrain": "valley"},
+        {"name": "Bruges / Coastal Flanders", "lat": 51.2093, "lon": 3.2247, "terrain": "coast"},
+        {"name": "Liege / Meuse Valley", "lat": 50.6326, "lon": 5.5797, "terrain": "valley"},
+        {"name": "Ardennes / Dinant Highlands", "lat": 50.2611, "lon": 4.9122, "terrain": "mountain"},
+    ],
+    "denmark": [
+        {"name": "Copenhagen / Zealand Coast", "lat": 55.6761, "lon": 12.5683, "terrain": "coast"},
+        {"name": "Aarhus / Jutland East Coast", "lat": 56.1629, "lon": 10.2039, "terrain": "coast"},
+        {"name": "Odense / Funen Island", "lat": 55.4038, "lon": 10.4024, "terrain": "valley"},
+        {"name": "Aalborg / Limfjord Northern Jutland", "lat": 57.0488, "lon": 9.9217, "terrain": "coast"},
+    ],
+    "hungary": [
+        {"name": "Budapest / Danube Basin Capital", "lat": 47.4979, "lon": 19.0402, "terrain": "urban"},
+        {"name": "Debrecen / Great Hungarian Plain", "lat": 47.5316, "lon": 21.6273, "terrain": "plateau"},
+        {"name": "Szeged / Southern Tisza Plain", "lat": 46.2530, "lon": 20.1414, "terrain": "valley"},
+        {"name": "Pecs / Mecsek Hills", "lat": 46.0727, "lon": 18.2323, "terrain": "mountain"},
+        {"name": "Balaton / Lake Highland", "lat": 46.8400, "lon": 17.7400, "terrain": "valley"},
+    ],
+    "romania": [
+        {"name": "Bucharest / Wallachian Plain", "lat": 44.4268, "lon": 26.1025, "terrain": "urban"},
+        {"name": "Cluj-Napoca / Transylvania Plateau", "lat": 46.7712, "lon": 23.6236, "terrain": "plateau"},
+        {"name": "Brasov / Carpathian Mountains", "lat": 45.6580, "lon": 25.6012, "terrain": "mountain"},
+        {"name": "Sibiu / Transylvanian Alps", "lat": 45.7983, "lon": 24.1256, "terrain": "mountain"},
+        {"name": "Iasi / Moldavia Hills", "lat": 47.1585, "lon": 27.6014, "terrain": "valley"},
+        {"name": "Constanta / Black Sea Coast", "lat": 44.1792, "lon": 28.6498, "terrain": "coast"},
+    ],
+    "bulgaria": [
+        {"name": "Sofia / Vitosha Mountain Foothills", "lat": 42.6977, "lon": 23.3219, "terrain": "mountain"},
+        {"name": "Plovdiv / Thracian Plain", "lat": 42.1354, "lon": 24.7453, "terrain": "valley"},
+        {"name": "Varna / Black Sea North Coast", "lat": 43.2141, "lon": 27.9147, "terrain": "coast"},
+        {"name": "Bansko / Pirin Alpine Peaks", "lat": 41.8383, "lon": 23.4885, "terrain": "mountain"},
+        {"name": "Veliko Tarnovo / Balkan Mountains", "lat": 43.0757, "lon": 25.6172, "terrain": "mountain"},
+    ],
+    "ukraine": [
+        {"name": "Kyiv / Dnieper River Basin", "lat": 50.4501, "lon": 30.5234, "terrain": "urban"},
+        {"name": "Lviv / Carpathian Foothills", "lat": 49.8397, "lon": 24.0297, "terrain": "valley"},
+        {"name": "Yaremche / Carpathian Mountains", "lat": 48.4594, "lon": 24.5574, "terrain": "mountain"},
+        {"name": "Odesa / Black Sea Coast Port", "lat": 46.4825, "lon": 30.7233, "terrain": "coast"},
+        {"name": "Kharkiv / Northeastern Plains", "lat": 49.9935, "lon": 36.2304, "terrain": "urban"},
+    ],
     "iceland": [
         {"name": "Reykjavik Coastal Capital", "lat": 64.1466, "lon": -21.9426, "terrain": "coast"},
         {"name": "Akureyri Northern Fjord", "lat": 65.6835, "lon": -18.1059, "terrain": "coast"},
@@ -510,12 +712,27 @@ COUNTRY_ANCHORS: Dict[str, List[Dict[str, Any]]] = {
         {"name": "Landmannalaugar Highlands", "lat": 63.9908, "lon": -19.0608, "terrain": "mountain"},
     ],
     "brazil": [
-        {"name": "Rio de Janeiro Guanabara Bay", "lat": -22.9068, "lon": -43.1729, "terrain": "coast"},
+        {"name": "Pirai do Sul / Pirai River / Campos Gerais PR", "lat": -24.7500, "lon": -50.0833, "terrain": "valley"},
+        {"name": "Ponta Grossa / Campos Gerais Parana", "lat": -25.0945, "lon": -50.1633, "terrain": "plateau"},
+        {"name": "Curitiba / Parana Highland Capital", "lat": -25.4284, "lon": -49.2733, "terrain": "plateau"},
+        {"name": "Foz do Iguacu / Parana Border", "lat": -25.5163, "lon": -54.5854, "terrain": "valley"},
+        {"name": "Londrina / Northern Parana", "lat": -23.3045, "lon": -51.1696, "terrain": "plateau"},
+        {"name": "Florianopolis / Santa Catarina Coast", "lat": -27.5954, "lon": -48.5480, "terrain": "coast"},
+        {"name": "Porto Alegre / Rio Grande do Sul", "lat": -30.0346, "lon": -51.2177, "terrain": "coast"},
+        {"name": "Caxias do Sul / Serra Gaucha RS", "lat": -29.1678, "lon": -51.1794, "terrain": "mountain"},
         {"name": "Sao Paulo Metropolitan", "lat": -23.5505, "lon": -46.6333, "terrain": "urban"},
+        {"name": "Campinas / Sao Paulo Interior", "lat": -22.9099, "lon": -47.0626, "terrain": "urban"},
+        {"name": "Rio de Janeiro Guanabara Bay", "lat": -22.9068, "lon": -43.1729, "terrain": "coast"},
         {"name": "Serra dos Orgaos / Petropolis", "lat": -22.4961, "lon": -43.0569, "terrain": "mountain"},
-        {"name": "Salvador Bahia Coast", "lat": -12.9777, "lon": -38.5016, "terrain": "coast"},
+        {"name": "Belo Horizonte / Minas Gerais Central", "lat": -19.9167, "lon": -43.9345, "terrain": "mountain"},
+        {"name": "Ouro Preto / Serra do Espinhaco MG", "lat": -20.3856, "lon": -43.5035, "terrain": "mountain"},
         {"name": "Brasilia Central Plateau", "lat": -15.7975, "lon": -47.8919, "terrain": "plateau"},
+        {"name": "Goiania / Goias Central Plateau", "lat": -16.6869, "lon": -49.2648, "terrain": "plateau"},
+        {"name": "Salvador Bahia Coast", "lat": -12.9777, "lon": -38.5016, "terrain": "coast"},
+        {"name": "Recife / Pernambuco Atlantic Coast", "lat": -8.0476, "lon": -34.8770, "terrain": "coast"},
+        {"name": "Fortaleza / Ceara Coast", "lat": -3.7172, "lon": -38.5433, "terrain": "coast"},
         {"name": "Manaus Amazon Basin", "lat": -3.1190, "lon": -60.0217, "terrain": "valley"},
+        {"name": "Cuiaba / Pantanal Gateway MT", "lat": -15.6014, "lon": -56.0979, "terrain": "valley"},
     ],
     "mexico": [
         {"name": "Mexico City Valley", "lat": 19.4326, "lon": -99.1332, "terrain": "valley"},
@@ -561,10 +778,18 @@ COUNTRY_ANCHORS: Dict[str, List[Dict[str, Any]]] = {
         {"name": "Kruger Lowveld Savanna", "lat": -24.0116, "lon": 31.4859, "terrain": "valley"},
     ],
     "kenya": [
-        {"name": "Nairobi Central Highlands", "lat": -1.2921, "lon": 36.8219, "terrain": "plateau"},
+        {"name": "Nanyuki / Mount Kenya Northwest Foothills", "lat": 0.0167, "lon": 37.0667, "terrain": "plateau"},
         {"name": "Mount Kenya Alpine Peak", "lat": -0.1521, "lon": 37.3084, "terrain": "mountain"},
-        {"name": "Mombasa Swahili Coast", "lat": -4.0435, "lon": 39.6682, "terrain": "coast"},
+        {"name": "Nairobi Central Highlands", "lat": -1.2921, "lon": 36.8219, "terrain": "plateau"},
+        {"name": "Nyeri / Central Highlands Foothills", "lat": -0.4197, "lon": 36.9511, "terrain": "mountain"},
         {"name": "Nakuru Great Rift Valley", "lat": -0.3031, "lon": 36.0800, "terrain": "valley"},
+        {"name": "Eldoret / Uasin Gishu Highland Plateau", "lat": 0.5143, "lon": 35.2698, "terrain": "plateau"},
+        {"name": "Kisumu / Lake Victoria Coast", "lat": -0.0917, "lon": 34.7680, "terrain": "coast"},
+        {"name": "Mombasa Swahili Coast", "lat": -4.0435, "lon": 39.6682, "terrain": "coast"},
+        {"name": "Naivasha / Great Rift Valley Lake", "lat": -0.7172, "lon": 36.4310, "terrain": "valley"},
+        {"name": "Marsabit / Northern Desert Oasis", "lat": 2.3284, "lon": 37.9899, "terrain": "desert"},
+        {"name": "Lodwar / Lake Turkana Basin", "lat": 3.1191, "lon": 35.5973, "terrain": "desert"},
+        {"name": "Voi / Tsavo Savanna Corridor", "lat": -3.3967, "lon": 38.5564, "terrain": "valley"},
     ],
     "indonesia": [
         {"name": "Jakarta Java Basin", "lat": -6.2088, "lon": 106.8456, "terrain": "urban"},
@@ -603,6 +828,91 @@ COUNTRY_ANCHORS: Dict[str, List[Dict[str, Any]]] = {
         {"name": "Altai Mountains / Belukha", "lat": 49.8000, "lon": 86.5833, "terrain": "mountain"},
         {"name": "Kamchatka Volcanoes / Petropavlovsk", "lat": 53.0167, "lon": 158.6500, "terrain": "mountain"},
     ],
+    "algeria": [
+        {"name": "Algiers / Mediterranean Bay Capital", "lat": 36.7538, "lon": 3.0588, "terrain": "coast"},
+        {"name": "Oran / Western Coast", "lat": 35.6987, "lon": -0.6349, "terrain": "coast"},
+        {"name": "Constantine / Rhumel River Gorges", "lat": 36.3650, "lon": 6.6147, "terrain": "mountain"},
+        {"name": "Annaba / Eastern Mediterranean Coast", "lat": 36.9000, "lon": 7.7667, "terrain": "coast"},
+        {"name": "Ghardaia / M'Zab Valley Sahara", "lat": 32.4900, "lon": 3.6739, "terrain": "desert"},
+        {"name": "Tamanrasset / Hoggar Mountains", "lat": 22.7850, "lon": 5.5228, "terrain": "mountain"},
+    ],
+    "tunisia": [
+        {"name": "Tunis / Gulf of Tunis Capital", "lat": 36.8065, "lon": 10.1815, "terrain": "coast"},
+        {"name": "Sousse / Sahel Coast", "lat": 35.8256, "lon": 10.6369, "terrain": "coast"},
+        {"name": "Sfax / Gulf of Gabes Port", "lat": 34.7406, "lon": 10.7603, "terrain": "coast"},
+        {"name": "Djerba / Island Coast", "lat": 33.8075, "lon": 10.8451, "terrain": "coast"},
+        {"name": "Tozeur / Chott el Djerid Sahara Oasis", "lat": 33.9197, "lon": 8.1336, "terrain": "desert"},
+        {"name": "Bizerte / Northern Mediterranean Coast", "lat": 37.2744, "lon": 9.8739, "terrain": "coast"},
+    ],
+    "libya": [
+        {"name": "Tripoli / Mediterranean Capital", "lat": 32.8872, "lon": 13.1913, "terrain": "coast"},
+        {"name": "Benghazi / Cyrenaica Coast", "lat": 32.1167, "lon": 20.0667, "terrain": "coast"},
+        {"name": "Misrata / Western Mediterranean Port", "lat": 32.3754, "lon": 15.0925, "terrain": "coast"},
+        {"name": "Sabha / Fezzan Sahara Oasis", "lat": 27.0377, "lon": 14.4283, "terrain": "desert"},
+    ],
+    "jordan": [
+        {"name": "Amman / Seven Hills Capital", "lat": 31.9454, "lon": 35.9284, "terrain": "urban"},
+        {"name": "Petra / Wadi Musa Sandstone Canyon", "lat": 30.3285, "lon": 35.4444, "terrain": "mountain"},
+        {"name": "Wadi Rum / Valley of the Moon Desert", "lat": 29.5735, "lon": 35.4206, "terrain": "desert"},
+        {"name": "Aqaba / Red Sea Gulf Coast", "lat": 29.5321, "lon": 35.0063, "terrain": "coast"},
+        {"name": "Jerash / Roman Decapolis Ruins", "lat": 32.2808, "lon": 35.8953, "terrain": "valley"},
+        {"name": "Dead Sea / Jordan Rift Valley", "lat": 31.5000, "lon": 35.5000, "terrain": "valley"},
+    ],
+    "taiwan": [
+        {"name": "Taipei / Tamsui Basin Capital", "lat": 25.0330, "lon": 121.5654, "terrain": "urban"},
+        {"name": "Kaohsiung / Southern Taiwan Harbor", "lat": 22.6273, "lon": 120.3014, "terrain": "coast"},
+        {"name": "Taichung / Central Taiwan Plain", "lat": 24.1477, "lon": 120.6736, "terrain": "urban"},
+        {"name": "Taroko Gorge / Hualien East Coast", "lat": 24.1592, "lon": 121.6214, "terrain": "mountain"},
+        {"name": "Alishan / Central Mountain Range Peaks", "lat": 23.5100, "lon": 120.8000, "terrain": "mountain"},
+        {"name": "Tainan / Historic South Coast", "lat": 22.9997, "lon": 120.2270, "terrain": "urban"},
+    ],
+    "malaysia": [
+        {"name": "Kuala Lumpur / Klang Valley Capital", "lat": 3.1390, "lon": 101.6869, "terrain": "urban"},
+        {"name": "Penang / George Town Strait Coast", "lat": 5.4164, "lon": 100.3327, "terrain": "coast"},
+        {"name": "Johor Bahru / Southern Peninsula", "lat": 1.4927, "lon": 103.7414, "terrain": "coast"},
+        {"name": "Cameron Highlands / Tea Mountain Plateau", "lat": 4.4714, "lon": 101.3768, "terrain": "mountain"},
+        {"name": "Kota Kinabalu / Mount Kinabalu Sabah", "lat": 5.9804, "lon": 116.0735, "terrain": "mountain"},
+        {"name": "Kuching / Sarawak River Basin", "lat": 1.5533, "lon": 110.3592, "terrain": "coast"},
+    ],
+    "philippines": [
+        {"name": "Manila / Manila Bay Capital", "lat": 14.5995, "lon": 120.9842, "terrain": "coast"},
+        {"name": "Cebu City / Central Visayas Port", "lat": 10.3157, "lon": 123.8854, "terrain": "coast"},
+        {"name": "Davao / Mount Apo Foothills Mindanao", "lat": 7.1907, "lon": 125.4504, "terrain": "mountain"},
+        {"name": "Baguio / Cordillera Mountain Pines", "lat": 16.4023, "lon": 120.5960, "terrain": "mountain"},
+        {"name": "Palawan / Puerto Princesa Karst Coast", "lat": 9.7392, "lon": 118.7353, "terrain": "coast"},
+        {"name": "Bicol / Mayon Volcano Albay", "lat": 13.2572, "lon": 123.6856, "terrain": "mountain"},
+    ],
+    "kazakhstan": [
+        {"name": "Almaty / Tian Shan Mountain Foothills", "lat": 43.2220, "lon": 76.8512, "terrain": "mountain"},
+        {"name": "Astana / Ishim River Steppe Capital", "lat": 51.1694, "lon": 71.4491, "terrain": "urban"},
+        {"name": "Shymkent / Southern Oasis Plain", "lat": 42.3417, "lon": 69.5901, "terrain": "plateau"},
+        {"name": "Aktau / Caspian Sea Coast", "lat": 43.6500, "lon": 51.1667, "terrain": "coast"},
+        {"name": "Altai / Belukha Foothills East", "lat": 49.9500, "lon": 84.5000, "terrain": "mountain"},
+    ],
+    "uzbekistan": [
+        {"name": "Tashkent / Chirchiq River Basin", "lat": 41.2995, "lon": 69.2401, "terrain": "urban"},
+        {"name": "Samarkand / Registan Silk Road Oasis", "lat": 39.6542, "lon": 66.9597, "terrain": "valley"},
+        {"name": "Bukhara / Kyzylkum Desert Oasis", "lat": 39.7747, "lon": 64.4286, "terrain": "desert"},
+        {"name": "Khiva / Amu Darya Basin Fortress", "lat": 41.3783, "lon": 60.3639, "terrain": "desert"},
+    ],
+    "kyrgyzstan": [
+        {"name": "Bishkek / Ala-Too Range Chuy Valley", "lat": 42.8746, "lon": 74.5698, "terrain": "mountain"},
+        {"name": "Issyk-Kul / High Mountain Alpine Lake", "lat": 42.5000, "lon": 77.2000, "terrain": "mountain"},
+        {"name": "Osh / Fergana Valley Sulaiman-Too", "lat": 40.5140, "lon": 72.8161, "terrain": "mountain"},
+    ],
+    "tajikistan": [
+        {"name": "Dushanbe / Hissar Valley Capital", "lat": 38.5598, "lon": 68.7870, "terrain": "mountain"},
+        {"name": "Pamir Mountains / Khorog Highway", "lat": 37.4900, "lon": 71.5500, "terrain": "mountain"},
+        {"name": "Khujand / Syr Darya Fergana", "lat": 40.2826, "lon": 69.6222, "terrain": "valley"},
+    ],
+    "nigeria": [
+        {"name": "Lagos / Atlantic Gulf of Guinea Port", "lat": 6.5244, "lon": 3.3792, "terrain": "coast"},
+        {"name": "Abuja / Aso Rock Capital Plateau", "lat": 9.0765, "lon": 7.3986, "terrain": "plateau"},
+        {"name": "Kano / Northern Sahel Savanna", "lat": 12.0022, "lon": 8.5920, "terrain": "urban"},
+        {"name": "Ibadan / Yoruba Hills Southwest", "lat": 7.3775, "lon": 3.9470, "terrain": "valley"},
+        {"name": "Jos / Jos Plateau Granite Highlands", "lat": 9.8965, "lon": 8.8583, "terrain": "mountain"},
+        {"name": "Port Harcourt / Niger Delta Coast", "lat": 4.8156, "lon": 7.0498, "terrain": "coast"},
+    ],
 }
 
 # Register title-cased keys for case-insensitive lookup
@@ -617,16 +927,24 @@ for _k, _v in list(COUNTRY_ANCHORS.items()):
 
 def get_country_anchors(
     country_name: str,
-    max_anchors: int = 12,
+    max_anchors: int = 16,
     terrain: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """Retrieve representative geographic anchors for a specified country, optionally prioritizing terrain."""
     c_clean = country_name.strip().lower()
     anchors: List[Dict[str, Any]] = []
-    for k, v in COUNTRY_ANCHORS.items():
-        if k == c_clean or k in c_clean or c_clean in k:
-            anchors = v
-            break
+    if c_clean in COUNTRY_ANCHORS:
+        anchors = COUNTRY_ANCHORS[c_clean]
+    else:
+        for k, v in COUNTRY_ANCHORS.items():
+            if k == c_clean:
+                anchors = v
+                break
+        if not anchors:
+            for k, v in COUNTRY_ANCHORS.items():
+                if k in c_clean.split() or c_clean in k.split():
+                    anchors = v
+                    break
     if not anchors:
         return []
 
@@ -675,6 +993,30 @@ def is_in_region(lat: float, lon: float, region_name: str) -> bool:
 
 def get_country_candidate(lat: float, lon: float) -> Optional[str]:
     """Find matching country based on bounding box lookup with border disambiguation."""
+    # 0. Nordic / Scandinavian border disambiguation (Finland vs Sweden vs Norway)
+    if 54.0 <= lat <= 71.5 and 4.0 <= lon <= 32.5:
+        # Finland: East of Gulf of Bothnia / Baltic Sea
+        if 59.5 <= lat <= 70.1 and lon >= 20.5:
+            if lat >= 69.6 and lon >= 29.0:
+                return "Norway"  # Kirkenes / Sør-Varanger
+            return "Finland"
+        # Sweden vs Norway border
+        if 55.0 <= lat <= 71.5:
+            if lat < 62.0:
+                if lon >= 12.5:
+                    return "Sweden"
+                return "Norway"
+            if 62.0 <= lat < 68.5:
+                if lon >= 13.5:
+                    return "Sweden"
+                return "Norway"
+            # Far north / Lapland
+            if lon >= 20.5:
+                return "Finland"
+            if lon >= 17.5 and lat <= 68.5:
+                return "Sweden"
+            return "Norway"
+
     # 1. High-precision border disambiguation for South Asia
     # Pakistan vs India border logic
     if (23.6 <= lat <= 37.2 and 60.8 <= lon <= 75.4) or (35.0 <= lat <= 37.2 and 72.5 <= lon <= 77.5):
@@ -773,7 +1115,7 @@ def get_country_candidate(lat: float, lon: float) -> Optional[str]:
             "pakistan", "india", "nepal", "bangladesh", "sri lanka",
             "bahrain", "qatar", "kuwait", "united arab emirates", "oman",
             "yemen", "israel", "syria", "iraq", "saudi arabia", "iran",
-            "turkey", "turkiye", "egypt"
+            "turkey", "turkiye", "egypt", "norway", "sweden", "finland"
         ):
             continue
         if point_in_bbox(lat, lon, bbox):
@@ -1184,16 +1526,18 @@ def cluster_points(
 
         if not assigned:
             # Create a new cluster
-            # Expand bbox by buffer (~25 km ~ 0.25 deg)
-            buf = radius_km / 111.0
+            # Expand bbox by buffer calibrated for latitude
+            buf_lat = radius_km / 111.0
+            cos_lat = max(0.2, math.cos(math.radians(lat)))
+            buf_lon = radius_km / (111.0 * cos_lat)
             clusters.append({
                 "cluster_id": f"cell_{len(clusters) + 1}",
                 "center_lat": lat,
                 "center_lon": lon,
-                "min_lat": lat - buf,
-                "max_lat": lat + buf,
-                "min_lon": lon - buf,
-                "max_lon": lon + buf,
+                "min_lat": lat - buf_lat,
+                "max_lat": lat + buf_lat,
+                "min_lon": lon - buf_lon,
+                "max_lon": lon + buf_lon,
                 "points": [pt],
                 "total_score": score,
                 "best_score": score,

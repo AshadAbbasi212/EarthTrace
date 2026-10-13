@@ -291,7 +291,7 @@ SCRIPT_PATTERNS = [
     ("hangul", re.compile(r"[\uAC00-\uD7AF\u1100-\u11FF]"), ["South Korea"]),
     ("japanese_kana", re.compile(r"[\u3040-\u309F\u30A0-\u30FF]"), ["Japan"]),
     ("thai", re.compile(r"[\u0E00-\u0E7F]"), ["Thailand"]),
-    ("hanzi", re.compile(r"[\u4E00-\u9FFF]"), ["China", "Taiwan", "Hong Kong", "Singapore"]),
+    ("hanzi_kanji", re.compile(r"[\u4E00-\u9FFF]"), ["Japan", "China", "Taiwan", "Hong Kong", "Singapore"]),
 ]
 
 COMMON_STOP_WORDS = {

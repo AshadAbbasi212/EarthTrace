@@ -202,6 +202,7 @@ class Stage2Prior:
         top_k: int = 50,
         mock_predictions: Optional[List[Dict[str, float]]] = None,
         multi_crop: bool = True,
+        in_country_candidates: Optional[List[Dict[str, Any]]] = None,
     ) -> List[Dict[str, float]]:
         """Run GeoCLIP inference with batched multi-crop spatial pooling and HCNGR refinement."""
         if mock_predictions is not None:
@@ -273,6 +274,66 @@ class Stage2Prior:
                         "lon": float(coords_np[i][1]),
                         "prob": float(probs_np[i]),
                     })
+
+                # In-country continuous neural location scoring & hierarchical refinement
+                if in_country_candidates:
+                    try:
+                        seen_c = set()
+                        unique_cands: List[Dict[str, Any]] = []
+                        for c in in_country_candidates:
+                            ck = (round(c["lat"], 3), round(c["lon"], 3))
+                            if ck not in seen_c:
+                                seen_c.add(ck)
+                                unique_cands.append(c)
+
+                        if unique_cands:
+                            with torch.no_grad():
+                                cand_arr = np.array([[float(c["lat"]), float(c["lon"])] for c in unique_cands], dtype=np.float32)
+                                t_cands = torch.tensor(cand_arr, dtype=torch.float32, device=m_dev)
+                                logits_cand = model.forward(batch, t_cands)
+                                probs_cand = logits_cand.softmax(dim=-1).mean(dim=0).detach().cpu().numpy()
+
+                                # Refine top in-country points with continuous neural head
+                                top_cand_indices = np.argsort(probs_cand)[::-1][:min(12, len(unique_cands))]
+
+                                for rank_i, c_idx in enumerate(top_cand_indices):
+                                    orig_cand = unique_cands[c_idx]
+                                    c_lat, c_lon = float(orig_cand["lat"]), float(orig_cand["lon"])
+                                    ref_lat, ref_lon = c_lat, c_lon
+
+                                    if rank_i < 3:
+                                        try:
+                                            # Level 1: coarse grid +/- 0.5 degrees (15x15 = 225 points)
+                                            lats1 = np.linspace(c_lat - 0.5, c_lat + 0.5, 15)
+                                            lons1 = np.linspace(c_lon - 0.5, c_lon + 0.5, 15)
+                                            glat1, glon1 = np.meshgrid(lats1, lons1)
+                                            grid1 = np.stack([glat1.ravel(), glon1.ravel()], axis=1)
+                                            t_grid1 = torch.tensor(grid1, dtype=torch.float32, device=m_dev)
+                                            lg1 = model.forward(batch[0:1], t_grid1)
+                                            b_idx1 = torch.argmax(lg1[0]).item()
+                                            b_lat1, b_lon1 = float(grid1[b_idx1][0]), float(grid1[b_idx1][1])
+
+                                            # Level 2: fine grid +/- 0.1 degrees (15x15 = 225 points)
+                                            lats2 = np.linspace(b_lat1 - 0.1, b_lat1 + 0.1, 15)
+                                            lons2 = np.linspace(b_lon1 - 0.1, b_lon1 + 0.1, 15)
+                                            glat2, glon2 = np.meshgrid(lats2, lons2)
+                                            grid2 = np.stack([glat2.ravel(), glon2.ravel()], axis=1)
+                                            t_grid2 = torch.tensor(grid2, dtype=torch.float32, device=m_dev)
+                                            lg2 = model.forward(batch[0:1], t_grid2)
+                                            b_idx2 = torch.argmax(lg2[0]).item()
+                                            ref_lat, ref_lon = float(grid2[b_idx2][0]), float(grid2[b_idx2][1])
+                                        except Exception as e_cr:
+                                            logger.debug("[stage2] In-country refinement skipped: %s", e_cr)
+
+                                    predictions.append({
+                                        "lat": ref_lat,
+                                        "lon": ref_lon,
+                                        "prob": float(probs_cand[c_idx]),
+                                        "anchor_name": orig_cand.get("name") or orig_cand.get("anchor_name"),
+                                        "country": orig_cand.get("country"),
+                                    })
+                    except Exception as e_cand:
+                        logger.warning("[stage2] In-country neural scoring skipped: %s", e_cand)
         except Exception as e:
             logger.warning("[stage2] GeoCLIP inference failed or timed out: %s. Continuing with clue priors.", e)
 
@@ -297,18 +358,9 @@ class Stage2Prior:
                 working_image_path = job_dir / "working_512.jpg"
             if not working_image_path.exists():
                 working_image_path = board.photo_path
+        logger.info("Stage 2 Prior: evaluating clues and geographic prior on %s", working_image_path)
 
-        logger.info("Stage 2 Prior: running image geolocator on %s", working_image_path)
-
-        # 1. Run visual geolocator prior (GeoCLIP)
-        raw_predictions = self.predict_image_locations(
-            image_path=working_image_path,
-            top_k=top_k,
-            mock_predictions=mock_predictions,
-        )
-        raw_predictions_count = len(raw_predictions)
-
-        # 2. Extract perception cues and user hints from board
+        # 1. Extract perception cues and user hints from board & disk
         observed_clues = board.data.get("clues", {})
         aridity_cue = 0.0
         veg_cue = 0.5
@@ -383,13 +435,9 @@ class Stage2Prior:
             except Exception:
                 pass
 
-        # 3. Vision-Language Geographic Zero-Shot Reranking (StreetCLIP / CLIP ViT-Large)
-        # Formulate full candidate country universe: global baseline + observed GeoCLIP/hint countries
+        # 2. Vision-Language Geographic Zero-Shot Reranking (StreetCLIP / CLIP ViT-Large)
+        # Formulate full candidate country universe: global baseline + hint/script/tld countries
         candidate_countries_set = set(GLOBAL_GEOLOC_COUNTRIES)
-        for p in raw_predictions[:25]:
-            c_name = get_country_candidate(p["lat"], p["lon"])
-            if c_name:
-                candidate_countries_set.add(c_name)
         for hc in hint_countries:
             candidate_countries_set.add(hc)
         for sc in script_countries:
@@ -400,7 +448,7 @@ class Stage2Prior:
             candidate_countries_set.add(phone_country)
 
         country_zero_shot_probs: Dict[str, float] = {}
-        if working_image_path and Path(working_image_path).exists():
+        if working_image_path and Path(working_image_path).exists() and mock_predictions is None:
             try:
                 country_zero_shot_probs = self.score_candidate_countries_zero_shot(
                     image_path=working_image_path,
@@ -409,8 +457,7 @@ class Stage2Prior:
             except Exception as e:
                 logger.warning("[stage2] Country zero-shot scoring failed: %s", e)
 
-        # 3b. High-Probability Country Anchor Injection (Terrain & Region Aware)
-        # Determine scene terrain context to bias anchors towards matching biomes (mountains, deserts, coasts)
+        # 3. Determine scene terrain context to bias anchors towards matching biomes
         desired_terrain: Optional[str] = None
         if snow_cue or "conifer" in str(observed_clues).lower():
             desired_terrain = "mountain"
@@ -431,18 +478,93 @@ class Stage2Prior:
             except Exception:
                 pass
 
-        existing_coords = {(round(p["lat"], 3), round(p["lon"], 3)) for p in raw_predictions}
+        # 4. Formulate In-Country Candidate Mesh for Continuous Neural Evaluation
+        in_country_candidates: List[Dict[str, Any]] = []
+        if country_zero_shot_probs and mock_predictions is None:
+            top_country, top_prob = next(iter(country_zero_shot_probs.items()))
+            if top_prob >= 0.04:
+                top_anchors = get_country_anchors(top_country, max_anchors=24, terrain=desired_terrain)
+                for a in top_anchors:
+                    in_country_candidates.append({
+                        "lat": a["lat"],
+                        "lon": a["lon"],
+                        "name": a["name"],
+                        "country": top_country,
+                    })
 
+                # If confident top country with bounding box, inject dense spatial grid (11x11 = 121 points)
+                c_key_lower = top_country.lower()
+                if top_prob >= 0.15 and c_key_lower in COUNTRY_BBOXES:
+                    c_bbox = COUNTRY_BBOXES[c_key_lower]
+                    lats_g = np.linspace(c_bbox[0], c_bbox[2], 11)
+                    lons_g = np.linspace(c_bbox[1], c_bbox[3], 11)
+                    for gla in lats_g:
+                        for glo in lons_g:
+                            in_country_candidates.append({
+                                "lat": float(gla),
+                                "lon": float(glo),
+                                "name": f"{top_country} Grid ({gla:.2f}, {glo:.2f})",
+                                "country": top_country,
+                            })
+
+            # Runners-up anchors
+            for c_name, c_prob in list(country_zero_shot_probs.items())[1:5]:
+                if c_prob >= 0.08:
+                    ru_anchors = get_country_anchors(c_name, max_anchors=16, terrain=desired_terrain)
+                    for a in ru_anchors:
+                        in_country_candidates.append({
+                            "lat": a["lat"],
+                            "lon": a["lon"],
+                            "name": a["name"],
+                            "country": c_name,
+                        })
+
+            # Discrete cue countries
+            cue_countries = list(dict.fromkeys(
+                hint_countries + ([tld_country] if tld_country else []) + ([phone_country] if phone_country else []) + script_countries[:3]
+            ))
+            for cue_c in cue_countries:
+                cue_anchors = get_country_anchors(cue_c, max_anchors=16, terrain=desired_terrain)
+                for a in cue_anchors:
+                    in_country_candidates.append({
+                        "lat": a["lat"],
+                        "lon": a["lon"],
+                        "name": a["name"],
+                        "country": cue_c,
+                    })
+
+        # 5. Run visual geolocator prior (GeoCLIP with continuous in-country evaluation & HCNGR refinement)
+        raw_predictions = self.predict_image_locations(
+            image_path=working_image_path,
+            top_k=top_k,
+            mock_predictions=mock_predictions,
+            in_country_candidates=in_country_candidates if in_country_candidates else None,
+        )
+        raw_predictions_count = len([p for p in raw_predictions if not p.get("anchor_name")])
+
+        # 5b. Fallback Anchor Injection: ensure all key anchors are represented
+        existing_coords = {(round(p["lat"], 3), round(p["lon"], 3)) for p in raw_predictions}
         if country_zero_shot_probs:
             top_country, top_prob = next(iter(country_zero_shot_probs.items()))
             if top_prob >= 0.04:
-                anchors = get_country_anchors(top_country, max_anchors=12, terrain=desired_terrain)
-                if anchors:
-                    logger.info(
-                        "[stage2] Injecting %d regional anchors for top zero-shot country '%s' (prob=%.2f%%, terrain=%s)",
-                        len(anchors), top_country, top_prob * 100, desired_terrain
-                    )
-                    anchor_prob = max(0.015, top_prob / len(anchors))
+                anchors = get_country_anchors(top_country, max_anchors=16, terrain=desired_terrain)
+                anchor_prob = max(0.015, top_prob / max(1, len(anchors)))
+                for a in anchors:
+                    c_key = (round(a["lat"], 3), round(a["lon"], 3))
+                    if c_key not in existing_coords:
+                        existing_coords.add(c_key)
+                        raw_predictions.append({
+                            "lat": a["lat"],
+                            "lon": a["lon"],
+                            "prob": anchor_prob,
+                            "anchor_name": a["name"],
+                            "country": top_country,
+                        })
+
+            for c_name, c_prob in list(country_zero_shot_probs.items())[1:5]:
+                if c_prob >= 0.08:
+                    anchors = get_country_anchors(c_name, max_anchors=10, terrain=desired_terrain)
+                    anchor_prob = max(0.01, c_prob / max(1, len(anchors)))
                     for a in anchors:
                         c_key = (round(a["lat"], 3), round(a["lon"], 3))
                         if c_key not in existing_coords:
@@ -452,53 +574,34 @@ class Stage2Prior:
                                 "lon": a["lon"],
                                 "prob": anchor_prob,
                                 "anchor_name": a["name"],
-                                "country": top_country,
+                                "country": c_name,
                             })
 
-            for c_name, c_prob in list(country_zero_shot_probs.items())[1:5]:
-                if c_prob >= 0.08:
-                    anchors = get_country_anchors(c_name, max_anchors=8, terrain=desired_terrain)
-                    if anchors:
-                        anchor_prob = max(0.01, c_prob / max(1, len(anchors)))
-                        for a in anchors:
-                            c_key = (round(a["lat"], 3), round(a["lon"], 3))
-                            if c_key not in existing_coords:
-                                existing_coords.add(c_key)
-                                raw_predictions.append({
-                                    "lat": a["lat"],
-                                    "lon": a["lon"],
-                                    "prob": anchor_prob,
-                                    "anchor_name": a["name"],
-                                    "country": c_name,
-                                })
-
-            # Also ensure any country or subnational division flagged by high-confidence discrete cues
-            # has full anchor representation in raw_predictions
-            cue_countries = list(dict.fromkeys(hint_countries + ([tld_country] if tld_country else []) + ([phone_country] if phone_country else []) + script_countries[:2]))
+            cue_countries = list(dict.fromkeys(hint_countries + ([tld_country] if tld_country else []) + ([phone_country] if phone_country else []) + script_countries[:3]))
             for cue_c in cue_countries:
-                cue_anchors = get_country_anchors(cue_c, max_anchors=10, terrain=desired_terrain)
-                if cue_anchors:
-                    logger.info("[stage2] Injecting %d anchors for discrete cue country '%s' (terrain=%s)", len(cue_anchors), cue_c, desired_terrain)
-                    for a in cue_anchors:
-                        # Prioritize anchors matching subnational hints if specified
+                cue_anchors = get_country_anchors(cue_c, max_anchors=12, terrain=desired_terrain)
+                for a in cue_anchors:
+                    c_key = (round(a["lat"], 3), round(a["lon"], 3))
+                    if c_key not in existing_coords:
+                        existing_coords.add(c_key)
                         a_name = a["name"].lower()
                         is_sub_match = any(sh.lower() in a_name for sh in subnational_hints)
-                        c_key = (round(a["lat"], 3), round(a["lon"], 3))
-                        if c_key not in existing_coords:
-                            existing_coords.add(c_key)
-                            raw_predictions.append({
-                                "lat": a["lat"],
-                                "lon": a["lon"],
-                                "prob": 0.08 if is_sub_match else 0.04,
-                                "anchor_name": a["name"],
-                                "country": cue_c,
-                            })
+                        raw_predictions.append({
+                            "lat": a["lat"],
+                            "lon": a["lon"],
+                            "prob": 0.08 if is_sub_match else 0.04,
+                            "anchor_name": a["name"],
+                            "country": cue_c,
+                        })
 
-        # 4. Fuse evidence for each candidate point
+        # 6. Fuse evidence for each candidate point
         country_raw_mass: Dict[str, float] = {}
         for p in raw_predictions:
             c_name = get_country_candidate(p["lat"], p["lon"]) or "Other"
             country_raw_mass[c_name] = country_raw_mass.get(c_name, 0.0) + p.get("prob", 0.0)
+
+        known_country_mass = sum(country_zero_shot_probs.values()) if country_zero_shot_probs else 0.0
+        rem_mass = max(0.0001, 1.0 - known_country_mass)
 
         scored_points: List[Dict[str, Any]] = []
 
@@ -510,16 +613,22 @@ class Stage2Prior:
 
             # Hierarchical visual prior: P(point | image) = P(country | image) * P(point | country)
             # This cleanly debiases GeoCLIP's gallery density differences across nations.
-            if country and country_zero_shot_probs:
-                c_prob = country_zero_shot_probs.get(country, 0.0001)
-                c_mass = max(1e-6, country_raw_mass.get(country, 1.0))
-                p_cond = prob / c_mass
-                joint_prior = c_prob * p_cond
+            if country_zero_shot_probs:
+                if country and country in country_zero_shot_probs:
+                    c_prob = country_zero_shot_probs[country]
+                    c_mass = max(1e-6, country_raw_mass.get(country, 1.0))
+                    joint_prior = c_prob * (prob / c_mass)
+                elif country:
+                    c_prob = country_zero_shot_probs.get(country, 0.0001)
+                    c_mass = max(1e-6, country_raw_mass.get(country, 1.0))
+                    joint_prior = c_prob * (prob / c_mass)
+                else:
+                    joint_prior = rem_mass * (prob / max(1e-6, sum(country_raw_mass.values())))
                 base_log_prior = math.log(max(1e-12, joint_prior))
                 reranker_lr = 0.0
             else:
                 base_log_prior = math.log(prob)
-                reranker_lr = 0.0
+                reranker_lr = 0.00
 
             climate_info = self.climate.get_climate_classification(lat, lon)
             koeppen = climate_info.get("code", "C")
@@ -587,9 +696,9 @@ class Stage2Prior:
             meta_lr = 0.0
             if script_countries and country:
                 if any(sc.lower() in country.lower() for sc in script_countries):
-                    meta_lr += 3.5
-                else:
-                    meta_lr -= 3.0
+                    meta_lr += 2.5
+                elif country_zero_shot_probs.get(country, 0.0) < 0.15:
+                    meta_lr -= 1.5
 
             if tld_country and country:
                 if tld_country.lower() in country.lower():
@@ -629,32 +738,32 @@ class Stage2Prior:
                 curb = env_meta.get("curb_style")
 
                 if soil == "red_laterite":
-                    if country in ("India", "Brazil", "Australia") or lat < 25.0:
+                    if country in ("India", "Brazil", "Australia", "Pakistan") or lat < 25.0:
                         env_lr += 2.0
                     elif lat > 45.0:
                         env_lr -= 4.0
                 elif soil == "desert_sand":
-                    if country in ("Saudi Arabia", "United Arab Emirates", "Egypt", "Oman", "Qatar", "Kuwait"):
+                    if country in ("Saudi Arabia", "United Arab Emirates", "Egypt", "Oman", "Qatar", "Kuwait", "Morocco", "Algeria", "Tunisia", "Jordan", "Australia", "United States"):
                         env_lr += 2.5
-                    elif climate_info.get("group") in ("D", "E", "C"):
+                    elif climate_info.get("group") in ("D", "E", "C") and not (country in ("Morocco", "Jordan", "Australia", "United States") and climate_info.get("group") == "C"):
                         env_lr -= 3.0
 
                 if flora == "date_palm":
-                    if country in ("United Arab Emirates", "Saudi Arabia", "Egypt", "Oman", "Iraq", "Pakistan"):
+                    if country in ("United Arab Emirates", "Saudi Arabia", "Egypt", "Oman", "Iraq", "Pakistan", "Morocco", "Algeria", "Tunisia"):
                         env_lr += 2.0
                     elif lat > 42.0:
                         env_lr -= 4.0
                 elif flora == "olive_groves":
-                    if country in ("Greece", "Italy", "Spain", "Turkey", "Israel", "Syria"):
+                    if country in ("Greece", "Italy", "Spain", "Turkey", "Israel", "Syria", "Morocco", "Tunisia", "Jordan", "Portugal"):
                         env_lr += 2.5
                     elif lat > 46.0 or lat < 20.0:
                         env_lr -= 3.0
 
-                if curb == "black_yellow" and country in ("Pakistan", "India", "United Kingdom"):
+                if curb == "black_yellow" and country in ("Pakistan", "India", "United Kingdom", "Kenya"):
                     env_lr += 2.0
-                if plate == "yellow_rear" and country in ("United Kingdom", "Israel", "Netherlands", "Cyprus"):
+                if plate == "yellow_rear" and country in ("United Kingdom", "Israel", "Netherlands", "Cyprus", "Kenya"):
                     env_lr += 3.5
-                elif plate == "eu_blue_band" and country in ("Germany", "France", "Italy", "Spain", "Turkey"):
+                elif plate == "eu_blue_band" and country in ("Germany", "France", "Italy", "Spain", "Turkey", "Poland", "Czech Republic", "Czechia", "Romania", "Hungary", "Bulgaria", "Finland", "Sweden", "Ireland", "Portugal"):
                     env_lr += 3.0
                 elif plate == "commercial_yellow" and country in ("India", "Pakistan"):
                     env_lr += 3.0
@@ -771,12 +880,20 @@ class Stage2Prior:
                 candidate_weights={cand_name: math.exp(min(1.5, c["best_score"] / 10.0))},
                 rationale="Visual embedding similarity from GeoCLIP",
             )
-            if cid_reranker and c.get("country") in country_zero_shot_probs:
-                c_zs_prob = country_zero_shot_probs[c["country"]]
+            if cid_reranker and country_zero_shot_probs:
+                top_country, top_prob = next(iter(country_zero_shot_probs.items()))
+                c_country = c.get("country")
+                c_zs_prob = country_zero_shot_probs.get(c_country, 0.0) if c_country else 0.0
+                if c_zs_prob >= 0.10:
+                    weight = min(3.0, 1.0 + 3.0 * (c_zs_prob / max(0.1, top_prob)))
+                elif c_zs_prob < 0.03 and top_prob >= 0.20:
+                    weight = 0.33
+                else:
+                    weight = max(0.5, 1.0 + (c_zs_prob - 0.1))
                 board.add_evidence(
                     clue_id=cid_reranker,
-                    candidate_weights={cand_name: 1.0 + 3.0 * c_zs_prob},
-                    rationale=f"Zero-shot vision-language country likelihood ({c_zs_prob*100:.1f}%)",
+                    candidate_weights={cand_name: weight},
+                    rationale=f"Zero-shot vision-language country likelihood ({c_country}: {c_zs_prob*100:.1f}%)",
                 )
 
             search_bboxes.append({
