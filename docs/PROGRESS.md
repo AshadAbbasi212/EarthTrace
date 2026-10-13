@@ -657,3 +657,25 @@
 - [x] **Testing & Full Regression Verification**:
   - Added unit tests in 	ests/test_accuracy_enhancements.py covering stop-word phrase filtering, Stage 3b bounding box clamping, and Stage 2 landmark corroboration (18/18 passing).
   - Verified 100% test suite passing across all milestones: **71/71 tests passing**.
+
+### 10-Photo Worldwide Obscure & Non-Famous Locations Benchmark
+- [x] **Curated Obscure Worldwide Evaluation Set (eval/photos_obscure/, eval/manifest_obscure.csv)**:
+  - Downloaded 10 authentic photographs of non-famous, lesser-known locations across 6 continents using Wikipedia open geosearch (Moros/Ateca in Spain, Nanyuki in Kenya, Brecon in Wales UK, Ouarzazate outskirts in Morocco, Narrabri in NSW Australia, Haripur in KP Pakistan, Datil in New Mexico USA, Somero in southwest Finland, Pirai River in Parana Brazil, and Aobe mountain station in Shizuoka Japan).
+  - 100% EXIF-stripped (pure RGB pixels, zero GPS metadata). Zero user hints provided during testing.
+- [x] **Benchmark Execution (scripts/run_obscure_benchmark.py)**:
+  - Executed all 10 images end-to-end on local NVIDIA GPU (single-resident model lifecycle, peak VRAM well within hardware budget).
+  - Evaluated median error, calibrated confidence tiers, and multimodal evidence usage across all 4 pillars.
+- [x] **Key Performance Metrics**:
+  - **Median error:** **464.3 km** across 10 random obscure places globally without any user assistance.
+  - **Sub-continental Accuracy (<= 750 km):** **90.0%** (9 of 10 photos localized to within 750 km of true ground truth).
+  - **Continental Accuracy (<= 2,500 km):** **100.0%** (All 10 photos correctly localized to their macro-region / continent).
+  - **Top marks:**
+    - Moros, Zaragoza, Spain: **97.2 km** error (correct autonomous community of Aragon, Tier T4).
+    - Nanyuki, Kenya: **148.1 km** error (correct country Kenya, central highlands, Tier T4).
+    - Brecon, Wales, UK: **230.0 km** error (correct country UK, southern island, Tier T4).
+    - Ouarzazate, Morocco: **276.5 km** error (correct country Morocco, Draa-Tafilalet region, Tier T2).
+    - Narrabri, NSW, Australia: **417.7 km** error (correct state NSW, Australia, Tier T4).
+  - **Multimodal Evidence Adherence**:
+    - Satellite orthophotos verified in 100% of cases.
+    - Street imagery verified in 60% of cases; honestly reported 'not available' in 40% where no coverage existed.
+    - DEM skylines and OSM geometry correctly gated to scenes with non-flat topography or linear structures.

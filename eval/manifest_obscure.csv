@@ -1,0 +1,11 @@
+id,name,category,country,continent,true_lat,true_lon,filename,filepath
+obs_01,"Somero, Finland",rural_town,Finland,Europe,60.6333,23.5167,obs_01_finland_rural_town.jpg,eval\photos_obscure\obs_01_finland_rural_town.jpg
+obs_02,"Datil, New Mexico",desert_junction,USA,North America,34.14222222,-107.8425,obs_02_usa_desert_junction.jpg,eval\photos_obscure\obs_02_usa_desert_junction.jpg
+obs_03,"Moros, Zaragoza",provincial_town,Spain,Europe,41.4,-1.81666667,obs_03_spain_provincial_town.jpg,eval\photos_obscure\obs_03_spain_provincial_town.jpg
+obs_04,Aobe Station,mountain_rail,Japan,Asia,35.08944444,138.11555556,obs_04_japan_mountain_rail.jpg,eval\photos_obscure\obs_04_japan_mountain_rail.jpg
+obs_05,Piraí River (Paraná),rural_river,Brazil,South America,-24.75,-50.08333333,obs_05_brazil_rural_river.jpg,eval\photos_obscure\obs_05_brazil_rural_river.jpg
+obs_06,Narrabri,outback_town,Australia,Oceania,-30.31666667,149.76666667,obs_06_australia_outback_town.jpg,eval\photos_obscure\obs_06_australia_outback_town.jpg
+obs_07,"Haripur, Pakistan",rural_foothills,Pakistan,Asia,33.99416667,72.93333333,obs_07_pakistan_rural_foothills.jpg,eval\photos_obscure\obs_07_pakistan_rural_foothills.jpg
+obs_08,Ouarzazate,arid_clay_village,Morocco,Africa,30.91666667,-6.91666667,obs_08_morocco_arid_clay_village.jpg,eval\photos_obscure\obs_08_morocco_arid_clay_village.jpg
+obs_09,Brecon,river_valley,UK,Europe,51.948,-3.391,obs_09_uk_river_valley.jpg,eval\photos_obscure\obs_09_uk_river_valley.jpg
+obs_10,Nanyuki,highland_town,Kenya,Africa,0.0167,37.0667,obs_10_kenya_highland_town.jpg,eval\photos_obscure\obs_10_kenya_highland_town.jpg
