@@ -308,7 +308,7 @@ class ReportGenerator:
         best_subdiv = (meta.get("subnational_division") if best_candidate else None) or (get_subnational_division(coordinates[0], coordinates[1]) if coordinates else None)
 
         # GeoSpy-style forensic clues and interpretation
-        clues_path = job_path / "clues.json"
+        clues_path = job_dir / "clues.json"
         forensic_analysis: Dict[str, Any] = {}
         if clues_path.exists():
             try:
