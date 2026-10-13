@@ -81,6 +81,38 @@ class Stage1Clues:
                     confidence=0.8,
                 )
 
+            for sub in parsed_hints.get("subnational", []):
+                div_name = sub.get("division")
+                c_name = sub.get("country")
+                board.add_clue(
+                    text=f"User specified subnational province/state: {div_name} ({c_name})",
+                    kind="user_hint_subnational",
+                    status="inferred",
+                    source="user_hint",
+                    confidence=0.90,
+                )
+                board.add_candidate(f"{div_name}, {c_name}", level="region", prior=5.0)
+
+            if parsed_hints.get("radius_km"):
+                r_km = parsed_hints["radius_km"]
+                board.add_clue(
+                    text=f"User specified search radius constraint: {r_km:.0f} km",
+                    kind="user_hint_radius",
+                    status="inferred",
+                    source="user_hint",
+                    confidence=0.95,
+                )
+
+            if parsed_hints.get("center_coords"):
+                c_lat, c_lon = parsed_hints["center_coords"]
+                board.add_clue(
+                    text=f"User specified approximate center coordinates: {c_lat:.4f}, {c_lon:.4f}",
+                    kind="user_hint_center",
+                    status="inferred",
+                    source="user_hint",
+                    confidence=0.95,
+                )
+
             if parsed_hints.get("season"):
                 board.add_clue(
                     text=f"User hinted season: {parsed_hints['season']}",
@@ -93,8 +125,10 @@ class Stage1Clues:
         # 2. Multi-Crop High-Resolution OCR Extraction
         ocr_snippets: List[Dict[str, Any]] = []
         try:
-            # 2a. Global view (1024px)
-            ocr_snippets.extend(self.ocr.read_text(working_image_path, min_conf=0.25))
+            # 2a. Global view (1024px, using contrast-enhanced copy if low-light detected)
+            enhanced_path = job_path / "working_enhanced.jpg"
+            ocr_target = enhanced_path if (board.data.get("is_low_light") and enhanced_path.exists()) else working_image_path
+            ocr_snippets.extend(self.ocr.read_text(ocr_target, min_conf=0.25))
             
             # 2b. Edge and boundary crops (bottom half, bottom corners, center if available)
             edges_dir = job_path / "edges"
@@ -864,6 +898,40 @@ class Stage1Clues:
             for s in ocr_snippets[:10]
         ]
 
+        # Construct GeoSpy-style structured supporting vs uncertain clues and forensic interpretation
+        supporting_clues: List[str] = []
+        uncertain_clues: List[str] = []
+
+        if scene_type != "other":
+            supporting_clues.append(f"Visual environment matches {scene_type} biome ({relief} relief, {veg_density} vegetation)")
+        if aridity == "arid":
+            supporting_clues.append("High solar aridity and dry soil conditions observed")
+        elif snow:
+            supporting_clues.append("Snow / alpine frost cover observed")
+        if text_items:
+            supporting_clues.append(f"Signage / text markers detected: {', '.join(t.text for t in text_items[:3])}")
+        for rg in region_guesses[:3]:
+            supporting_clues.append(f"Candidate region: {rg.place} ({rg.reason})")
+        for sc in visual_country_candidates[:2]:
+            supporting_clues.append(f"Visual-language likelihood aligns with {sc}")
+
+        # Confounding or uncertain clues
+        if relief == "unknown":
+            uncertain_clues.append("Terrain relief is partially obstructed or ambiguous")
+        if not text_items:
+            uncertain_clues.append("No legible road furniture, license plates, or signage in frame")
+        if len(visual_country_candidates) > 2:
+            uncertain_clues.append(f"Cross-regional visual homonyms between {', '.join(visual_country_candidates[:3])}")
+
+        interp_parts = [
+            f"Scene categorized as {scene_type} with {relief} relief and {aridity} climate characteristics.",
+        ]
+        if visual_country_candidates:
+            interp_parts.append(f"Visual appearance aligns with {', '.join(visual_country_candidates[:3])}.")
+        if text_items:
+            interp_parts.append(f"Observed textual markers include: {', '.join(t.text for t in text_items[:3])}.")
+        interpretation = " ".join(interp_parts)
+
         result = ClueExtractionResult(
             scene_type=scene_type,
             terrain={"relief": relief, "landforms": [], "rock_soil_color": "yellow_brown" if sand_ratio > 0.2 else "unknown", "horizon_visible": horizon_visible},
@@ -876,6 +944,9 @@ class Stage1Clues:
             region_guesses=region_guesses,
             distinctive_features=[],
             overall_confidence=0.85 if region_guesses else 0.65,
+            interpretation=interpretation,
+            supporting_clues=supporting_clues,
+            uncertain_clues=uncertain_clues,
         )
         return result, visual_country_candidates
 

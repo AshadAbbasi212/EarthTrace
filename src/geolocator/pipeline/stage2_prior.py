@@ -281,13 +281,35 @@ class Stage2Prior:
         snow_cue = False
         driving_cue: Optional[str] = None
         hint_countries: List[str] = []
+        subnational_hints: List[str] = []
         script_countries: List[str] = []
         tld_country: Optional[str] = None
         phone_country: Optional[str] = None
 
+        user_hints_dict = board.data.get("user_hints", {})
+        for sub_item in user_hints_dict.get("subnational", []):
+            if sub_item.get("division") and sub_item["division"] not in subnational_hints:
+                subnational_hints.append(sub_item["division"])
+        radius_km_hint: Optional[float] = user_hints_dict.get("radius_km")
+        center_coords_hint: Optional[Tuple[float, float]] = user_hints_dict.get("center_coords")
+
         for cid, cinfo in observed_clues.items():
             kind = cinfo.get("kind")
             text = cinfo.get("text", "")
+            if kind == "user_hint_subnational":
+                m = re.search(r"province/state:\s*([^\(]+)", text)
+                if m:
+                    sub_name = m.group(1).strip()
+                    if sub_name not in subnational_hints:
+                        subnational_hints.append(sub_name)
+            elif kind == "user_hint_radius":
+                m = re.search(r"radius constraint:\s*(\d+)", text)
+                if m and not radius_km_hint:
+                    radius_km_hint = float(m.group(1))
+            elif kind == "user_hint_center":
+                m = re.search(r"center coordinates:\s*(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)", text)
+                if m and not center_coords_hint:
+                    center_coords_hint = (float(m.group(1)), float(m.group(2)))
             if kind == "colorimetry":
                 if "arid" in text.lower() or "desert" in text.lower():
                     aridity_cue = 0.8
@@ -416,7 +438,7 @@ class Stage2Prior:
                                     "country": c_name,
                                 })
 
-            # Also ensure any country flagged by high-confidence discrete cues (hints, TLD, calling code, script)
+            # Also ensure any country or subnational division flagged by high-confidence discrete cues
             # has full anchor representation in raw_predictions
             cue_countries = list(dict.fromkeys(hint_countries + ([tld_country] if tld_country else []) + ([phone_country] if phone_country else []) + script_countries[:2]))
             for cue_c in cue_countries:
@@ -424,13 +446,16 @@ class Stage2Prior:
                 if cue_anchors:
                     logger.info("[stage2] Injecting %d anchors for discrete cue country '%s' (terrain=%s)", len(cue_anchors), cue_c, desired_terrain)
                     for a in cue_anchors:
+                        # Prioritize anchors matching subnational hints if specified
+                        a_name = a["name"].lower()
+                        is_sub_match = any(sh.lower() in a_name for sh in subnational_hints)
                         c_key = (round(a["lat"], 3), round(a["lon"], 3))
                         if c_key not in existing_coords:
                             existing_coords.add(c_key)
                             raw_predictions.append({
                                 "lat": a["lat"],
                                 "lon": a["lon"],
-                                "prob": 0.04,
+                                "prob": 0.08 if is_sub_match else 0.04,
                                 "anchor_name": a["name"],
                                 "country": cue_c,
                             })
@@ -489,6 +514,33 @@ class Stage2Prior:
                     hint_lr = 3.5
                 else:
                     hint_lr = -2.5
+
+            # Subnational Division (ADMIN1) alignment (Picarta & GeoSpy state conditioning)
+            subnational_lr = 0.0
+            if subnational_hints:
+                cand_subdiv = get_subnational_division(lat, lon)
+                if cand_subdiv:
+                    cand_div_str = str(cand_subdiv).lower()
+                    matched_sub = any(
+                        sh.lower() in cand_div_str or cand_div_str in sh.lower()
+                        for sh in subnational_hints
+                    )
+                    if matched_sub:
+                        subnational_lr += 4.5
+                    elif country and any(hc.lower() in country.lower() for hc in hint_countries):
+                        subnational_lr -= 3.0
+                else:
+                    if country and any(hc.lower() in country.lower() for hc in hint_countries):
+                        subnational_lr -= 1.5
+
+            # Distance radius constraint (Picarta radius parameter)
+            radius_lr = 0.0
+            if center_coords_hint and radius_km_hint:
+                dist_to_center = haversine_distance_km(lat, lon, center_coords_hint[0], center_coords_hint[1])
+                if dist_to_center <= radius_km_hint:
+                    radius_lr += 3.5
+                else:
+                    radius_lr -= 12.0
 
             # Driving side alignment
             driving_lr = 0.0
@@ -592,7 +644,10 @@ class Stage2Prior:
                 elif tf == "coast" and country:
                     copilot_lr += 1.5
 
-            combined_score = base_log_prior + climate_lr + hint_lr + driving_lr + meta_lr + reranker_lr + solar_lr + env_lr + copilot_lr
+            combined_score = (
+                base_log_prior + climate_lr + hint_lr + driving_lr + meta_lr
+                + reranker_lr + solar_lr + env_lr + copilot_lr + subnational_lr + radius_lr
+            )
 
             scored_points.append({
                 "lat": lat,
@@ -603,6 +658,8 @@ class Stage2Prior:
                 "koeppen": koeppen,
                 "climate_lr": climate_lr,
                 "hint_lr": hint_lr,
+                "subnational_lr": subnational_lr,
+                "radius_lr": radius_lr,
                 "driving_lr": driving_lr,
                 "meta_lr": meta_lr,
                 "solar_lr": solar_lr,

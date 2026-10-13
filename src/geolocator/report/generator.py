@@ -307,6 +307,20 @@ class ReportGenerator:
 
         best_subdiv = (meta.get("subnational_division") if best_candidate else None) or (get_subnational_division(coordinates[0], coordinates[1]) if coordinates else None)
 
+        # GeoSpy-style forensic clues and interpretation
+        clues_path = job_path / "clues.json"
+        forensic_analysis: Dict[str, Any] = {}
+        if clues_path.exists():
+            try:
+                c_json = json.loads(clues_path.read_text(encoding="utf-8"))
+                forensic_analysis = {
+                    "interpretation": c_json.get("interpretation", ""),
+                    "supporting_clues": c_json.get("supporting_clues", []),
+                    "uncertain_clues": c_json.get("uncertain_clues", []),
+                }
+            except Exception:
+                pass
+
         report_data = {
             "version": "1.0.0",
             "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -334,6 +348,7 @@ class ReportGenerator:
                 "score": round(best_candidate["score"], 4) if best_candidate else 0.0,
             },
             "top_alternatives": formatted_alternatives,
+            "forensic_analysis": forensic_analysis,
             "evidence": {
                 "osm_geometry": osm_evidence,
                 "elevation_skyline": dem_evidence,
@@ -446,6 +461,23 @@ class ReportGenerator:
             lines.append(f"- **{st_name}** [{step.get('status')}]: {step.get('findings')}")
             if step.get("artifact"):
                 lines.append(f"  *Artifact:* `{step.get('artifact')}`")
+
+        forensic = report_data.get("forensic_analysis", {})
+        if forensic and (forensic.get("interpretation") or forensic.get("supporting_clues")):
+            lines.extend([
+                "",
+                "## Forensic Evidence Breakdown",
+            ])
+            if forensic.get("interpretation"):
+                lines.append(f"**Interpretation:** {forensic['interpretation']}\n")
+            if forensic.get("supporting_clues"):
+                lines.append("### Supporting Clues")
+                for sc in forensic["supporting_clues"]:
+                    lines.append(f"- {sc}")
+            if forensic.get("uncertain_clues"):
+                lines.append("\n### Confounding & Uncertain Factors")
+                for uc in forensic["uncertain_clues"]:
+                    lines.append(f"- {uc}")
 
         lines.extend([
             "",

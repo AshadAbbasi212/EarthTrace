@@ -69,6 +69,9 @@ class ClueExtractionResult(BaseModel):
     region_guesses: List[RegionGuessItem] = Field(default_factory=list)
     distinctive_features: List[str] = Field(default_factory=list)
     overall_confidence: float = 0.0
+    interpretation: str = ""
+    supporting_clues: List[str] = Field(default_factory=list)
+    uncertain_clues: List[str] = Field(default_factory=list)
 
     @classmethod
     def create_default(cls) -> "ClueExtractionResult":

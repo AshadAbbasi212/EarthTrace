@@ -25,7 +25,7 @@ COUNTRY_BBOXES: Dict[str, Tuple[float, float, float, float]] = {
     "nepal": (26.3, 80.0, 30.5, 88.2),
     "bangladesh": (20.5, 88.0, 26.7, 92.7),
     "sri lanka": (5.9, 79.6, 9.9, 81.9),
-    "pakistan": (23.6, 60.8, 37.1, 75.3),
+    "pakistan": (23.6, 60.8, 37.2, 77.5),
     "afghanistan": (29.3, 60.5, 38.5, 74.9),
     "iran": (25.0, 44.0, 39.8, 63.4),
     "iraq": (29.0, 38.7, 37.4, 48.6),
@@ -677,7 +677,7 @@ def get_country_candidate(lat: float, lon: float) -> Optional[str]:
     """Find matching country based on bounding box lookup with border disambiguation."""
     # 1. High-precision border disambiguation for South Asia
     # Pakistan vs India border logic
-    if 23.6 <= lat <= 37.1 and 60.8 <= lon <= 75.3:
+    if (23.6 <= lat <= 37.2 and 60.8 <= lon <= 75.4) or (35.0 <= lat <= 37.2 and 72.5 <= lon <= 77.5):
         # Southern border: Rajasthan / Gujarat vs Sindh
         if lat < 28.0 and lon > 71.0:
             return "India"
@@ -798,7 +798,7 @@ class SubnationalDivision(dict):
 def get_subnational_division(lat: float, lon: float) -> Optional[SubnationalDivision]:
     """Resolve GPS coordinates to province/governorate/state and major district with 100% gap-free coverage."""
     # 1. Pakistan (Comprehensive coverage across all administrative territories)
-    if 23.6 <= lat <= 37.1 and 60.8 <= lon <= 75.3:
+    if (23.6 <= lat <= 37.2 and 60.8 <= lon <= 75.4) or (35.0 <= lat <= 37.2 and 72.5 <= lon <= 77.5):
         # Islamabad Capital Territory
         if 33.60 <= lat <= 33.82 and 72.85 <= lon <= 73.28:
             return SubnationalDivision({"country": "Pakistan", "division": "Islamabad Capital Territory", "district": "Islamabad"})

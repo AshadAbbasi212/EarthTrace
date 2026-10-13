@@ -140,3 +140,62 @@ def test_stage2_copilot_exclusion_penalty(tmp_path):
     if len(clusters) > 0:
         top_cluster = clusters[0]
         assert "India" not in top_cluster.get("name", "")
+
+
+def test_subnational_admin1_and_radius_parsing():
+    """Verify HintParser extracts subnational provinces (ADMIN1), radius, and coordinates (Picarta/GeoSpy)."""
+    parser = HintParser()
+    res = parser.parse("Hiked in Bavaria, Germany near Garmisch within 40 km radius")
+    assert "Germany" in res["countries"]
+    assert len(res["subnational"]) > 0
+    assert res["subnational"][0]["division"] == "Bavaria"
+    assert res["radius_km"] == 40.0
+
+    res_coords = parser.parse("Camped in Gilgit-Baltistan around coordinates 35.32, 75.64")
+    assert "Pakistan" in res_coords["countries"]
+    assert any(s["division"] == "Gilgit-Baltistan" for s in res_coords["subnational"])
+    assert res_coords["center_coords"] == (35.32, 75.64)
+
+
+def test_subnational_prior_conditioning(tmp_path):
+    """Verify that Stage2Prior boosts candidate cells within hinted subnational province."""
+    stage2 = Stage2Prior()
+    board = CandidateBoard(photo_path=tmp_path / "dummy.jpg")
+    board.data["user_hints"] = {
+        "countries": ["Pakistan"],
+        "subnational": [{"division": "Gilgit-Baltistan", "country": "Pakistan"}],
+    }
+
+    mock_preds = [
+        {"lat": 35.3, "lon": 75.6, "prob": 0.01},  # Skardu (Gilgit-Baltistan)
+        {"lat": 31.5, "lon": 74.3, "prob": 0.05},  # Lahore (Punjab)
+    ]
+
+    report, updated_board = stage2.process(
+        job_dir=tmp_path / "job_subdiv",
+        board=board,
+        mock_predictions=mock_preds,
+    )
+    top_cluster = report["top_clusters"][0]
+    assert top_cluster["country"] == "Pakistan"
+    assert top_cluster["center"][0] > 34.5, "Gilgit-Baltistan must outrank Punjab under subnational conditioning"
+
+
+def test_stage0_low_light_contrast_enhancement(tmp_path):
+    """Verify Stage0Intake detects low-light/twilight photos and produces enhanced copy (GeoAxis HyperVision)."""
+    from geolocator.pipeline.stage0_intake import Stage0Intake
+
+    # Create very dark photo (mean luminance ~ 20)
+    dark_photo = tmp_path / "night_shot.jpg"
+    im = Image.new("RGB", (400, 300), (20, 22, 25))
+    im.save(dark_photo, format="JPEG")
+
+    stage0 = Stage0Intake()
+    intake_summary, board = stage0.process(dark_photo, tmp_path / "job_dark")
+
+    assert intake_summary["is_low_light"] is True
+    assert intake_summary["mean_luminance"] < 50.0
+    assert intake_summary["working_enhanced"] is not None
+    assert Path(intake_summary["working_enhanced"]).exists()
+    assert board.data["is_low_light"] is True
+

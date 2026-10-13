@@ -74,6 +74,39 @@ class Stage0Intake:
         # Edge crops (4 edges + 4 corners)
         edge_crops = generate_edge_crops(job_original, job_path / "edges")
 
+        # Low-light detection and contrast enhancement (GeoAxis HyperVision low-light handling)
+        is_low_light = False
+        mean_luminance = 128.0
+        copy_enhanced = None
+        try:
+            import numpy as np
+            with Image.open(copy_1024) as im_chk:
+                im_gray = im_chk.convert("L")
+                np_gray = np.array(im_gray, dtype=np.float32)
+                mean_luminance = float(np_gray.mean())
+                if mean_luminance < 55.0 or float(np_gray.std()) < 25.0:
+                    is_low_light = True
+                    enhanced_path = job_path / "working_enhanced.jpg"
+                    try:
+                        import cv2
+                        bgr = cv2.imread(str(copy_1024))
+                        lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB)
+                        l_ch, a_ch, b_ch = cv2.split(lab)
+                        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+                        cl = clahe.apply(l_ch)
+                        merged = cv2.merge((cl, a_ch, b_ch))
+                        enhanced_bgr = cv2.cvtColor(merged, cv2.COLOR_LAB2BGR)
+                        cv2.imwrite(str(enhanced_path), enhanced_bgr)
+                        copy_enhanced = enhanced_path
+                    except Exception:
+                        from PIL import ImageOps
+                        autoc = ImageOps.autocontrast(im_chk, cutoff=2)
+                        autoc.save(enhanced_path, format="JPEG", quality=90)
+                        copy_enhanced = enhanced_path
+                    logger.info("[stage0] Low-light scene detected (luminance=%.1f). Generated CLAHE enhanced copy: %s", mean_luminance, enhanced_path)
+        except Exception as e:
+            logger.debug("[stage0] Low-light check skipped: %s", e)
+
         # Extract EXIF metadata
         try:
             exif_data = extract_exif(job_original)
@@ -86,6 +119,17 @@ class Stage0Intake:
         active_board.data["image_hash"] = sha256
         active_board.data["image_size"] = orig_size
         active_board.data["exif"] = exif_data
+        active_board.data["is_low_light"] = is_low_light
+        active_board.data["mean_luminance"] = round(mean_luminance, 1)
+
+        if is_low_light:
+            active_board.add_clue(
+                text=f"Low-light/night scene detected (mean luminance {mean_luminance:.1f}); contrast normalized for feature extraction.",
+                kind="lighting_enhancement",
+                status="observed",
+                source="stage0_intake",
+                confidence=0.85,
+            )
 
         # Check for GPS fast path
         gps = exif_data.get("gps_wgs84")
@@ -121,6 +165,9 @@ class Stage0Intake:
             "fov": exif_data.get("fov_4x3_long_short"),
             "working_1024": str(copy_1024),
             "working_512": str(copy_512),
+            "working_enhanced": str(copy_enhanced) if copy_enhanced else None,
+            "is_low_light": is_low_light,
+            "mean_luminance": round(mean_luminance, 1),
             "edge_crops_count": len(edge_crops),
         }
 

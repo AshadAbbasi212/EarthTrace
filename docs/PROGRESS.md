@@ -571,3 +571,36 @@
   - Successfully broke the static collapse loop (no longer collapsing onto Cell cell_1 or Nepal).
 - [x] **Automated Regression Suite**:
   - 100% test suite passing (**59/59 tests passing**).
+
+### Reverse Engineering of Commercial Platforms (Picarta, GeoSpy, GeoAxis) & Accuracy Integrations
+- [x] **Reverse Engineering Commercial Geolocation Platforms**:
+  - **Picarta.ai (`bundle_home.js`)**:
+    - Discovered client-side EXIF extraction (`UTIF.js`) before API dispatch to `/pgi`.
+    - Identified request payload parameters: `img_file`, `country_code`, `admin1`, `admin2`, `center_lat`, `center_lng`, `radius`, `context`.
+    - Identified direct integration with William & Mary open `geoboundaries.org` for `ADM1` and `ADM2` administrative boundary polygons (`simplifiedGeometryGeoJSON`).
+    - Discovered continuous S2 probability surface rendering via Leaflet and `HeatmapOverlay` (`heatmap.js`), scaling point intensity from cell ranks.
+  - **GeoSpy.net (`main.411968ea.js`, Chunk 616 `Module 5400`)**:
+    - Extracted the exact VLM system prompt, output rules, and JSON response schema.
+    - Identified 4 core forensic dimensions: Architectural indicators (roof, windows, masonry), Environmental indicators (topography, soil, vegetation), Cultural indicators (scripts, signage, driving side), and Time-period indicators.
+    - Extracted candidate ranking structure: up to 3 candidate locations with `country`, `state` (subnational area), `city`, `specific_area`, `coordinates`, `confidence` (High/Medium/Low), `confidence_score` (0.0-1.0), `explanation`, `supporting_clues`, and `contradicting_or_uncertain_clues`.
+  - **GeoAxis.ai ("HyperVision™")**:
+    - Analyzed architecture achieving sub-10m precision in indexed cities and calibrated confidence radii in unindexed rural/low-context areas.
+    - Discovered specific contrast and silhouette normalization for challenging nighttime and low-light imagery.
+- [x] **Pipeline Accuracy Enhancements Integrated from Findings**:
+  - **Subnational (`ADMIN1`) & Radius Parser (`hint_parser.py`)**:
+    - Added gazetteer of subnational provinces/states (`SUBNATIONAL_DIVISIONS`) mapping regional entities (e.g. Gilgit-Baltistan, KP, Punjab, Bavaria, Tyrol, Valais, Tuscany, California, Texas, Hokkaido, Dhofar, Asir) to `(country, division)`.
+    - Added regex extraction for distance radius bounds (`within 50 km`, `radius of 25 km`) and explicit center coordinates.
+  - **Subnational Prior Conditioning & Intra-Province Anchors (`stage2_prior.py`)**:
+    - Added subnational log-ratio scoring: $+4.5$ boost for matching candidates, $-3.0$ penalty for differing provinces within the same country.
+    - Added radius distance gating: $-12.0$ penalty for candidates outside the specified search radius.
+    - Injected high-probability anchors matching the requested subnational province.
+  - **GeoAxis-Style Low-Light Contrast Normalization (`stage0_intake.py`, `stage1_clues.py`)**:
+    - Implemented luminance check ($L < 55$); automatically applies CLAHE (Contrast Limited Adaptive Histogram Equalization) to create `working_enhanced.jpg`.
+    - Routed enhanced copy to OCR and edge matching to preserve detection on dark/twilight imagery.
+  - **GeoSpy-Style Forensic Clues Breakdown (`schema.py`, `stage1_clues.py`, `generator.py`)**:
+    - Added `interpretation`, `supporting_clues`, and `uncertain_clues` to `ClueExtractionResult`.
+    - Populated and rendered structured evidence breakdown in the decision report and markdown output.
+- [x] **Automated Regression Suite**:
+  - Added new unit tests in `tests/test_accuracy_enhancements.py` covering subnational parsing, prior conditioning, and low-light contrast enhancement (11/11 passing).
+  - All test suites passing without regressions.
+
