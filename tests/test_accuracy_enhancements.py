@@ -319,3 +319,80 @@ def test_online_copilot_mock_success(tmp_path):
     assert (job_dir / "online_copilot_results.json").exists()
 
 
+def test_sign_stop_words_phrase_filtering():
+    """Verify that generic sign and marker phrases are caught by stop-word filters."""
+    from geolocator.adapters.clues_adapter import COMMON_STOP_WORDS
+    assert "historical marker" in COMMON_STOP_WORDS
+    assert "visitor" in COMMON_STOP_WORDS
+    assert "viewpoint" in COMMON_STOP_WORDS
+    assert "welcome" in COMMON_STOP_WORDS
+
+    # Verify token-level matching rejects composite stop-word phrases
+    test_phrase = "Historical Marker"
+    tokens = [t.lower() for t in test_phrase.split()]
+    assert all(t in COMMON_STOP_WORDS for t in tokens)
+
+
+def test_stage3_built_bbox_clamping():
+    """Verify that oversized bounding boxes in Stage3Built are bounded to <= 0.20 deg."""
+    from geolocator.pipeline.stage3_built import Stage3Built
+    from unittest.mock import MagicMock
+
+    mock_osm = MagicMock()
+    mock_osm.find_co_occurrences.return_value = []
+    stage3 = Stage3Built(osm_provider=mock_osm)
+
+    # Supply an oversized bounding box (e.g. 1.0 deg x 1.0 deg)
+    oversized_bbox = (33.0, 72.0, 34.0, 73.0)
+    stage3.query_crossings_in_bbox(oversized_bbox, line_kind="railway")
+
+    # Assert that find_co_occurrences was called with clamped bounds
+    call_kwargs = mock_osm.find_co_occurrences.call_args[1]
+    assert call_kwargs["north"] - call_kwargs["south"] <= 0.21
+    assert call_kwargs["east"] - call_kwargs["west"] <= 0.21
+
+
+def test_stage2_prior_corroborates_confident_landmarks(tmp_path):
+    """Verify that Stage2Prior accepts high-confidence landmark candidates even without nearby cell prior."""
+    job_dir = tmp_path / "job_landmark_corrob"
+    job_dir.mkdir(parents=True)
+    photo_path = tmp_path / "photo.jpg"
+    im = Image.new("RGB", (50, 50), (120, 120, 120))
+    im.save(photo_path, format="JPEG")
+
+    board = CandidateBoard(photo_path=photo_path, board_path=job_dir / "board.json")
+    # Add a high-confidence T1 landmark candidate
+    board.add_candidate(
+        name="Landmark: Faisal Mosque",
+        level="point",
+        lat=33.7299,
+        lon=73.0373,
+        prior=5.0,
+        metadata={
+            "landmark": "Faisal Mosque",
+            "tier": "T1",
+            "radius_km": 0.05,
+            "source": "landmark_matcher",
+        },
+    )
+
+    stage2 = Stage2Prior()
+    # Mock GeoCLIP predictions far away to test landmark exception
+    mock_preds = [{"lat": 24.86, "lon": 67.00, "prob": 0.05}]  # Karachi ~1100 km away
+    summary, updated_board = stage2.process(
+        job_dir=job_dir,
+        board=board,
+        working_image_path=photo_path,
+        mock_predictions=mock_preds,
+    )
+
+    # Verify that the landmark point candidate was retained in search bboxes
+    assert (job_dir / "prior_results.json").exists()
+    search_bboxes = updated_board.data.get("search_bboxes", [])
+    has_landmark_bbox = any(
+        abs(b["center"][0] - 33.7299) < 0.1 for b in search_bboxes
+    )
+    assert has_landmark_bbox
+
+
+

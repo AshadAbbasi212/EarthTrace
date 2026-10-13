@@ -128,6 +128,16 @@ class Stage3Built:
     ) -> List[Dict[str, Any]]:
         """Query bridge, waterway, and highway crossings in bbox via Overpass."""
         south, west, north, east = bbox
+        # Bound search box to prevent Overpass timeouts on oversized candidate bboxes
+        if (north - south) > 0.35 or (east - west) > 0.35:
+            mid_lat = (north + south) / 2.0
+            mid_lon = (east + west) / 2.0
+            south = max(-90.0, mid_lat - 0.10)
+            north = min(90.0, mid_lat + 0.10)
+            west = max(-180.0, mid_lon - 0.10)
+            east = min(180.0, mid_lon + 0.10)
+            logger.debug("[stage3_built] Bbox bounded to 0.20 deg centered at (%.3f, %.3f) for Overpass query", mid_lat, mid_lon)
+
         tag_line = '["railway"="rail"]' if line_kind == "railway" else '["highway"~"^(motorway|trunk|primary)$"]'
         
         # Look for bridges and water intersections
@@ -296,7 +306,7 @@ class Stage3Built:
             clue_kinds = {c.get("kind") for c in board.data.get("clues", {}).values() if isinstance(c, dict)}
             raw_hint = (board.data.get("user_hints", {}).get("raw_text", "") or "").lower()
             has_linear_infrastructure = (
-                bool({"corridor", "road_infrastructure", "railway", "infrastructure"} & clue_kinds)
+                bool({"corridor", "railway_crossing", "bridge_crossing", "railway"} & clue_kinds)
                 or any(k in raw_hint for k in ("bridge", "railway", "train", "crossing", "canal", "river crossing", "track", "rail"))
             )
 

@@ -636,3 +636,24 @@
 - [x] **Testing & Full Regression Verification**:
   - Added `test_skyline_extractor_rejects_manmade_roofline` and `test_stage3_terrain_bypasses_manmade_roofline` to `tests/test_stage3_terrain.py`.
   - Verified 100% test suite passing: **68/68 tests passing**.
+
+### Multi-Template Country Ensembling, Continuous Neural Refinement (HCNGR) & Landmark Corroboration
+- [x] **Multi-Template Zero-Shot Country Ensembling (stage1_clues.py, stage2_prior.py)**:
+  - Upgraded country perception prompts to an ensemble across 4 varied prompt templates ('a street or road photo in {c}', 'a scenic landscape or countryside in {c}', 'architecture and buildings in {c}', 'typical nature and flora in {c}').
+  - Averages logit matrices across template variants before softmax normalization, improving zero-shot classification robustness against varying lighting and image compositions.
+- [x] **Hierarchical Continuous Neural Location Refinement (HCNGR) (stage2_prior.py)**:
+  - Enhanced GeoCLIP point evaluation: for the top-5 discrete gallery locations, evaluates continuous Fourier location features over a two-tier continuous grid:
+    - Level 1: coarse grid +-0.60 deg (19 x 19 = 361 continuous coordinates).
+    - Level 2: fine grid +-0.12 deg (19 x 19 = 361 continuous coordinates).
+  - Continuously refines predicted coordinates beyond the discrete ~20k Flickr gallery point limits.
+- [x] **High-Confidence Landmark Corroboration (stage2_prior.py, stage1_clues.py)**:
+  - Upgraded Stage 1 landmark perception to automatically evaluate structures, urban scenes, and monuments with negative prompt rejection.
+  - Updated Stage 2 candidate pruning: preserves high-confidence Tier T1/T2 landmark candidates from landmark_matcher in search bounding boxes, preventing distant coarse cell priors from incorrectly discarding verified structures.
+- [x] **Road Sign Stop-Words & Phrase-Level Filtering (clues_adapter.py, stage1_clues.py)**:
+  - Expanded COMMON_STOP_WORDS with generic tourist and highway phrases ('historical marker', 'visitor center', 'viewpoint', 'welcome', 'border', 'scenic', 'monument', 'state line', 'turnpike').
+  - Enforced token-level phrase filtering: multi-word phrases composed entirely of stop words are prevented from querying Nominatim, eliminating spurious geocoding outliers.
+- [x] **Stage 3b Overpass Bounding Box Clamping (stage3_built.py)**:
+  - Clamped linear corridor search windows to a maximum of 0.20 deg x 0.20 deg centered on the candidate midpoint, preventing Overpass Gateway Timeout (504) failures on wide regional candidate boxes.
+- [x] **Testing & Full Regression Verification**:
+  - Added unit tests in 	ests/test_accuracy_enhancements.py covering stop-word phrase filtering, Stage 3b bounding box clamping, and Stage 2 landmark corroboration (18/18 passing).
+  - Verified 100% test suite passing across all milestones: **71/71 tests passing**.

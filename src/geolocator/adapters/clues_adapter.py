@@ -306,6 +306,12 @@ COMMON_STOP_WORDS = {
     "safe", "safety", "fasten", "buckle", "caution", "danger", "warning", "toll plaza",
     "vehicle", "traffic", "rules", "fine", "penalty", "camera", "km/h", "mph", "post", "check",
     "seat belt", "seat beit",
+    # Generic sign phrases and markers
+    "historic", "historical", "birthplace", "monument", "memorial", "visitor", "visitors",
+    "museum", "famous", "scenic", "byway", "route", "national", "park", "heritage",
+    "lookout", "viewpoint", "preservation", "historical marker", "marker", "welcome to",
+    "welcome", "border", "welcome to the", "landmark", "state line", "country store",
+    "trading post", "mile", "miles", "junction", "intersection", "turnpike",
     # Urdu / Persian / Arabic common words
     "پولیس", "کنٹرول", "سب", "چائے", "ہوٹل", "روڈ", "تھانہ", "ڈویژن", "ضلع", "تحصیل", "شہر", "مرکز",
     "شارع", "طريق", "جادة", "دوار", "منطقة", "محافظة", "ولاية", "بلدية", "مستشفى", "صيدلية", "بنك",

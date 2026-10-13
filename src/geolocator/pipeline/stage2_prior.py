@@ -159,7 +159,13 @@ class Stage2Prior:
                         im.thumbnail((672, 672), Image.LANCZOS)
                     
                     w, h = im.size
-                    prompts = [f"a photo taken in {c}" for c in unique_countries]
+                    templates = [
+                        "a photo taken in {c}",
+                        "a street or road photo in {c}",
+                        "a scenic landscape or countryside in {c}",
+                        "architecture and buildings in {c}",
+                    ]
+                    all_prompts = [tmpl.format(c=c) for tmpl in templates for c in unique_countries]
 
                     if w >= 224 and h >= 224:
                         crop_full = im
@@ -171,10 +177,10 @@ class Stage2Prior:
                         crops = [im]
                         weights = [1.0]
 
-                    inputs = processor(text=prompts, images=crops, return_tensors="pt", padding=True).to(device)
+                    inputs = processor(text=all_prompts, images=crops, return_tensors="pt", padding=True).to(device)
                     with torch.no_grad():
                         outputs = model(**inputs)
-                        probs_mat = outputs.logits_per_image.softmax(dim=-1).cpu().numpy()
+                        probs_mat = outputs.logits_per_image.view(len(crops), len(templates), len(unique_countries)).mean(dim=1).softmax(dim=-1).cpu().numpy()
                         # Weighted sum across crops
                         combined_probs = np.zeros(len(unique_countries), dtype=np.float32)
                         for cr_idx, w_cr in enumerate(weights):
@@ -183,7 +189,7 @@ class Stage2Prior:
 
                     scored = {c: float(p) for c, p in zip(unique_countries, combined_probs)}
                     sorted_scored = dict(sorted(scored.items(), key=lambda kv: kv[1], reverse=True))
-                    logger.info("[stage2] Zero-shot multi-crop geographic ranking: %s", 
+                    logger.info("[stage2] Zero-shot multi-crop geographic ranking (ensemble): %s", 
                                 {k: f"{v*100:.1f}%" for k, v in list(sorted_scored.items())[:5]})
                     return sorted_scored
         except Exception as e:
@@ -197,7 +203,7 @@ class Stage2Prior:
         mock_predictions: Optional[List[Dict[str, float]]] = None,
         multi_crop: bool = True,
     ) -> List[Dict[str, float]]:
-        """Run GeoCLIP inference with batched multi-crop spatial pooling."""
+        """Run GeoCLIP inference with batched multi-crop spatial pooling and HCNGR refinement."""
         if mock_predictions is not None:
             return mock_predictions
 
@@ -232,6 +238,34 @@ class Stage2Prior:
                         top_pred = torch.topk(probs, min(top_k, gps_gal.shape[0]), dim=1)
                         coords_np = gps_gal.index_select(0, top_pred.indices[0]).cpu().numpy()
                         probs_np = top_pred.values[0].cpu().numpy()
+
+                        # Hierarchical Continuous Neural Location Refinement (HCNGR)
+                        # Evaluates continuous Fourier features to refine discrete gallery points
+                        for top_i in range(min(5, len(coords_np))):
+                            try:
+                                c_lat, c_lon = float(coords_np[top_i][0]), float(coords_np[top_i][1])
+                                # Level 1: coarse grid +/- 0.6 degrees (19x19 = 361 points)
+                                lats1 = np.linspace(c_lat - 0.6, c_lat + 0.6, 19)
+                                lons1 = np.linspace(c_lon - 0.6, c_lon + 0.6, 19)
+                                grid_lats1, grid_lons1 = np.meshgrid(lats1, lons1)
+                                grid1 = np.stack([grid_lats1.ravel(), grid_lons1.ravel()], axis=1)
+                                t_grid1 = torch.tensor(grid1, dtype=torch.float32, device=m_dev)
+                                logits1 = model.forward(batch[0:1], t_grid1)
+                                best_i1 = torch.argmax(logits1[0]).item()
+                                b_lat1, b_lon1 = float(grid1[best_i1][0]), float(grid1[best_i1][1])
+
+                                # Level 2: fine grid +/- 0.12 degrees (19x19 = 361 points)
+                                lats2 = np.linspace(b_lat1 - 0.12, b_lat1 + 0.12, 19)
+                                lons2 = np.linspace(b_lon1 - 0.12, b_lon1 + 0.12, 19)
+                                grid_lats2, grid_lons2 = np.meshgrid(lats2, lons2)
+                                grid2 = np.stack([grid_lats2.ravel(), grid_lons2.ravel()], axis=1)
+                                t_grid2 = torch.tensor(grid2, dtype=torch.float32, device=m_dev)
+                                logits2 = model.forward(batch[0:1], t_grid2)
+                                best_i2 = torch.argmax(logits2[0]).item()
+                                coords_np[top_i][0] = float(grid2[best_i2][0])
+                                coords_np[top_i][1] = float(grid2[best_i2][1])
+                            except Exception as e_hcngr:
+                                logger.debug("[stage2_hcngr] Refinement skipped for point %d: %s", top_i, e_hcngr)
 
                 for i in range(len(coords_np)):
                     predictions.append({
@@ -471,7 +505,7 @@ class Stage2Prior:
         for p in raw_predictions:
             lat = p["lat"]
             lon = p["lon"]
-            prob = max(1e-12, p["prob"])
+            prob = max(1e-12, float(p.get("prob", p.get("score", 1.0))))
             country = get_country_candidate(lat, lon)
 
             # Hierarchical visual prior: P(point | image) = P(country | image) * P(point | country)
@@ -792,9 +826,12 @@ class Stage2Prior:
                         if top_cluster_country.lower() != c_cand_country.lower():
                             country_conflict = True
 
-                    # Only accept point candidates within 150 km of visual prior clusters without cross-country contradiction,
-                    # or explicitly matching ground truth user hint
-                    if ((min_dist_km <= 150.0 and not country_conflict) or hint_match):
+                    # Accept point candidates within 150 km of visual prior clusters without cross-country contradiction,
+                    # or explicitly matching ground truth user hint, or high-confidence landmark perception
+                    is_landmark_source = cand.get("metadata", {}).get("source") in ("landmark_matcher", "landmark_hint")
+                    is_confident_landmark = is_landmark_source and cand.get("metadata", {}).get("tier") in ("T1", "T2")
+
+                    if ((min_dist_km <= 150.0 and not country_conflict) or hint_match or is_confident_landmark):
                         g_bbox = cand.get("bbox") or [p_lat - 0.05, p_lon - 0.05, p_lat + 0.05, p_lon + 0.05]
                         cand_subdiv = get_subnational_division(p_lat, p_lon)
                         corroborated_point_bboxes.append({

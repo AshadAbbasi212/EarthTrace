@@ -278,7 +278,12 @@ class Stage1Clues:
         filtered_phrases = []
         for p in unique_phrases:
             pl = p.strip().lower()
-            if pl not in COMMON_STOP_WORDS and len(pl) >= 2:
+            tokens = [t.lower() for t in re.findall(r"\b\w+\b", pl)]
+            if (
+                pl not in COMMON_STOP_WORDS 
+                and len(pl) >= 2 
+                and not (tokens and all(t in COMMON_STOP_WORDS for t in tokens))
+            ):
                 filtered_phrases.append(p)
 
         filtered_phrases.sort(key=lambda p: (0 if p in known_synonyms else 1, len(p) < 4))
@@ -290,15 +295,20 @@ class Stage1Clues:
         for phrase in filtered_phrases:
             try:
                 query_str = GEO_PHONETIC_SYNONYMS.get(phrase, phrase).strip()
+                query_words = [t.lower() for t in re.findall(r"\b\w+\b", query_str)]
+                if query_words and all(t in COMMON_STOP_WORDS for t in query_words):
+                    logger.debug("[stage1] Skipping token '%s' (all constituent words in COMMON_STOP_WORDS)", query_str)
+                    continue
+
                 is_route_code = bool(re.search(r"\b(US|I|M|A|B|D|N|RN|BR|NH|SH|E|Q|O|Ruta|Route|Hwy|Highway)\s*[\-\.]?\s*(\d{1,4}[A-Z]?)\b", query_str, re.IGNORECASE))
                 
                 # Rule: Only query Nominatim if the token is a recognized route code, a known phonetic synonym,
-                # a multi-word phrase, or a capitalized proper noun of at least 5 letters.
+                # a multi-word phrase with non-stopword tokens, or a capitalized proper noun of at least 5 letters.
                 # Never query arbitrary 3-4 letter abbreviations/fragments (e.g. BEIT, NYOK, STOP).
                 is_proper_place_query = (
                     is_route_code
                     or (query_str in GEO_PHONETIC_SYNONYMS.values())
-                    or (len(query_str.split()) >= 2)
+                    or (len(query_str.split()) >= 2 and any(t not in COMMON_STOP_WORDS for t in query_words))
                     or (len(query_str) >= 5 and query_str[0].isupper() and query_str.lower() not in COMMON_STOP_WORDS)
                 )
 
@@ -320,8 +330,8 @@ class Stage1Clues:
                 if not nom_results and country_codes_param:
                     nom_results = self.nominatim.search(query_str, country_codes=country_codes_param, limit=1)
 
-                # Fallback to global query ONLY for distinct multi-word proper nouns
-                if not nom_results and not is_route_code and len(query_str.split()) >= 2:
+                # Fallback to global query ONLY for distinct multi-word proper nouns with substantial non-stopword tokens
+                if not nom_results and not is_route_code and len(query_str.split()) >= 2 and any(t not in COMMON_STOP_WORDS for t in query_words):
                     nom_results = self.nominatim.search(query_str, limit=1)
 
                 if nom_results:
@@ -828,19 +838,26 @@ class Stage1Clues:
             except Exception as e:
                 logger.debug("[stage1_skyline] Direct contour check error: %s", e)
 
-            # Zero-shot Country Perception Sweep
-            country_prompts = [f"a street or landscape in {c}" for c in GLOBAL_GEOLOC_COUNTRIES]
-            c_inputs = clip_proc(text=country_prompts, images=im, return_tensors="pt", padding=True).to(device)
+            # Multi-template Zero-shot Country Perception Sweep
+            country_templates = [
+                "a street or road photo in {c}",
+                "a scenic landscape or countryside in {c}",
+                "architecture and buildings in {c}",
+                "typical nature and flora in {c}",
+            ]
+            all_country_prompts = [tmpl.format(c=c) for tmpl in country_templates for c in GLOBAL_GEOLOC_COUNTRIES]
+            c_inputs = clip_proc(text=all_country_prompts, images=im, return_tensors="pt", padding=True).to(device)
             with torch.no_grad():
                 c_out = clip_model(**c_inputs)
-                c_probs = c_out.logits_per_image.softmax(dim=-1).cpu().numpy()[0]
+                c_logits_mat = c_out.logits_per_image.view(len(country_templates), len(GLOBAL_GEOLOC_COUNTRIES)).mean(dim=0)
+                c_probs = c_logits_mat.softmax(dim=-1).cpu().numpy()
 
             top_c_indices = np.argsort(c_probs)[::-1]
             top_c1_idx = int(top_c_indices[0])
             top_c1_country = GLOBAL_GEOLOC_COUNTRIES[top_c1_idx]
             top_c1_prob = float(c_probs[top_c1_idx])
             logger.info(
-                "[stage1_country] Top zero-shot countries: %s (%.3f), %s (%.3f), %s (%.3f)",
+                "[stage1_country] Top zero-shot countries (multi-template ensemble): %s (%.3f), %s (%.3f), %s (%.3f)",
                 top_c1_country, top_c1_prob,
                 GLOBAL_GEOLOC_COUNTRIES[int(top_c_indices[1])], float(c_probs[top_c_indices[1]]),
                 GLOBAL_GEOLOC_COUNTRIES[int(top_c_indices[2])], float(c_probs[top_c_indices[2]]),
@@ -853,18 +870,25 @@ class Stage1Clues:
             if top_c1_prob >= 0.18 and not region_guesses:
                 region_guesses.append(RegionGuessItem(place=top_c1_country, confidence=round(top_c1_prob, 3), reason="Vision-language country prior"))
 
-            # Informational landmark perception (with candidate countries consistency filter)
+            # Automatic Landmark Perception:
+            # LandmarkMatcher uses 8 negative prompt rejectors and country consistency checks.
+            # Run whenever scene is not flat empty terrain, or if user explicitly hinted landmarks.
             user_requested_landmark = bool(board and board.data.get("user_hints", {}).get("landmarks"))
             all_known_countries = list(dict.fromkeys((candidate_countries or []) + visual_country_candidates))
-            if user_requested_landmark:
+            should_run_landmark = (
+                user_requested_landmark
+                or scene_type in ("urban", "monument", "mountain", "desert", "coastal", "other")
+            )
+            if should_run_landmark:
                 lm_matcher = LandmarkMatcher()
                 lm_res = lm_matcher.match(im, clip_model, clip_proc, device=device, candidate_countries=all_known_countries)
-                if lm_res and lm_res.get("confidence", 0.0) >= 0.60:
+                if lm_res and lm_res.get("confidence", 0.0) >= 0.50:
                     l_name = lm_res["name"]
                     l_lat = lm_res["latitude"]
                     l_lon = lm_res["longitude"]
                     l_conf = lm_res["confidence"]
-                    region_guesses.append(RegionGuessItem(place=l_name, confidence=l_conf, reason="User-requested landmark perception"))
+                    reason_desc = "User-requested landmark perception" if user_requested_landmark else "Zero-shot visual landmark identification"
+                    region_guesses.append(RegionGuessItem(place=l_name, confidence=l_conf, reason=reason_desc))
                     cand_name = f"Landmark: {l_name}"
                     if board:
                         board.add_candidate(
@@ -872,12 +896,12 @@ class Stage1Clues:
                             level="point",
                             lat=l_lat,
                             lon=l_lon,
-                            prior=2.5,
+                            prior=3.5,
                             metadata={
                                 "landmark": l_name,
-                                "tier": "T2",
+                                "tier": "T1" if l_conf >= 0.70 else "T2",
                                 "radius_km": lm_res.get("radius_km", 2.0),
-                                "source": "landmark_hint",
+                                "source": "landmark_matcher",
                             }
                         )
 
