@@ -602,5 +602,7 @@
     - Populated and rendered structured evidence breakdown in the decision report and markdown output.
 - [x] **Automated Regression Suite**:
   - Added new unit tests in `tests/test_accuracy_enhancements.py` covering subnational parsing, prior conditioning, and low-light contrast enhancement (11/11 passing).
-  - All test suites passing without regressions.
+  - Fixed variable name typo (`job_path` -> `job_dir`) in `ReportGenerator.build_report_data` (`generator.py`) preventing `NameError` at Stage 5 completion.
+  - Complete test suite passing: **62/62 tests passing cleanly**.
+
 
