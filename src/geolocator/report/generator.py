@@ -107,14 +107,17 @@ class ReportGenerator:
             margin = score - runner_up_score
 
             # Check if verified by high-precision branches
-            if "sign_text" in meta or "Geocoded Sign" in top_name:
+            if meta.get("online_copilot"):
+                tier = meta.get("tier", "T2")
+                calibrated_radius_km = float(meta.get("radius_km", 5.0))
+            elif "sign_text" in meta or "Geocoded Sign" in top_name:
                 tier = meta.get("tier", "T1")
                 calibrated_radius_km = float(meta.get("radius_km", 1.5))
             elif "corridor_score" in meta and meta["corridor_score"] >= 3.0:
                 tier = "T1"
                 calibrated_radius_km = 0.5
-            elif "fit_score" in meta and meta["fit_score"] >= 0.50:
-                tier = meta.get("tier", "T2" if meta["fit_score"] >= 0.65 else "T3")
+            elif "fit_score" in meta and meta["fit_score"] >= 0.70:
+                tier = meta.get("tier", "T2" if meta["fit_score"] >= 0.80 else "T3")
                 calibrated_radius_km = float(meta.get("radius_km", 4.5 if tier == "T2" else 15.0))
             elif meta.get("source") == "cadastral_exact_mark":
                 tier = "T1"

@@ -88,6 +88,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         hints: Optional[str] = Form(None),
         excluded_countries: Optional[str] = Form(None),
         terrain_filter: Optional[str] = Form(None),
+        api_key: Optional[str] = Form(None),
     ):
         """Upload photo and optional user hints/co-pilot constraints, enqueueing job for processing."""
         job_id = f"job_{uuid.uuid4().hex[:12]}"
@@ -126,7 +127,12 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         )
 
         # Enqueue for sequential processing
-        await queue_mgr.enqueue(job_id=job_id, photo_path=photo_path, user_hint=combined_hints)
+        await queue_mgr.enqueue(
+            job_id=job_id,
+            photo_path=photo_path,
+            user_hint=combined_hints,
+            api_key=api_key,
+        )
 
         return {
             "job_id": job_id,

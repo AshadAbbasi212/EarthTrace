@@ -605,4 +605,20 @@
   - Fixed variable name typo (`job_path` -> `job_dir`) in `ReportGenerator.build_report_data` (`generator.py`) preventing `NameError` at Stage 5 completion.
   - Complete test suite passing: **62/62 tests passing cleanly**.
 
+### False-Positive Gating & Optional Free Online Co-Pilot (Gemini API)
+- [x] **Elevation Skylines False-Positive Gating (`orchestrator.py`, `stage3_terrain.py`)**:
+  - Gated DEM search to execute only when genuine mountainous/hilly terrain or user mountain hints are detected. Flat and urban scenes bypass DEM search with status `not_applicable`.
+  - Raised viewpoint promotion threshold to NCC $\ge 0.72$ (with $0.45 \le \text{NCC} < 0.72$ retained as supporting clues only), preventing spurious point fabrication.
+- [x] **OSM Geometry Gating (`stage3_built.py`)**:
+  - Gated linear corridor intersection matching to only run when explicit linear infrastructure clues (railway, bridge, corridor) or hints are observed.
+  - Natural/rural landscapes without linear infrastructure now honestly output `not_applicable`, eliminating fabricated bridge point coordinates.
+- [x] **Optional Free Online Co-Pilot (`online_copilot.py`, `api.py`, `app.js`, `index.html`)**:
+  - Integrated `OnlineCoPilotProvider` supporting free Google AI Studio Gemini API keys (`gemini-2.5-flash` / `gemini-1.5-flash`).
+  - Added optional UI key input in the Tactical Accuracy Co-Pilot panel (with persistent `localStorage` retention).
+  - Maintained 100% backward-compatible, graceful offline fallback: when no key is provided, the pipeline executes completely offline and locally without errors, preserving strict adherence to `AGENTS.md`.
+- [x] **Testing & Verification**:
+  - Added tests in `tests/test_accuracy_enhancements.py` verifying built gating, terrain thresholding, and online copilot mock execution (15/15 tests passing).
+  - Complete pipeline, backend API, and stage tests verified passing without regressions.
+
+
 

@@ -326,3 +326,24 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
 - **Verification & Outcome:**
   - Evaluated user photo `IMG_2555.JPG` (`job_845795f4c401`).
   - Pipeline successfully promoted `Terrain Ridgeline Viewpoint (34.2647, 73.9854)` in `Azad Kashmir (Muzaffarabad / Jhelum Valley)` to #1 on the candidate board with Tier **T2 (4.5 km)**, score **10.8335**, completely eliminating the static collapse onto coarse cell defaults.
+
+---
+
+## 27. False-Positive Gating for Elevation Skylines / OSM Geometry & Optional Free Online Co-Pilot
+- **Problem Statement:**
+  - Elevation Skylines (`stage3_terrain`) was being executed unconditionally on every image in `orchestrator.py`, even for flat city streets or indoor scenes where tree lines, clouds, or rooflines triggered spurious DEM searches.
+  - The viewpoint candidate promotion threshold ($\ge 0.50$ NCC) was too permissive, allowing weak accidental cross-correlations against mountain terrain to inject `level="point"` candidates that hijacked regional predictions.
+  - OSM Geometry (`stage3_built`) defaulted to synthesizing a diagonal corridor across bounding boxes and searching for railway/river crossings even when no bridge, railway, or linear infrastructure was present in the image, resulting in fabricated `OSM Infrastructure Corridor Point` candidates.
+- **Architectural Solution & Decisions:**
+  1. **Elevation Skylines False-Positive Gating:**
+     - `orchestrator.py` now checks `scene_type` and `relief`: DEM skyline search only triggers if the scene contains genuine mountain/hill relief or if user hints specify mountainous terrain. Flat and urban scenes bypass DEM search with status `not_applicable`.
+     - Raised the viewpoint candidate promotion threshold from $\ge 0.50$ to $\ge 0.72$ NCC. Scores between $0.45$ and $0.71$ are retained strictly as supporting visual clues for the regional candidate without fabricating an unverified point coordinate.
+  2. **OpenStreetMap Geometry Gating:**
+     - `stage3_built.py` checks for linear infrastructure clues (`corridor`, `railway`, `road_infrastructure`) or hints before querying crossings.
+     - If no bridge, railway, or linear corridor is observed, it bypasses corridor search and honestly outputs `not_applicable`, eliminating fabricated bridge point candidates.
+  3. **Optional Free Online Co-Pilot Integration (Google Gemini API):**
+     - Implemented `OnlineCoPilotProvider` supporting the free tier of Google AI Studio Gemini API (`gemini-2.5-flash` / `gemini-1.5-flash`).
+     - **100% Opt-In & Backward-Compatible:** Users can configure `GEMINI_API_KEY` in `config.yaml`, `.env`, or directly in the Web UI co-pilot input.
+     - When an API key is provided, the provider executes cloud-scale multimodal reasoning, extracting pinpoint coordinates and forensic rationale.
+     - When no key is provided, the provider silently bypasses, guaranteeing 100% offline, local execution without errors or dependencies, fully compliant with `AGENTS.md`.
+

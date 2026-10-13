@@ -199,3 +199,123 @@ def test_stage0_low_light_contrast_enhancement(tmp_path):
     assert Path(intake_summary["working_enhanced"]).exists()
     assert board.data["is_low_light"] is True
 
+
+def test_stage3_built_bypassed_when_no_linear_infrastructure(tmp_path):
+    """Verify Stage3Built returns not_applicable and does not fabricate points without linear clues."""
+    from geolocator.pipeline.stage3_built import Stage3Built
+
+    job_dir = tmp_path / "job_no_infra"
+    photo_path = tmp_path / "desert.jpg"
+    im = Image.new("RGB", (100, 100), (200, 180, 120))
+    im.save(photo_path, format="JPEG")
+
+    board = CandidateBoard(photo_path=photo_path, board_path=job_dir / "board.json")
+    # Natural scene: no bridge, railway, or corridor clues
+    board.add_clue(text="Arid desert dunes", kind="soil_type", status="observed")
+
+    stage3b = Stage3Built()
+    summary, board = stage3b.process(job_dir, board)
+
+    assert summary["status"] == "not_applicable"
+    assert "No linear corridor or bridge" in summary["reason"]
+    # Verify no candidate points were fabricated
+    assert len(board.data["candidates"]) == 0
+
+
+def test_stage3_terrain_does_not_fabricate_point_at_moderate_ncc(tmp_path):
+    """Verify Stage3Terrain does not promote viewpoint candidate if NCC is below 0.72."""
+    from geolocator.pipeline.stage3_terrain import Stage3Terrain
+
+    job_dir = tmp_path / "job_moderate_ncc"
+    photo_path = tmp_path / "photo.jpg"
+    im = Image.new("RGB", (100, 100), (100, 120, 140))
+    im.save(photo_path, format="JPEG")
+
+    board = CandidateBoard(photo_path=photo_path, board_path=job_dir / "board.json")
+    stage3a = Stage3Terrain()
+
+    # Synthetic profile with mock score ~ 0.55
+    # Should not promote candidate point
+    stage3a.search_viewpoint = lambda **kwargs: {
+        "best_viewpoint": {"lat": 34.0, "lon": 73.0, "heading": 180.0},
+        "best_score": 0.58,  # Below 0.72 threshold
+        "calibrated_radius_km": 15.0,
+        "confidence_tier": "T3",
+    }
+
+    mock_profile = [0.1, 0.2, 0.4, 0.3, 0.1, 0.5, 0.3, 0.2]
+    summary, board = stage3a.process(
+        job_dir=job_dir,
+        board=board,
+        photo_skyline_override=mock_profile,
+    )
+
+    # Point candidate should NOT be fabricated
+    point_cands = [c for c in board.data["candidates"].values() if c.get("level") == "point"]
+    assert len(point_cands) == 0
+
+
+def test_online_copilot_disabled_offline_fallback(tmp_path):
+    """Verify OnlineCoPilotProvider is disabled when no key is set and bypasses silently."""
+    from geolocator.providers.online_copilot import OnlineCoPilotProvider
+
+    copilot = OnlineCoPilotProvider(api_key=None)
+    # Ensure environment key is not set
+    import os
+    orig_env = os.environ.get("GEMINI_API_KEY")
+    if orig_env:
+        del os.environ["GEMINI_API_KEY"]
+
+    try:
+        assert copilot.is_enabled() is False
+        job_dir = tmp_path / "job_offline"
+        photo_path = tmp_path / "photo.jpg"
+        im = Image.new("RGB", (50, 50), (100, 100, 100))
+        im.save(photo_path, format="JPEG")
+        board = CandidateBoard(photo_path=photo_path, board_path=job_dir / "board.json")
+
+        result = copilot.process(job_dir, board, photo_path)
+        assert result is None
+        assert len(board.data["candidates"]) == 0
+    finally:
+        if orig_env:
+            os.environ["GEMINI_API_KEY"] = orig_env
+
+
+def test_online_copilot_mock_success(tmp_path):
+    """Verify OnlineCoPilotProvider adds verified candidate when API succeeds."""
+    from geolocator.providers.online_copilot import OnlineCoPilotProvider
+
+    copilot = OnlineCoPilotProvider(api_key="mock_test_key")
+    assert copilot.is_enabled() is True
+
+    # Mock analyze_photo
+    copilot.analyze_photo = lambda *args, **kwargs: {
+        "location_name": "Eiffel Tower, Paris",
+        "country": "France",
+        "state_or_province": "Île-de-France",
+        "city_or_district": "Paris",
+        "latitude": 48.8584,
+        "longitude": 2.2945,
+        "confidence_tier": "T1",
+        "error_radius_km": 0.05,
+        "supporting_clues": ["Wrought-iron lattice tower structure", "Champ de Mars alignment"],
+        "forensic_rationale": "Distinctive architectural silhouette of the Eiffel Tower in Paris.",
+    }
+
+    job_dir = tmp_path / "job_mock_copilot"
+    photo_path = tmp_path / "photo.jpg"
+    im = Image.new("RGB", (50, 50), (100, 100, 100))
+    im.save(photo_path, format="JPEG")
+    board = CandidateBoard(photo_path=photo_path, board_path=job_dir / "board.json")
+
+    res = copilot.process(job_dir, board, photo_path, api_key="mock_test_key")
+    assert res is not None
+    assert "Online Vision: Eiffel Tower, Paris" in board.data["candidates"]
+    top_cand = board.data["candidates"]["Online Vision: Eiffel Tower, Paris"]
+    assert top_cand["lat"] == 48.8584
+    assert top_cand["lon"] == 2.2945
+    assert top_cand["level"] == "point"
+    assert (job_dir / "online_copilot_results.json").exists()
+
+

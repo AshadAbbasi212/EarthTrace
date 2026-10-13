@@ -307,8 +307,10 @@ class Stage3Terrain:
         best_vp = fit_results.get("best_viewpoint")
         score = fit_results.get("best_score", -1.0)
 
-        # Calibrated DEM viewpoint promotion threshold (NCC >= 0.50 confirms genuine physical terrain match)
-        if best_vp and score >= 0.50:
+        # Calibrated DEM viewpoint promotion threshold:
+        # Require strong physical correlation (NCC >= 0.72) to promote a point viewpoint candidate.
+        # Moderate correlations (0.45 - 0.71) are recorded as supporting evidence without overriding locations.
+        if best_vp and score >= 0.72:
             v_lat = best_vp["lat"]
             v_lon = best_vp["lon"]
             v_heading = best_vp["heading"]
@@ -341,6 +343,13 @@ class Stage3Terrain:
                 candidate_weights={cand_name: weight},
                 rationale=f"Photographic skyline matched against AWS Terrarium DEM (NCC={score:.3f})",
                 artifact_path=str(job_dir / "terrain_results.json"),
+            )
+        elif best_vp and score >= 0.45:
+            # Supporting clue only; do not fabricate a point candidate that hijacks predictions
+            board.add_clue(
+                text=f"Terrain ridgeline curvature consistent with regional DEM (NCC={score:.3f}, unverified viewpoint)",
+                kind="terrain",
+                status="computed",
             )
 
         board.data["stages_run"].append("stage3_terrain")

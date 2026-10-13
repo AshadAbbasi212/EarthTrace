@@ -1,6 +1,7 @@
 """Master Pipeline Orchestrator: Chains Stages 0 through 5 with candidate board tracking."""
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
@@ -13,6 +14,7 @@ from geolocator.pipeline.stage2_prior import Stage2Prior
 from geolocator.pipeline.stage3_terrain import Stage3Terrain
 from geolocator.pipeline.stage3_built import Stage3Built
 from geolocator.pipeline.stage4_verification import Stage4Verification
+from geolocator.providers.online_copilot import OnlineCoPilotProvider
 from geolocator.report.generator import ReportGenerator
 
 logger = logging.getLogger("geolocator.pipeline.orchestrator")
@@ -30,6 +32,7 @@ class PipelineOrchestrator:
         self.stage3_built = Stage3Built(self.config)
         self.stage4 = Stage4Verification(self.config)
         self.stage5 = ReportGenerator()
+        self.online_copilot = OnlineCoPilotProvider()
 
     def run(
         self,
@@ -37,6 +40,7 @@ class PipelineOrchestrator:
         job_dir: Optional[str | Path] = None,
         user_hint_text: Optional[str] = None,
         progress_callback: Optional[Callable[[str, int], None]] = None,
+        api_key: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Execute complete geolocation workflow."""
         photo_path = Path(photo_path)
@@ -78,6 +82,23 @@ class PipelineOrchestrator:
         report_progress("Stage 1: Extracting Visual Clues & OCR", 25)
         clues_res, board = self.stage1.process(job_dir, board, user_hint_text=user_hint_text)
 
+        # Optional Online Co-Pilot (e.g. free Gemini API key)
+        working_img = job_dir / "working_1024.jpg"
+        if not working_img.exists():
+            working_img = photo_path
+        if self.online_copilot.is_enabled(api_key):
+            report_progress("Online Co-Pilot: Multimodal Cloud Vision Analysis", 35)
+            try:
+                self.online_copilot.process(
+                    job_dir=job_dir,
+                    board=board,
+                    working_image_path=working_img,
+                    user_hint=user_hint_text,
+                    api_key=api_key,
+                )
+            except Exception as e:
+                logger.warning("[orchestrator] Online co-pilot error: %s (continuing offline)", e)
+
         # ----------------------------------------------------
         # Stage 2: Global Prior & Biome Candidate Bounding Boxes
         # ----------------------------------------------------
@@ -92,14 +113,49 @@ class PipelineOrchestrator:
         terrain_obj = getattr(clues_res, "terrain", None)
         relief = getattr(terrain_obj, "relief", "flat") if terrain_obj else "flat"
         horizon_vis = getattr(terrain_obj, "horizon_visible", False) if terrain_obj else False
+        hint_lower = (user_hint_text or "").lower()
 
-        # Terrain skyline branch: analyzes image skyline, saves skyline_overlay.png,
-        # and executes DEM correlation search whenever genuine mountain/hill relief exists.
-        self.stage3_terrain.process(job_dir, board)
+        # 3a. Terrain skyline branch: only runs when genuine mountain/hill relief is present
+        is_mountainous_relief = (
+            scene_type in ("mountain", "wilderness")
+            or relief in ("mountainous", "hilly")
+            or horizon_vis
+            or any(k in hint_lower for k in ("mountain", "ridge", "alps", "peak", "himalaya", "valley", "hiking", "pass", "summit", "cliff", "hill"))
+        )
+        if is_mountainous_relief:
+            self.stage3_terrain.process(job_dir, board)
+        else:
+            logger.info("[orchestrator] Scene is flat/urban (type='%s', relief='%s'). Bypassing DEM skyline search.", scene_type, relief)
+            board.data["stages_run"].append("stage3_terrain")
+            board.data["terrain_evaluation"] = {
+                "status": "not_applicable",
+                "reason": f"Scene classified as flat or urban terrain (scene='{scene_type}', relief='{relief}') without prominent ridgeline; skyline search bypassed.",
+            }
+            summary = {
+                "status": "not_applicable",
+                "reason": f"Scene classified as flat or urban terrain (scene='{scene_type}', relief='{relief}') without prominent ridgeline; skyline search bypassed.",
+                "fit_results": {"best_score": 0.0, "best_viewpoint": None},
+            }
+            (job_dir / "terrain_results.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+            board.save()
 
-        # Built & infrastructure branch runs for urban, buildings, landmarks, roads, bridges
-        if any(b in scene_type for b in ("urban", "building", "landmark", "rural_road", "farmland", "bridge", "coast", "other")):
+        # 3b. Built & infrastructure branch runs for urban, buildings, landmarks, roads, bridges
+        has_built_cues = (
+            any(b in scene_type for b in ("urban", "building", "landmark", "rural_road", "farmland", "bridge", "coast", "other"))
+            or any(k in hint_lower for k in ("bridge", "railway", "train", "crossing", "road", "building", "street", "city", "station"))
+            or any(cand.get("level") == "point" for cand in board.data.get("candidates", {}).values())
+        )
+        if has_built_cues:
             self.stage3_built.process(job_dir, board)
+        else:
+            board.data["stages_run"].append("stage3_built")
+            summary = {
+                "status": "not_applicable",
+                "reason": "Natural terrain without built structures or linear infrastructure; corridor search bypassed.",
+                "match_results": {"status": "not_applicable"},
+            }
+            (job_dir / "osm_corridor_results.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+            board.save()
 
         # ----------------------------------------------------
         # Stage 4: Verification & Camera Pose Resection

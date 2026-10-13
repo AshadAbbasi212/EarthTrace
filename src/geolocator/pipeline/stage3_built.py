@@ -292,6 +292,27 @@ class Stage3Built:
             corridor = mock_corridor
             crossings = mock_crossings or []
         else:
+            # Check whether linear infrastructure is genuinely observed in visual clues or hints
+            clue_kinds = {c.get("kind") for c in board.data.get("clues", {}).values() if isinstance(c, dict)}
+            raw_hint = (board.data.get("user_hints", {}).get("raw_text", "") or "").lower()
+            has_linear_infrastructure = (
+                bool({"corridor", "road_infrastructure", "railway", "infrastructure"} & clue_kinds)
+                or any(k in raw_hint for k in ("bridge", "railway", "train", "crossing", "canal", "river crossing", "track", "rail"))
+            )
+
+            if not has_linear_infrastructure:
+                logger.info("[stage3_built] No linear infrastructure or bridge detected. Bypassing corridor matching.")
+                summary = {
+                    "search_bbox": search_bbox,
+                    "match_results": {"status": "not_applicable", "score": 0.0},
+                    "status": "not_applicable",
+                    "reason": "No linear corridor or bridge infrastructure detected in photo; corridor intersection search bypassed.",
+                }
+                board.data["stages_run"].append("stage3_built")
+                board.save()
+                (job_dir / "osm_corridor_results.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+                return summary, board
+
             crossings = self.query_crossings_in_bbox(search_bbox, line_kind="railway")
             # Create polyline across bbox center if no explicit line was passed
             s, w, n, e = search_bbox

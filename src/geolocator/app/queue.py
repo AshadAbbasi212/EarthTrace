@@ -40,12 +40,13 @@ class JobQueueManager:
                 pass
             self.worker_task = None
 
-    async def enqueue(self, job_id: str, photo_path: Path, user_hint: Optional[str] = None) -> None:
+    async def enqueue(self, job_id: str, photo_path: Path, user_hint: Optional[str] = None, api_key: Optional[str] = None) -> None:
         """Add job to sequential queue."""
         await self.queue.put({
             "job_id": job_id,
             "photo_path": photo_path,
             "user_hint": user_hint,
+            "api_key": api_key,
         })
         self.start_worker()
 
@@ -73,6 +74,8 @@ class JobQueueManager:
                     pass
 
     async def _process_queue(self) -> None:
+        from functools import partial
+
         while not self._stopped:
             try:
                 item = await self.queue.get()
@@ -82,6 +85,7 @@ class JobQueueManager:
             job_id = item["job_id"]
             photo_path = item["photo_path"]
             user_hint = item["user_hint"]
+            api_key = item.get("api_key")
 
             # Check if job was cancelled while waiting in queue
             job_rec = self.db.get_job(job_id)
@@ -105,16 +109,23 @@ class JobQueueManager:
                 )
 
             try:
+                import inspect
                 job_dir = Path(job_rec["job_dir"]) if job_rec else photo_path.parent
                 # Run synchronous pipeline in thread pool to keep asyncio event loop responsive
-                report_data = await loop.run_in_executor(
-                    None,
+                sig = inspect.signature(self.orchestrator.run)
+                kwargs = {}
+                if "api_key" in sig.parameters:
+                    kwargs["api_key"] = api_key
+
+                run_fn = partial(
                     self.orchestrator.run,
                     photo_path,
                     job_dir,
                     user_hint,
                     progress_hook,
+                    **kwargs,
                 )
+                report_data = await loop.run_in_executor(None, run_fn)
 
                 self.db.update_progress(
                     job_id,
