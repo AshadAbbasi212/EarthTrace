@@ -88,6 +88,30 @@ class SkylineExtractor:
         is_non_flat = bool(std_val >= 0.02 and contrast_val >= 0.07)
         norm_curve = (ridge_inverted - np.mean(ridge_inverted)) / (std_val if std_val > 1e-4 else 1.0)
 
+        # Sample color below contour for terracotta / red roof tiles & brick architecture
+        red_count = 0
+        total_samples = 0
+        for col in range(w):
+            r_idx = int(horizon_rows[col])
+            sample_row = min(h - 1, r_idx + 5)
+            if sample_row < h:
+                pixel = rgb[sample_row, col]
+                r_c, g_c, b_c = float(pixel[0]), float(pixel[1]), float(pixel[2])
+                mean_gb = (g_c + b_c) / 2.0
+                if r_c > 1.25 * mean_gb and r_c > 75.0:
+                    red_count += 1
+                total_samples += 1
+
+        red_roof_fraction = float(red_count / max(1, total_samples))
+        is_manmade_roofline = bool(red_roof_fraction >= 0.20)
+        roofline_reason = (
+            f"Prominent red roof tile / terracotta architectural roofline ({red_roof_fraction:.1%}) detected below contour"
+            if is_manmade_roofline
+            else ""
+        )
+        if is_manmade_roofline:
+            is_non_flat = False
+
         # Generate visual overlay if requested
         overlay_saved = False
         if save_overlay_path is not None:
@@ -111,6 +135,9 @@ class SkylineExtractor:
             "std_elevation": round(std_val, 4),
             "contrast": round(contrast_val, 4),
             "is_non_flat": is_non_flat,
+            "is_manmade_roofline": is_manmade_roofline,
+            "roofline_reason": roofline_reason,
+            "red_roof_fraction": round(red_roof_fraction, 4),
             "overlay_saved": overlay_saved,
             "overlay_path": str(save_overlay_path) if overlay_saved else None,
         }

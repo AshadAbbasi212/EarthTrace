@@ -808,10 +808,23 @@ class Stage1Clues:
                 overlay_path = image_path.parent / "skyline_overlay.png"
                 sky_info = extractor.extract_from_image(im, save_overlay_path=overlay_path)
                 std_elev = sky_info.get("std_elevation", 0.0)
-                if sky_info.get("is_non_flat", False) or std_elev >= 0.02:
+                is_roofline = sky_info.get("is_manmade_roofline", False)
+                is_urban_built = (
+                    scene_type in ("urban", "building", "indoor")
+                    or architecture in ("historic_monument", "institutional_brick", "urban_modern")
+                )
+
+                if is_roofline or is_urban_built:
+                    logger.info(
+                        "[stage1_skyline] Contour identified as building roofline / architectural silhouette (scene=%s, arch=%s, roofline=%s); preserving natural terrain relief as flat/urban.",
+                        scene_type, architecture, is_roofline
+                    )
+                    # Building rooflines are built environment features, not natural mountain horizons
+                    sky_info["is_non_flat"] = False
+                elif sky_info.get("is_non_flat", False) or std_elev >= 0.02:
                     relief = "mountainous" if std_elev >= 0.055 else "hilly"
                     horizon_visible = True
-                    logger.info("[stage1_skyline] Direct contour inspection confirmed non-flat terrain (std=%.4f, relief=%s)", std_elev, relief)
+                    logger.info("[stage1_skyline] Direct contour inspection confirmed non-flat natural terrain (std=%.4f, relief=%s)", std_elev, relief)
             except Exception as e:
                 logger.debug("[stage1_skyline] Direct contour check error: %s", e)
 

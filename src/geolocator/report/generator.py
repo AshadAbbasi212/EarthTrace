@@ -190,14 +190,21 @@ class ReportGenerator:
         dem_status = terrain_data.get("status", "")
         fit_score = terrain_data.get("fit_results", {}).get("best_score", 0.0) if terrain_data else 0.0
         overlay_exists = (job_dir / "skyline_overlay.png").exists()
-        if ("stage3_terrain" in stages_run or terrain_data) and dem_status != "not_applicable" and fit_score >= 0.65:
+        if dem_status == "not_applicable" or (terrain_data and terrain_data.get("status") == "not_applicable"):
+            dem_evidence = {
+                "name": "Elevation Skylines",
+                "status": "not applicable",
+                "findings": terrain_data.get("reason", "Scene classified as flat or urban architecture; natural mountain terrain skyline bypassed."),
+                "artifact": None,
+            }
+        elif ("stage3_terrain" in stages_run or terrain_data) and fit_score >= 0.65:
             dem_evidence = {
                 "name": "Elevation Skylines",
                 "status": "used",
                 "findings": f"AWS Terrarium DEM horizon profile correlated with photo ridgeline (NCC={fit_score:.3f})",
-                "artifact": "skyline_overlay.png",
+                "artifact": "skyline_overlay.png" if overlay_exists else None,
             }
-        elif overlay_exists:
+        elif overlay_exists and fit_score >= 0.45:
             dem_evidence = {
                 "name": "Elevation Skylines",
                 "status": "used",
@@ -208,7 +215,7 @@ class ReportGenerator:
             dem_evidence = {
                 "name": "Elevation Skylines",
                 "status": "not applicable",
-                "findings": terrain_data.get("reason", "Horizon profile is flat; natural mountain terrain skyline bypassed."),
+                "findings": terrain_data.get("reason", "Horizon profile is flat or obscured; natural mountain terrain skyline bypassed."),
                 "artifact": None,
             }
 

@@ -955,16 +955,22 @@
     applyBadge(detailBadgeDem, dem.status);
     detailFindingsDem.textContent = dem.findings || 'Terrarium DEM horizon profile correlated with photo ridgeline curvature.';
     detailStatusDem.textContent = dem.status === 'used' ? 'Horizon Profile Aligned' : 'Natural flat / urban terrain (not used)';
-    const demArtifactUrl = appendPassphraseParam(`/api/jobs/${jobId}/artifacts/skyline_overlay.png`);
-    detailDemImg.src = demArtifactUrl;
-    detailDemImg.onload = () => {
-      detailDemImg.style.display = 'block';
-      detailDemEmptyNote.style.display = 'none';
-    };
-    detailDemImg.onerror = () => {
+    if (dem.status === 'used' && dem.artifact) {
+      const demArtifactUrl = appendPassphraseParam(`/api/jobs/${jobId}/artifacts/skyline_overlay.png`);
+      detailDemImg.src = demArtifactUrl;
+      detailDemImg.onload = () => {
+        detailDemImg.style.display = 'block';
+        detailDemEmptyNote.style.display = 'none';
+      };
+      detailDemImg.onerror = () => {
+        detailDemImg.style.display = 'none';
+        detailDemEmptyNote.style.display = 'block';
+      };
+    } else {
       detailDemImg.style.display = 'none';
       detailDemEmptyNote.style.display = 'block';
-    };
+      detailDemEmptyNote.textContent = dem.findings || 'Elevation skyline analysis not applicable for this scene.';
+    }
 
     // --- 4. Populate Dedicated Tab 3: Satellite Imagery ---
     const sat = evidence.satellite_imagery || {};

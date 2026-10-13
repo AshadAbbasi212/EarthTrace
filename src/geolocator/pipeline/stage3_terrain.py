@@ -238,6 +238,35 @@ class Stage3Terrain:
         std_elev = skyline_info.get("std_elevation", float(np.std(photo_profile)))
         is_non_flat = skyline_info.get("is_non_flat", std_elev >= 0.02)
 
+        # Check if the extracted horizon is a man-made building roofline or scene is urban architecture
+        is_roofline = skyline_info.get("is_manmade_roofline", False)
+        clues_data = board.data.get("clues_data", {})
+        scene_type = clues_data.get("scene_type", "")
+        arch = clues_data.get("built_environment", {}).get("architecture", "")
+        user_hint = (board.data.get("user_hints", {}).get("raw_hint") or "").lower()
+        has_mountain_hint = any(k in user_hint for k in ("mountain", "ridge", "alps", "peak", "himalaya", "valley", "hiking", "pass", "summit", "cliff", "hill"))
+
+        if (is_roofline or scene_type in ("urban", "building", "indoor") or arch in ("historic_monument", "institutional_brick", "urban_modern")) and not has_mountain_hint:
+            reason_msg = (
+                skyline_info.get("roofline_reason")
+                or "Horizon contour identified as man-made architecture / building roofline; DEM natural terrain matching bypassed."
+            )
+            logger.info("[stage3_terrain] %s", reason_msg)
+            board.data["stages_run"].append("stage3_terrain")
+            board.data["terrain_evaluation"] = {
+                "status": "not_applicable",
+                "reason": reason_msg,
+            }
+            board.save()
+            summary = {
+                "status": "not_applicable",
+                "reason": reason_msg,
+                "skyline_overlay_path": None,
+                "fit_results": {"best_score": 0.0, "best_viewpoint": None},
+            }
+            (job_dir / "terrain_results.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+            return summary, board
+
         if not is_non_flat and std_elev < 0.015:
             logger.info("[stage3_terrain] Extracted skyline is flat (std=%.4f). Bypassing DEM search.", std_elev)
             board.data["stages_run"].append("stage3_terrain")
@@ -249,7 +278,7 @@ class Stage3Terrain:
             summary = {
                 "status": "not_applicable",
                 "reason": f"Extracted horizon profile is flat (relief variation std={std_elev:.3f}); natural mountain terrain skyline bypassed.",
-                "skyline_overlay_path": str(overlay_path) if overlay_path.exists() else None,
+                "skyline_overlay_path": None,
                 "fit_results": {"best_score": 0.0, "best_viewpoint": None},
             }
             (job_dir / "terrain_results.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")

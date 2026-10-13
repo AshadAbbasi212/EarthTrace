@@ -116,24 +116,35 @@ class PipelineOrchestrator:
         hint_lower = (user_hint_text or "").lower()
 
         # 3a. Terrain skyline branch: only runs when genuine mountain/hill relief is present
+        has_mountain_hint = any(k in hint_lower for k in ("mountain", "ridge", "alps", "peak", "himalaya", "valley", "hiking", "pass", "summit", "cliff", "hill"))
+        built_env = getattr(clues_res, "built_environment", None)
+        architecture = getattr(built_env, "architecture", "unknown") if built_env else "unknown"
+        is_urban_building = (
+            scene_type in ("urban", "building", "indoor")
+            or architecture in ("historic_monument", "institutional_brick", "urban_modern")
+        )
+
         is_mountainous_relief = (
-            scene_type in ("mountain", "wilderness")
-            or relief in ("mountainous", "hilly")
-            or horizon_vis
-            or any(k in hint_lower for k in ("mountain", "ridge", "alps", "peak", "himalaya", "valley", "hiking", "pass", "summit", "cliff", "hill"))
+            (scene_type in ("mountain", "wilderness") or (relief in ("mountainous", "hilly") and not is_urban_building) or (horizon_vis and not is_urban_building))
+            or has_mountain_hint
         )
         if is_mountainous_relief:
             self.stage3_terrain.process(job_dir, board)
         else:
-            logger.info("[orchestrator] Scene is flat/urban (type='%s', relief='%s'). Bypassing DEM skyline search.", scene_type, relief)
+            reason_msg = (
+                "Scene classified as urban architecture / built structures; building rooflines excluded from DEM terrain correlation."
+                if is_urban_building
+                else f"Scene classified as flat or urban terrain (scene='{scene_type}', relief='{relief}') without prominent ridgeline; skyline search bypassed."
+            )
+            logger.info("[orchestrator] %s", reason_msg)
             board.data["stages_run"].append("stage3_terrain")
             board.data["terrain_evaluation"] = {
                 "status": "not_applicable",
-                "reason": f"Scene classified as flat or urban terrain (scene='{scene_type}', relief='{relief}') without prominent ridgeline; skyline search bypassed.",
+                "reason": reason_msg,
             }
             summary = {
                 "status": "not_applicable",
-                "reason": f"Scene classified as flat or urban terrain (scene='{scene_type}', relief='{relief}') without prominent ridgeline; skyline search bypassed.",
+                "reason": reason_msg,
                 "fit_results": {"best_score": 0.0, "best_viewpoint": None},
             }
             (job_dir / "terrain_results.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")

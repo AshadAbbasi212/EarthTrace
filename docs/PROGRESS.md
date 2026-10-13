@@ -622,3 +622,17 @@
 
 
 
+
+### Building Roofline & Silhouette Rejection for Elevation Skylines
+- [x] **Identified Root Cause of Building Horizon Extraction**:
+  - In urban/monument photos (`IMG_20240714_163748_906.jpg`), pitched terracotta roofs and church towers were extracted as elevation contours, matched against AWS Terrarium DEM tiles ($NCC=0.849$), and promoted as false viewpoint candidates over true settlement predictions.
+  - Traced to blind relief overwrite in `stage1_clues.py`, permissive routing in `orchestrator.py`, and an overlay fallthrough bug in `generator.py`.
+- [x] **Architectural Roofline Gating & Terracotta Chromaticity Detection**:
+  - `skyline_extractor.py`: Samples RGB values directly beneath the contour for red/terracotta tile chromaticity ($R > 1.25 \times \frac{G+B}{2}$ and $R > 75$). Flags `is_manmade_roofline = True` and sets `is_non_flat = False`.
+  - `stage1_clues.py`: Guards relief classification against being overwritten as mountainous when `is_manmade_roofline` is True or the scene is classified as urban/building architecture.
+  - `orchestrator.py`: Bypasses DEM terrain matching for urban/building architecture unless explicit mountain keywords are provided by the user.
+  - `stage3_terrain.py`: Honestly returns `not_applicable` when manmade rooflines or urban architecture are present, preventing point candidate fabrication.
+  - `generator.py` & `app.js`: Ensured Evidence 2 strictly outputs `status: "not applicable"` and suppresses misleading image overlays on urban scenes.
+- [x] **Testing & Full Regression Verification**:
+  - Added `test_skyline_extractor_rejects_manmade_roofline` and `test_stage3_terrain_bypasses_manmade_roofline` to `tests/test_stage3_terrain.py`.
+  - Verified 100% test suite passing: **68/68 tests passing**.

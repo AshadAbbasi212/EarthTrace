@@ -347,3 +347,28 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
      - When an API key is provided, the provider executes cloud-scale multimodal reasoning, extracting pinpoint coordinates and forensic rationale.
      - When no key is provided, the provider silently bypasses, guaranteeing 100% offline, local execution without errors or dependencies, fully compliant with `AGENTS.md`.
 
+
+---
+
+## 28. Building Roofline & Architectural Silhouette Rejection for Elevation Skylines
+- **Problem Statement:**
+  - In urban and architectural monument photographs (such as `IMG_20240714_163748_906.jpg` in `job_ff57a72248a9`), pitched rooflines, gables, church towers, and chimneys were traced by the red contour line in Evidence 2 ("Elevation Skyline").
+  - The contour was correlated against AWS Terrarium DEM tiles, where sharp triangular roof angles accidentally matched mountain peaks ($NCC = 0.849$), fabricating a `Terrain Ridgeline Viewpoint` candidate that hijacked the primary location estimate away from the correct settlement cluster (`Murree / Galyat Ridge`).
+  - Furthermore, in the report generator and Web UI, Evidence 2 was marked as `USED` even when DEM matching was supposed to be not applicable because `skyline_overlay.png` existed on disk.
+- **Root Cause Analysis:**
+  1. **Blind Relief Override in `stage1_clues.py`:** CLIP correctly identified `scene_type = "urban"` and `architecture = "historic_monument"`. However, the direct contour analyzer blindly checked `std_elev >= 0.055` and unconditionally overwrote `relief = "mountainous"` and `horizon_visible = True`.
+  2. **Cascading Route Failure in `orchestrator.py`:** Because `relief` was marked mountainous, the orchestrator assumed natural terrain ridgelines were present and executed `stage3_terrain.py`.
+  3. **Fallthrough Overlay Bug in `generator.py`:** In `generator.py`, an `elif overlay_exists:` branch marked `Elevation Skylines` as `status: "used"` whenever `skyline_overlay.png` was present on disk, ignoring `dem_status == "not_applicable"`.
+- **Architectural Solution & Decisions:**
+  1. **Terracotta & Red Roof Tile Chromaticity Detection (`skyline_extractor.py`):**
+     - Enhanced `SkylineExtractor` to inspect pixel color distributions directly below the extracted contour: calculates `red_roof_fraction` ($R > 1.25 \times \frac{G+B}{2}$ and $R > 75$).
+     - When `red_roof_fraction >= 0.20`, flags `is_manmade_roofline = True`, `roofline_reason = "Prominent red roof tile / terracotta architectural roofline detected below contour"`, and sets `is_non_flat = False`.
+  2. **Protected Relief Logic (`stage1_clues.py`):**
+     - When `is_roofline` is True or the scene is classified as `urban` / `building` / `historic_monument`, the contour is logged as an architectural silhouette; `relief` remains `flat` (or urban) and `horizon_visible` remains `False`.
+  3. **Strict Natural Terrain Routing (`orchestrator.py`):**
+     - If `scene_type in ("urban", "building", "indoor")` or architectural cues are present and no mountain keywords appear in the user hint, DEM skyline correlation is bypassed immediately with `not_applicable` ("Scene classified as urban architecture / built structures; building rooflines excluded from DEM terrain correlation.").
+  4. **Defense-in-Depth (`stage3_terrain.py`):**
+     - If called directly on an urban building or `is_manmade_roofline` image without mountain hints, returns `not_applicable` immediately with `skyline_overlay_path = None`, preventing spurious point viewpoint generation.
+  5. **Honest Report & UI Representation (`generator.py` & `app.js`):**
+     - Updated `generator.py` so that `dem_status == "not_applicable"` strictly sets `status: "not applicable"` and suppresses the artifact, preventing building photos with red contour outlines from being presented as valid elevation evidence.
+     - Updated `app.js` Tab 2 to display a clean informative note when elevation skylines are not used.
