@@ -233,19 +233,36 @@ class Stage2Prior:
                     batch = torch.cat(tensors, dim=0).to(m_dev)
                     gps_gal = model.gps_gallery.to(m_dev)
 
-                    with torch.no_grad():
-                        logits = model.forward(batch, gps_gal)
-                        probs = logits.softmax(dim=-1).mean(dim=0, keepdim=True)
-                        top_pred = torch.topk(probs, min(top_k, gps_gal.shape[0]), dim=1)
-                        coords_np = gps_gal.index_select(0, top_pred.indices[0]).cpu().numpy()
-                        probs_np = top_pred.values[0].cpu().numpy()
+                    unique_cands: List[Dict[str, Any]] = []
+                    if in_country_candidates:
+                        seen_c = set()
+                        for c in in_country_candidates:
+                            ck = (round(c["lat"], 3), round(c["lon"], 3))
+                            if ck not in seen_c:
+                                seen_c.add(ck)
+                                unique_cands.append(c)
 
-                        # Hierarchical Continuous Neural Location Refinement (HCNGR)
-                        # Evaluates continuous Fourier features to refine discrete gallery points
+                    if unique_cands:
+                        cand_arr = np.array([[float(c["lat"]), float(c["lon"])] for c in unique_cands], dtype=np.float32)
+                        t_cands = torch.tensor(cand_arr, dtype=torch.float32, device=m_dev)
+                        all_locations = torch.cat([gps_gal, t_cands], dim=0)
+                    else:
+                        all_locations = gps_gal
+
+                    with torch.no_grad():
+                        logits = model.forward(batch, all_locations)
+                        probs = logits.softmax(dim=-1).mean(dim=0)
+
+                        # Top gallery points
+                        gal_probs = probs[:len(gps_gal)]
+                        top_pred = torch.topk(gal_probs, min(top_k, len(gps_gal)))
+                        coords_np = gps_gal.index_select(0, top_pred.indices).cpu().numpy()
+                        probs_np = top_pred.values.cpu().numpy()
+
+                        # Hierarchical Continuous Neural Location Refinement (HCNGR) on gallery points
                         for top_i in range(min(5, len(coords_np))):
                             try:
                                 c_lat, c_lon = float(coords_np[top_i][0]), float(coords_np[top_i][1])
-                                # Level 1: coarse grid +/- 0.6 degrees (19x19 = 361 points)
                                 lats1 = np.linspace(c_lat - 0.6, c_lat + 0.6, 19)
                                 lons1 = np.linspace(c_lon - 0.6, c_lon + 0.6, 19)
                                 grid_lats1, grid_lons1 = np.meshgrid(lats1, lons1)
@@ -255,7 +272,6 @@ class Stage2Prior:
                                 best_i1 = torch.argmax(logits1[0]).item()
                                 b_lat1, b_lon1 = float(grid1[best_i1][0]), float(grid1[best_i1][1])
 
-                                # Level 2: fine grid +/- 0.12 degrees (19x19 = 361 points)
                                 lats2 = np.linspace(b_lat1 - 0.12, b_lat1 + 0.12, 19)
                                 lons2 = np.linspace(b_lon1 - 0.12, b_lon1 + 0.12, 19)
                                 grid_lats2, grid_lons2 = np.meshgrid(lats2, lons2)
@@ -268,72 +284,61 @@ class Stage2Prior:
                             except Exception as e_hcngr:
                                 logger.debug("[stage2_hcngr] Refinement skipped for point %d: %s", top_i, e_hcngr)
 
-                for i in range(len(coords_np)):
-                    predictions.append({
-                        "lat": float(coords_np[i][0]),
-                        "lon": float(coords_np[i][1]),
-                        "prob": float(probs_np[i]),
-                    })
+                        for i in range(len(coords_np)):
+                            predictions.append({
+                                "lat": float(coords_np[i][0]),
+                                "lon": float(coords_np[i][1]),
+                                "prob": float(probs_np[i]),
+                            })
 
-                # In-country continuous neural location scoring & hierarchical refinement
-                if in_country_candidates:
-                    try:
-                        seen_c = set()
-                        unique_cands: List[Dict[str, Any]] = []
-                        for c in in_country_candidates:
-                            ck = (round(c["lat"], 3), round(c["lon"], 3))
-                            if ck not in seen_c:
-                                seen_c.add(ck)
-                                unique_cands.append(c)
-
+                        # In-country continuous neural location scoring & hierarchical refinement
                         if unique_cands:
-                            with torch.no_grad():
-                                cand_arr = np.array([[float(c["lat"]), float(c["lon"])] for c in unique_cands], dtype=np.float32)
-                                t_cands = torch.tensor(cand_arr, dtype=torch.float32, device=m_dev)
-                                logits_cand = model.forward(batch, t_cands)
-                                probs_cand = logits_cand.softmax(dim=-1).mean(dim=0).detach().cpu().numpy()
+                            cand_probs = probs[len(gps_gal):].cpu().numpy()
+                            sorted_cand_indices = np.argsort(cand_probs)[::-1]
+                            top_cand_indices = list(sorted_cand_indices[:min(60, len(unique_cands))])
+                            # Ensure all curated regional anchors are included alongside grid points
+                            cand_index_set = set(top_cand_indices)
+                            for c_i, c_obj in enumerate(unique_cands):
+                                if "Grid" not in (c_obj.get("name") or "") and c_i not in cand_index_set:
+                                    top_cand_indices.append(c_i)
+                                    cand_index_set.add(c_i)
 
-                                # Refine top in-country points with continuous neural head
-                                top_cand_indices = np.argsort(probs_cand)[::-1][:min(12, len(unique_cands))]
+                            for rank_i, c_idx in enumerate(top_cand_indices):
+                                orig_cand = unique_cands[c_idx]
+                                c_lat, c_lon = float(orig_cand["lat"]), float(orig_cand["lon"])
+                                ref_lat, ref_lon = c_lat, c_lon
 
-                                for rank_i, c_idx in enumerate(top_cand_indices):
-                                    orig_cand = unique_cands[c_idx]
-                                    c_lat, c_lon = float(orig_cand["lat"]), float(orig_cand["lon"])
-                                    ref_lat, ref_lon = c_lat, c_lon
+                                if rank_i < 5:
+                                    try:
+                                        # Level 1: coarse grid +/- 0.5 degrees (15x15 = 225 points)
+                                        lats1 = np.linspace(c_lat - 0.5, c_lat + 0.5, 15)
+                                        lons1 = np.linspace(c_lon - 0.5, c_lon + 0.5, 15)
+                                        glat1, glon1 = np.meshgrid(lats1, lons1)
+                                        grid1 = np.stack([glat1.ravel(), glon1.ravel()], axis=1)
+                                        t_grid1 = torch.tensor(grid1, dtype=torch.float32, device=m_dev)
+                                        lg1 = model.forward(batch[0:1], t_grid1)
+                                        b_idx1 = torch.argmax(lg1[0]).item()
+                                        b_lat1, b_lon1 = float(grid1[b_idx1][0]), float(grid1[b_idx1][1])
 
-                                    if rank_i < 3:
-                                        try:
-                                            # Level 1: coarse grid +/- 0.5 degrees (15x15 = 225 points)
-                                            lats1 = np.linspace(c_lat - 0.5, c_lat + 0.5, 15)
-                                            lons1 = np.linspace(c_lon - 0.5, c_lon + 0.5, 15)
-                                            glat1, glon1 = np.meshgrid(lats1, lons1)
-                                            grid1 = np.stack([glat1.ravel(), glon1.ravel()], axis=1)
-                                            t_grid1 = torch.tensor(grid1, dtype=torch.float32, device=m_dev)
-                                            lg1 = model.forward(batch[0:1], t_grid1)
-                                            b_idx1 = torch.argmax(lg1[0]).item()
-                                            b_lat1, b_lon1 = float(grid1[b_idx1][0]), float(grid1[b_idx1][1])
+                                        # Level 2: fine grid +/- 0.1 degrees (15x15 = 225 points)
+                                        lats2 = np.linspace(b_lat1 - 0.1, b_lat1 + 0.1, 15)
+                                        lons2 = np.linspace(b_lon1 - 0.1, b_lon1 + 0.1, 15)
+                                        glat2, glon2 = np.meshgrid(lats2, lons2)
+                                        grid2 = np.stack([glat2.ravel(), glon2.ravel()], axis=1)
+                                        t_grid2 = torch.tensor(grid2, dtype=torch.float32, device=m_dev)
+                                        lg2 = model.forward(batch[0:1], t_grid2)
+                                        b_idx2 = torch.argmax(lg2[0]).item()
+                                        ref_lat, ref_lon = float(grid2[b_idx2][0]), float(grid2[b_idx2][1])
+                                    except Exception as e_cr:
+                                        logger.debug("[stage2] In-country refinement skipped: %s", e_cr)
 
-                                            # Level 2: fine grid +/- 0.1 degrees (15x15 = 225 points)
-                                            lats2 = np.linspace(b_lat1 - 0.1, b_lat1 + 0.1, 15)
-                                            lons2 = np.linspace(b_lon1 - 0.1, b_lon1 + 0.1, 15)
-                                            glat2, glon2 = np.meshgrid(lats2, lons2)
-                                            grid2 = np.stack([glat2.ravel(), glon2.ravel()], axis=1)
-                                            t_grid2 = torch.tensor(grid2, dtype=torch.float32, device=m_dev)
-                                            lg2 = model.forward(batch[0:1], t_grid2)
-                                            b_idx2 = torch.argmax(lg2[0]).item()
-                                            ref_lat, ref_lon = float(grid2[b_idx2][0]), float(grid2[b_idx2][1])
-                                        except Exception as e_cr:
-                                            logger.debug("[stage2] In-country refinement skipped: %s", e_cr)
-
-                                    predictions.append({
-                                        "lat": ref_lat,
-                                        "lon": ref_lon,
-                                        "prob": float(probs_cand[c_idx]),
-                                        "anchor_name": orig_cand.get("name") or orig_cand.get("anchor_name"),
-                                        "country": orig_cand.get("country"),
-                                    })
-                    except Exception as e_cand:
-                        logger.warning("[stage2] In-country neural scoring skipped: %s", e_cand)
+                                predictions.append({
+                                    "lat": ref_lat,
+                                    "lon": ref_lon,
+                                    "prob": float(cand_probs[c_idx]),
+                                    "anchor_name": orig_cand.get("name") or orig_cand.get("anchor_name"),
+                                    "country": orig_cand.get("country"),
+                                })
         except Exception as e:
             logger.warning("[stage2] GeoCLIP inference failed or timed out: %s. Continuing with clue priors.", e)
 
@@ -492,12 +497,15 @@ class Stage2Prior:
                         "country": top_country,
                     })
 
-                # If confident top country with bounding box, inject dense spatial grid (11x11 = 121 points)
+                # If confident top country with bounding box, inject dense spatial grid
                 c_key_lower = top_country.lower()
                 if top_prob >= 0.15 and c_key_lower in COUNTRY_BBOXES:
                     c_bbox = COUNTRY_BBOXES[c_key_lower]
-                    lats_g = np.linspace(c_bbox[0], c_bbox[2], 11)
-                    lons_g = np.linspace(c_bbox[1], c_bbox[3], 11)
+                    lat_span = c_bbox[2] - c_bbox[0]
+                    lon_span = c_bbox[3] - c_bbox[1]
+                    grid_n = 15 if max(lat_span, lon_span) > 20.0 else 11
+                    lats_g = np.linspace(c_bbox[0], c_bbox[2], grid_n)
+                    lons_g = np.linspace(c_bbox[1], c_bbox[3], grid_n)
                     for gla in lats_g:
                         for glo in lons_g:
                             in_country_candidates.append({
@@ -548,7 +556,7 @@ class Stage2Prior:
             top_country, top_prob = next(iter(country_zero_shot_probs.items()))
             if top_prob >= 0.04:
                 anchors = get_country_anchors(top_country, max_anchors=16, terrain=desired_terrain)
-                anchor_prob = max(0.015, top_prob / max(1, len(anchors)))
+                anchor_prob = 0.0008
                 for a in anchors:
                     c_key = (round(a["lat"], 3), round(a["lon"], 3))
                     if c_key not in existing_coords:
@@ -564,7 +572,7 @@ class Stage2Prior:
             for c_name, c_prob in list(country_zero_shot_probs.items())[1:5]:
                 if c_prob >= 0.08:
                     anchors = get_country_anchors(c_name, max_anchors=10, terrain=desired_terrain)
-                    anchor_prob = max(0.01, c_prob / max(1, len(anchors)))
+                    anchor_prob = 0.0006
                     for a in anchors:
                         c_key = (round(a["lat"], 3), round(a["lon"], 3))
                         if c_key not in existing_coords:
@@ -589,17 +597,12 @@ class Stage2Prior:
                         raw_predictions.append({
                             "lat": a["lat"],
                             "lon": a["lon"],
-                            "prob": 0.08 if is_sub_match else 0.04,
+                            "prob": 0.0015 if is_sub_match else 0.0008,
                             "anchor_name": a["name"],
                             "country": cue_c,
                         })
 
         # 6. Fuse evidence for each candidate point
-        country_raw_mass: Dict[str, float] = {}
-        for p in raw_predictions:
-            c_name = get_country_candidate(p["lat"], p["lon"]) or "Other"
-            country_raw_mass[c_name] = country_raw_mass.get(c_name, 0.0) + p.get("prob", 0.0)
-
         known_country_mass = sum(country_zero_shot_probs.values()) if country_zero_shot_probs else 0.0
         rem_mass = max(0.0001, 1.0 - known_country_mass)
 
@@ -612,18 +615,16 @@ class Stage2Prior:
             country = get_country_candidate(lat, lon)
 
             # Hierarchical visual prior: P(point | image) = P(country | image) * P(point | country)
-            # This cleanly debiases GeoCLIP's gallery density differences across nations.
+            # Both P(country) and P(point) are globally normalized probabilities.
             if country_zero_shot_probs:
                 if country and country in country_zero_shot_probs:
                     c_prob = country_zero_shot_probs[country]
-                    c_mass = max(1e-6, country_raw_mass.get(country, 1.0))
-                    joint_prior = c_prob * (prob / c_mass)
+                    joint_prior = c_prob * prob
                 elif country:
-                    c_prob = country_zero_shot_probs.get(country, 0.0001)
-                    c_mass = max(1e-6, country_raw_mass.get(country, 1.0))
-                    joint_prior = c_prob * (prob / c_mass)
+                    c_prob = country_zero_shot_probs.get(country, 0.0005)
+                    joint_prior = c_prob * prob
                 else:
-                    joint_prior = rem_mass * (prob / max(1e-6, sum(country_raw_mass.values())))
+                    joint_prior = max(0.0005, rem_mass / 50.0) * prob
                 base_log_prior = math.log(max(1e-12, joint_prior))
                 reranker_lr = 0.0
             else:
@@ -738,7 +739,7 @@ class Stage2Prior:
                 curb = env_meta.get("curb_style")
 
                 if soil == "red_laterite":
-                    if country in ("India", "Brazil", "Australia", "Pakistan") or lat < 25.0:
+                    if country in ("India", "Brazil", "Australia", "Pakistan"):
                         env_lr += 2.0
                     elif lat > 45.0:
                         env_lr -= 4.0
@@ -944,11 +945,13 @@ class Stage2Prior:
                             country_conflict = True
 
                     # Accept point candidates within 150 km of visual prior clusters without cross-country contradiction,
-                    # or explicitly matching ground truth user hint, or high-confidence landmark perception
+                    # or explicitly matching ground truth user hint, or high-confidence T1 architectural monuments.
+                    # Unhinted generic T2/T3 natural features (e.g. dunes, basins) must be corroborated within 150 km.
                     is_landmark_source = cand.get("metadata", {}).get("source") in ("landmark_matcher", "landmark_hint")
-                    is_confident_landmark = is_landmark_source and cand.get("metadata", {}).get("tier") in ("T1", "T2")
+                    is_t1_landmark = is_landmark_source and cand.get("metadata", {}).get("tier") == "T1"
+                    is_landmark_hint = cand.get("metadata", {}).get("source") == "landmark_hint"
 
-                    if ((min_dist_km <= 150.0 and not country_conflict) or hint_match or is_confident_landmark):
+                    if ((min_dist_km <= 150.0 and not country_conflict) or hint_match or is_landmark_hint or is_t1_landmark):
                         g_bbox = cand.get("bbox") or [p_lat - 0.05, p_lon - 0.05, p_lat + 0.05, p_lon + 0.05]
                         cand_subdiv = get_subnational_division(p_lat, p_lon)
                         corroborated_point_bboxes.append({

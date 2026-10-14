@@ -259,7 +259,7 @@ class Stage4Verification:
         )
         board.add_evidence(
             clue_id=cid_sat,
-            candidate_weights={cand_name: 1.6 if sat_similarity > 0.65 else (1.2 if sat_similarity > 0.50 else 0.8)},
+            candidate_weights={cand_name: 1.6 if sat_similarity > 0.65 else (1.2 if sat_similarity > 0.50 else 1.0)},
             rationale=f"Overhead satellite orthoimagery visual consistency via DINOv2 foundation embeddings ({sat_dinov2_sim:.3f}), SIFT{geom_text}",
             artifact_path=str(sat_path),
         )

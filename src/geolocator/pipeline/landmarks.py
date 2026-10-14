@@ -203,6 +203,9 @@ NEGATIVE_PROMPTS = [
     "an indoor room, office, or domestic interior",
     "ordinary agricultural farmland, rural pasture, or wild forest without landmarks",
     "a close up photo or non-scenic view",
+    "an ordinary desert town, mudbrick village, clay houses, or arid settlement without famous landmarks",
+    "an ordinary rural road or country highway through trees or hills without landmarks",
+    "an ordinary outback town, country street, or regional settlement without famous landmarks",
 ]
 
 
@@ -270,7 +273,9 @@ class LandmarkMatcher:
 
         # Country consistency verification: Reject if candidate country is strongly known and doesn't match landmark
         if candidate_countries:
-            lm_text = f"{top_lm[0]} {top_lm[1]}".lower()
+            from geolocator.pipeline.geo_utils import get_country_candidate
+            lm_country = get_country_candidate(top_lm[2], top_lm[3]) or ""
+            lm_text = f"{top_lm[0]} {top_lm[1]} {lm_country}".lower()
             norm_cand_countries = [c.strip().lower() for c in candidate_countries if c.strip()]
             country_matched = any(c in lm_text for c in norm_cand_countries)
             if not country_matched and top_prob < 0.90:

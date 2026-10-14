@@ -175,18 +175,18 @@ class Stage3Terrain:
                                 "distance_from_center_km": haversine_distance_km(center_lat, center_lon, f_lat, f_lon),
                             }
 
-        # Calibrated error radius based on skyline correlation score
+        # Calibrated error radius based on skyline correlation score and physical DEM viewing distance
         if best_score > 0.85:
-            calibrated_radius_km = 1.5
-            tier = "T2"
-        elif best_score > 0.65:
             calibrated_radius_km = 4.5
             tier = "T2"
+        elif best_score > 0.65:
+            calibrated_radius_km = 30.0
+            tier = "T2"
         elif best_score > 0.45:
-            calibrated_radius_km = 15.0
+            calibrated_radius_km = 45.0
             tier = "T3"
         else:
-            calibrated_radius_km = 45.0
+            calibrated_radius_km = 90.0
             tier = "T4"
 
         return {
