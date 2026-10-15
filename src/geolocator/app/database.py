@@ -136,3 +136,39 @@ class JobDatabase:
         if deleted_count > 0:
             logger.info("Purged %d expired jobs older than %d hours", deleted_count, retention_hours)
         return deleted_count
+
+    def clear_all_jobs(self, jobs_dir: str | Path = "jobs") -> int:
+        """Purge all jobs from database and delete all job directories."""
+        deleted_count = 0
+        with self._get_connection() as conn:
+            cur = conn.execute("SELECT id, job_dir FROM jobs")
+            rows = cur.fetchall()
+            for row in rows:
+                j_dir = Path(row["job_dir"])
+                if j_dir.exists():
+                    try:
+                        shutil.rmtree(j_dir, ignore_errors=True)
+                    except Exception as e:
+                        logger.warning("Failed to delete job dir %s: %s", j_dir, e)
+                deleted_count += 1
+            conn.execute("DELETE FROM jobs")
+            conn.commit()
+
+        # Clean any leftover or untracked directories in jobs_dir
+        j_base = Path(jobs_dir)
+        if j_base.exists():
+            for item in j_base.iterdir():
+                if item.is_dir():
+                    try:
+                        shutil.rmtree(item, ignore_errors=True)
+                    except Exception as e:
+                        logger.warning("Failed to remove directory %s: %s", item, e)
+                elif item.is_file() and item.name != ".gitkeep":
+                    try:
+                        item.unlink(missing_ok=True)
+                    except Exception as e:
+                        logger.warning("Failed to remove file %s: %s", item, e)
+
+        logger.info("Purged all jobs (%d records) and cleared jobs directory", deleted_count)
+        return deleted_count
+

@@ -253,6 +253,14 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         deleted = db.delete_expired_jobs(retention_hours=cfg.storage.retention_hours)
         return {"deleted_jobs_count": deleted}
 
+    @app.delete("/api/jobs", dependencies=[Depends(verify_passphrase)])
+    @app.post("/api/maintenance/clear-all", dependencies=[Depends(verify_passphrase)])
+    async def clear_all_jobs_endpoint():
+        """Clear all job history and delete all job artifacts from disk."""
+        deleted = db.clear_all_jobs(jobs_dir=cfg.storage.jobs_dir)
+        return {"status": "cleared", "deleted_jobs_count": deleted}
+
+
     # Static Web UI mounting if available
     web_dir = Path(__file__).resolve().parent.parent / "web" / "static"
     if web_dir.exists():
