@@ -233,7 +233,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="GeoJSON report not generated yet")
         return JSONResponse(content=json.loads(geojson_file.read_text(encoding="utf-8")))
 
-    @app.get("/api/jobs/{job_id}/artifacts/{filename}", dependencies=[Depends(verify_passphrase)])
+    @app.get("/api/jobs/{job_id}/artifacts/{filename:path}", dependencies=[Depends(verify_passphrase)])
     async def get_artifact(job_id: str, filename: str):
         """Serve specific evidence artifact image or JSON file."""
         job = db.get_job(job_id)

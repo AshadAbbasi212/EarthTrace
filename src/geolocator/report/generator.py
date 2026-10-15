@@ -119,7 +119,7 @@ class ReportGenerator:
             elif "fit_score" in meta and meta["fit_score"] >= 0.70:
                 tier = meta.get("tier", "T2" if meta["fit_score"] >= 0.80 else "T3")
                 calibrated_radius_km = float(meta.get("radius_km", 4.5 if tier == "T2" else 15.0))
-            elif meta.get("source") == "cadastral_exact_mark":
+            elif meta.get("source") == "cadastral_exact_mark" or "Cadastral Building:" in top_name:
                 tier = "T1"
                 calibrated_radius_km = 0.05
             elif meta.get("source") == "exif_gps":
@@ -150,17 +150,30 @@ class ReportGenerator:
         # 3. Mandatory 4 Evidence Types Reasoning Timeline (Brief §2a)
         stages_run = board.data.get("stages_run", [])
 
-        # Evidence 1: OpenStreetMap Geometry
+        # Evidence 1: OpenStreetMap Geometry & Built Cadastre
+        detected_buildings = osm_data.get("detected_buildings", [])
+        matched_cadastral = osm_data.get("matched_cadastral", [])
+        building_overlay = osm_data.get("building_overlay")
+
         if "stage3_built" in stages_run or osm_data:
-            if osm_data.get("building_verified"):
+            if osm_data.get("building_verified") or matched_cadastral:
                 osm_feat = osm_data.get("osm_feature", {})
-                disp_str = osm_feat.get("display_name", "Building footprint")[:60]
-                osm_id_str = osm_feat.get("osm_id", "")
+                disp_str = osm_feat.get("display_name") or (matched_cadastral[0]["matched"]["name"] if matched_cadastral else "Building footprint")
+                osm_id_str = osm_feat.get("osm_id") or (str(matched_cadastral[0]["matched"].get("osm_id", "")) if matched_cadastral else "")
+                b_cnt = len(detected_buildings)
+                cnt_str = f" ({b_cnt} facade{'s' if b_cnt > 1 else ''} extracted)" if b_cnt > 0 else ""
                 osm_evidence = {
                     "name": "OpenStreetMap Geometry",
                     "status": "used",
-                    "findings": f"Cadastral building footprint verified: {disp_str} (OSM {osm_id_str})",
-                    "artifact": "osm_corridor_results.json",
+                    "findings": f"Cadastral building footprint verified: {disp_str[:60]} (OSM {osm_id_str}){cnt_str}",
+                    "artifact": "buildings/building_detection_overlay.png" if building_overlay else "osm_corridor_results.json",
+                }
+            elif detected_buildings:
+                osm_evidence = {
+                    "name": "OpenStreetMap Geometry",
+                    "status": "used",
+                    "findings": f"Extracted {len(detected_buildings)} building facades with architectural telemetry; evaluated against OSM.",
+                    "artifact": "buildings/building_detection_overlay.png" if building_overlay else "osm_corridor_results.json",
                 }
             else:
                 crossings = osm_data.get("crossings_found", 0)
@@ -284,6 +297,14 @@ class ReportGenerator:
             street_evidence,
         ]
 
+        if detected_buildings:
+            reasoning_timeline.append({
+                "step": "Stage 3b: Automated Building & Facade Detection",
+                "status": "computed",
+                "findings": f"Identified {len(detected_buildings)} distinct structural facades; classified architectural style, palette, and cadastral correspondence.",
+                "artifact": "buildings/building_detection_overlay.png" if building_overlay else "buildings/detected_buildings.json",
+            })
+
         formatted_alternatives = []
         for i, alt in enumerate(alternatives[:4]):
             alt_meta = alt.get("metadata", {})
@@ -365,6 +386,10 @@ class ReportGenerator:
                 "satellite_imagery": sat_evidence,
                 "street_imagery": street_evidence,
             },
+            "detected_buildings": detected_buildings,
+            "building_count": len(detected_buildings),
+            "building_overlay": building_overlay,
+            "matched_cadastral": matched_cadastral,
             "reasoning_timeline": reasoning_timeline,
             "mandatory_evidence_summary": {
                 "osm_geometry": osm_evidence["status"],

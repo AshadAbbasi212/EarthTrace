@@ -289,7 +289,7 @@ class LandmarkMatcher:
                 return None
 
         prompt_text, canonical_name, lat, lon, category = top_lm
-        if category in ("monument", "national_monument", "fortress", "unesco_world_heritage", "world_landmark", "landmark_building", "cathedral", "grand_mosque", "national_mosque", "historical_mosque", "palace", "museum", "university_campus", "hospital_complex", "civic_building", "civic_market"):
+        if category in ("monument", "national_monument", "fortress", "unesco_world_heritage", "world_landmark", "landmark_building", "cathedral", "grand_mosque", "national_mosque", "historical_mosque", "palace", "museum", "university_campus", "hospital_complex", "civic_building", "civic_market", "luxury_hotel", "hotel", "sports_club", "hospitality"):
             calibrated_radius_km = 0.05 if top_prob >= 0.25 else 0.10
             tier = "T1"
         elif category in ("urban_metropolis", "scenic_corridor", "coastal_cliffs", "coastal_stacks", "coastal_cape", "bridge"):

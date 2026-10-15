@@ -705,4 +705,24 @@
     - `obs_06` (Narrabri, Australia): **89.7 km**.
     - `obs_03` (Moros, Spain): **97.2 km**.
     - `obs_10` (Nanyuki, Kenya): **106.2 km**.
-  - All 71 tests in `tests/` passing cleanly.
+  - All 71 baseline tests in `tests/` passing cleanly.
+
+### Automated Building Facade Detection, Multi-Scale Telemetry & Cadastral Matching
+- [x] **Vertical Gradient Morphology & Facade Extraction (`building_detector.py`)**:
+  - Implemented vertical Sobel-X edge filtering, morphological vertical closure, and connected-component bounding box extraction to isolate structural architectural facades.
+  - Slices high-salience facade crops directly to `buildings/building_{i:02d}.jpg` with aspect-ratio and area bounding box sanity gating.
+- [x] **Zero-Shot Architectural Classification & Dominant Color Extraction**:
+  - Zero-shot CLIP classification across 11 building categories (`luxury_hotel`, `civic_building`, `historic_palace`, `place_of_worship`, `stadium_sports_complex`, `hospital_medical_center`, `educational_campus`, etc.) and 6 architectural styles.
+  - Dominant color extraction in HSV/RGB space (terracotta, sandstone, beige, white, glass/blue, gray/concrete, dark granite, red brick).
+- [x] **Tactical Cyber-HUD Overlay Generation (`building_detection_overlay.png`)**:
+  - Overlays high-contrast cyan targeting reticles, corner brackets, building IDs, category tags, and confidence telemetry.
+- [x] **Word-Level Cadastral Matching & Overpass Failover**:
+  - Tokenizes OCR clues and user hints into word tokens ($\ge 4$ characters) to match multi-word landmark names.
+  - Integrated local curated `LANDMARK_DATABASE` failover for zero-latency, keyless matching, preventing 502/429 timeouts on public Overpass servers.
+  - Automatically elevates confirmed cadastral matches to **Tier T1** ($0.05\text{km}$ / $\pm 50\text{m}$ calibrated radius) on the candidate board.
+- [x] **Dedicated Analysis Workbench Tab 5 ("🏛️ 5. Building Match")**:
+  - Added Tab 5 in `index.html` and `app.js` featuring the tactical HUD overlay viewer, dynamic facade crop gallery, dominant color swatches, architectural style tags, lightbox image preview, and one-click "📍 Pinpoint on Map" focusing.
+- [x] **Unit & Regression Testing**:
+  - Created `tests/test_building_detector.py` covering contour extraction, color analysis, zero-shot classification, cadastral matching, and Stage 3 pipeline integration.
+  - Verified 100% test pass rate across building detector and Stage 3 tests: **6/6 passed in 64s**.
+

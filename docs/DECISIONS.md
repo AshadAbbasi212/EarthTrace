@@ -372,3 +372,27 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
   5. **Honest Report & UI Representation (`generator.py` & `app.js`):**
      - Updated `generator.py` so that `dem_status == "not_applicable"` strictly sets `status: "not applicable"` and suppresses the artifact, preventing building photos with red contour outlines from being presented as valid elevation evidence.
      - Updated `app.js` Tab 2 to display a clean informative note when elevation skylines are not used.
+
+---
+
+## 29. Automated Building Facade Detection, Telemetry & Cadastral Matching
+- **Problem Statement:**
+  - High-resolution target images often feature distinct urban structures, hotels, civic buildings, and historical facades.
+  - Previous pipeline logic relied on OCR text or coarse regional scene classification. When images featured prominent architectural landmarks (e.g. multi-story hotel complexes, clubs, or civic pavilions) without prominent street signs, the system lacked structural building localization and could not elevate candidates to cadastral street-level precision (Tier T1, $\pm 25\text{m} - \pm 50\text{m}$).
+- **Architectural Solution & Decisions:**
+  1. **Vertical Gradient Morphology & Facade Segmentation (`building_detector.py`):**
+     - Developed `BuildingDetector` utilizing Sobel-X vertical gradient analysis, adaptive morphological thresholding, and connected-component bounding box extraction to isolate structural vertical building facades.
+     - Automatically filters out ground clutter and sky noise by clamping bounding box areas ($2.5\% \le \text{area} \le 95\%$ of image) and aspect ratios.
+     - Slices and persists top high-salience facade crops directly to `buildings/building_{i:02d}.jpg`.
+  2. **Zero-Shot Architectural Classification & Dominant Color Extraction:**
+     - Integrates zero-shot CLIP classification across 11 building types (`luxury_hotel`, `civic_building`, `historic_palace`, `place_of_worship`, `stadium_sports_complex`, `hospital_medical_center`, `educational_campus`, `commercial_office_tower`, `residential_apartment`, `industrial_warehouse`, `traditional_residential`) and 6 architectural styles (`modern_glass_steel`, `colonial_classical`, `mughal_islamic`, `brutalist_concrete`, `gothic_revival`, `vernacular_brick`).
+     - Extracts dominant HSV/RGB color palettes (terracotta, sandstone, beige, glass/blue, red brick, concrete/gray, dark granite) for material classification.
+  3. **Tactical Cyber-HUD Visualizer Overlay (`building_detection_overlay.png`):**
+     - Generates high-contrast visual telemetry with cyan reticles, corner brackets, bounding box telemetry, category tags, and confidence badges overlaid on the target image.
+  4. **Word-Level Tokenized Cadastral Matching & Overpass Consolidation:**
+     - Tokenizes extracted OCR clues and user hints into word tokens ($\ge 4$ characters) to match multi-word landmark names (e.g., matching `"Hotel view near club road"` against `"Pearl Continental Hotel"` or `"Karachi Club"`).
+     - Prioritizes local curated `LANDMARK_DATABASE` for instantaneous, zero-latency, keyless matching, preventing 502/429 Gateway Timeouts from public Overpass servers.
+     - For verified building matches, promotes point candidates directly to **Tier T1** ($0.05\text{km}$ / $\pm 50\text{m}$ calibrated radius) with high log-likelihood scores on the Candidate Board.
+  5. **Dedicated Web UI Pillar 5 ("🏛️ 5. Building Match"):**
+     - Integrated Tab 5 in the analysis workbench with interactive crop gallery, dominant color swatches, architectural style chips, full-screen lightbox modal preview, and one-click "📍 Pinpoint on Map" focus.
+

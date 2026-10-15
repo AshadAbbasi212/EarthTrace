@@ -4,12 +4,14 @@ from __future__ import annotations
 import json
 import logging
 import math
+import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from geolocator.config import AppConfig, get_config
 from geolocator.providers.osm import OSMProvider
 from geolocator.pipeline.board import CandidateBoard
+from geolocator.pipeline.building_detector import BuildingDetector
 from geolocator.pipeline.geo_utils import haversine_distance_km, point_in_bbox
 
 logger = logging.getLogger("geolocator.pipeline.stage3_built")
@@ -22,10 +24,12 @@ class Stage3Built:
         self,
         config: Optional[AppConfig] = None,
         osm_provider: Optional[OSMProvider] = None,
+        building_detector: Optional[BuildingDetector] = None,
     ):
         self.config = config or get_config()
         cache_dir = getattr(self.config, "storage", None) and self.config.storage.cache_dir or ".geo-cache"
         self.osm = osm_provider or OSMProvider(cache_dir=cache_dir, offline_mode=self.config.offline_mode)
+        self.building_detector = building_detector or BuildingDetector()
 
     @staticmethod
     def sample_points_along_polyline(
@@ -181,8 +185,9 @@ class Stage3Built:
         target_features: Optional[Dict[str, Any]] = None,
         mock_corridor: Optional[List[Tuple[float, float]]] = None,
         mock_crossings: Optional[List[Dict[str, Any]]] = None,
+        image_path: Optional[Path | str] = None,
     ) -> Tuple[Dict[str, Any], CandidateBoard]:
-        """Execute Stage 3b Built/Rural and Coastal Branch."""
+        """Execute Stage 3b Built/Rural, Building Detection, and Coastal Branch."""
         job_dir = Path(job_dir)
         job_dir.mkdir(parents=True, exist_ok=True)
 
@@ -191,6 +196,14 @@ class Stage3Built:
                 "is_bridge": True,
                 "is_water_crossing": True,
             }
+
+        # Resolve image path
+        if image_path is None:
+            for ext in ("original.jpeg", "original.jpg", "original.png", "original.webp"):
+                cand_file = job_dir / ext
+                if cand_file.exists():
+                    image_path = cand_file
+                    break
 
         # Resolve search bbox
         if search_bbox is None:
@@ -209,11 +222,109 @@ class Stage3Built:
                     min(e, c_lon + half_span),
                 )
             else:
-                search_bbox = (51.48, -0.15, 51.52, -0.08)  # London Thames corridor default
+                # Center search bbox on top coordinate candidate if available
+                ranked = board.rank()
+                top_coord_cand = next((c for c in ranked if c.get("lat") is not None and c.get("lon") is not None), None)
+                if top_coord_cand:
+                    c_lat = float(top_coord_cand["lat"])
+                    c_lon = float(top_coord_cand["lon"])
+                    half_span = 0.045
+                    search_bbox = (c_lat - half_span, c_lon - half_span, c_lat + half_span, c_lon + half_span)
+                else:
+                    search_bbox = (51.48, -0.15, 51.52, -0.08)  # London default
 
         logger.info("Stage 3b Built executing within bbox %s", search_bbox)
 
-        # 0. Check if high-priority landmark or building candidate exists on the board
+        # -------------------------------------------------------------------
+        # 1. Automated Building & Facade Detection + Cadastral Matching
+        # -------------------------------------------------------------------
+        detected_manifest: Dict[str, Any] = {"count": 0, "buildings": [], "overlay_path": None}
+        matched_cadastral_list: List[Dict[str, Any]] = []
+
+        if image_path and Path(image_path).exists():
+            try:
+                bldg_out_dir = job_dir / "buildings"
+                detected_manifest = self.building_detector.detect_building_regions(
+                    image_path=image_path,
+                    output_dir=bldg_out_dir,
+                    max_buildings=5,
+                )
+                logger.info("[stage3_built] Detected %d building facades", detected_manifest.get("count", 0))
+
+                # Copy tactical HUD overlay to job_dir root for convenience
+                if detected_manifest.get("overlay_path") and Path(detected_manifest["overlay_path"]).exists():
+                    shutil.copy2(detected_manifest["overlay_path"], job_dir / "building_detection_overlay.png")
+
+                detected_buildings = detected_manifest.get("buildings", [])
+                if detected_buildings:
+                    # Enrich buildings with OCR text clues from board
+                    ocr_clues = [
+                        c.get("text", "") for c in board.data.get("clues", {}).values()
+                        if isinstance(c, dict) and (c.get("kind") in ("text", "ocr", "sign") or c.get("status") == "read")
+                    ]
+                    combined_ocr = " ".join(ocr_clues)
+                    for bldg in detected_buildings:
+                        if not bldg.get("ocr_text") and combined_ocr:
+                            bldg["ocr_text"] = combined_ocr
+
+                    matched_cadastral_list = self.building_detector.match_buildings_against_osm(
+                        detected_buildings=detected_buildings,
+                        candidate_bbox=search_bbox,
+                        osm_provider=self.osm,
+                    )
+            except Exception as e:
+                logger.warning("[stage3_built] Building detection failed: %s", e)
+
+        # Promote matched cadastral buildings to high-confidence point candidates on the board
+        primary_building_feature = None
+        for m_item in matched_cadastral_list:
+            m_cad = m_item.get("matched", {})
+            m_name = m_cad.get("name")
+            if not m_name:
+                continue
+            cand_name = f"Cadastral Building: {m_name}"
+            exact_lat = m_cad["lat"]
+            exact_lon = m_cad["lon"]
+            osm_id = m_cad.get("osm_id", "")
+            osm_type = m_cad.get("osm_type", "way")
+
+            board.add_candidate(
+                name=cand_name,
+                level="point",
+                lat=exact_lat,
+                lon=exact_lon,
+                prior=5.0,
+                metadata={
+                    "radius_km": 0.05,
+                    "tier": "T1",
+                    "osm_id": f"{osm_type}/{osm_id}",
+                    "source": "cadastral_exact_mark",
+                    "building_id": m_item.get("building_id"),
+                    "classification": m_item.get("classification"),
+                    "match_score": m_cad.get("match_score"),
+                },
+            )
+            cid_bldg = board.add_clue(
+                text=f"OpenStreetMap Cadastral Building Match: {m_name} (OSM {osm_type}/{osm_id})",
+                kind="cadastral_building",
+                status="computed",
+            )
+            board.add_evidence(
+                clue_id=cid_bldg,
+                candidate_weights={cand_name: 35.0},
+                rationale=f"Automated building facade detection matched cadastral footprint in OpenStreetMap ({m_name})",
+                artifact_path=str(job_dir / "buildings" / "detected_buildings.json"),
+            )
+            if primary_building_feature is None:
+                primary_building_feature = {
+                    "display_name": m_name,
+                    "osm_id": f"{osm_type}/{osm_id}",
+                    "coordinates": [exact_lat, exact_lon],
+                }
+
+        # -------------------------------------------------------------------
+        # 2. Check if high-priority landmark candidate exists on the board
+        # -------------------------------------------------------------------
         landmark_cand = None
         for cand_name, cand in board.data.get("candidates", {}).items():
             if cand.get("level") == "point" and ("landmark" in cand.get("metadata", {}) or "Landmark:" in cand_name):
@@ -251,6 +362,7 @@ class Stage3Built:
                     landmark_cand["lon"] = exact_lon
                     landmark_cand["metadata"]["radius_km"] = 0.05
                     landmark_cand["metadata"]["tier"] = "T1"
+                    landmark_cand["metadata"]["source"] = "cadastral_exact_mark"
                     landmark_cand["metadata"]["osm_id"] = f"{osm_type}/{osm_id}"
                     landmark_cand["metadata"]["osm_display_name"] = disp_name
 
@@ -261,82 +373,54 @@ class Stage3Built:
                     )
                     board.add_evidence(
                         clue_id=cid_osm,
-                        candidate_weights={landmark_cand["name"]: 8.0},
+                        candidate_weights={landmark_cand["name"]: 12.0},
                         rationale=f"OpenStreetMap cadastral building geometry confirmed for {lm_name}",
                         artifact_path=str(job_dir / "osm_corridor_results.json"),
                     )
 
-                    match_res = {
-                        "best_point": {
-                            "lat": exact_lat,
-                            "lon": exact_lon,
-                            "name": lm_name,
-                            "osm_id": f"{osm_type}/{osm_id}",
-                        },
-                        "score": 4.5,
-                        "calibrated_radius_km": 0.05,
-                        "confidence_tier": "T1",
-                        "status": "used",
-                        "building_verified": True,
-                    }
-                    summary = {
-                        "search_bbox": search_bbox,
-                        "match_results": match_res,
-                        "building_verified": True,
-                        "crossings_found": 1,
-                        "osm_feature": {
+                    if primary_building_feature is None:
+                        primary_building_feature = {
                             "display_name": disp_name,
                             "osm_id": f"{osm_type}/{osm_id}",
                             "coordinates": [exact_lat, exact_lon],
-                        },
-                    }
-                    board.data["stages_run"].append("stage3_built")
-                    board.save()
-                    (job_dir / "osm_corridor_results.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
-                    return summary, board
+                        }
             except Exception as e:
                 logger.warning("OSM landmark building verification error: %s", e)
 
-        # 1. Fetch or use corridor
+        # -------------------------------------------------------------------
+        # 3. Linear Corridor & Infrastructure Matching (Bridges, Rails)
+        # -------------------------------------------------------------------
+        clue_kinds = {c.get("kind") for c in board.data.get("clues", {}).values() if isinstance(c, dict)}
+        raw_hint = (board.data.get("user_hints", {}).get("raw_text", "") or "").lower()
+        has_linear_infrastructure = (
+            bool({"corridor", "railway_crossing", "bridge_crossing", "railway"} & clue_kinds)
+            or any(k in raw_hint for k in ("bridge", "railway", "train", "crossing", "canal", "river crossing", "track", "rail"))
+        )
+
+        match_res = {"status": "not_applicable", "score": 0.0, "best_point": None}
+        crossings: List[Dict[str, Any]] = []
+
         if mock_corridor is not None:
             corridor = mock_corridor
             crossings = mock_crossings or []
-        else:
-            # Check whether linear infrastructure is genuinely observed in visual clues or hints
-            clue_kinds = {c.get("kind") for c in board.data.get("clues", {}).values() if isinstance(c, dict)}
-            raw_hint = (board.data.get("user_hints", {}).get("raw_text", "") or "").lower()
-            has_linear_infrastructure = (
-                bool({"corridor", "railway_crossing", "bridge_crossing", "railway"} & clue_kinds)
-                or any(k in raw_hint for k in ("bridge", "railway", "train", "crossing", "canal", "river crossing", "track", "rail"))
+            match_res = self.match_corridor_point(
+                corridor_polyline=corridor,
+                crossings=crossings,
+                target_features=target_features,
+                max_deviation_km=1.0,
             )
-
-            if not has_linear_infrastructure:
-                logger.info("[stage3_built] No linear infrastructure or bridge detected. Bypassing corridor matching.")
-                summary = {
-                    "search_bbox": search_bbox,
-                    "match_results": {"status": "not_applicable", "score": 0.0},
-                    "status": "not_applicable",
-                    "reason": "No linear corridor or bridge infrastructure detected in photo; corridor intersection search bypassed.",
-                }
-                board.data["stages_run"].append("stage3_built")
-                board.save()
-                (job_dir / "osm_corridor_results.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
-                return summary, board
-
+        elif has_linear_infrastructure:
             crossings = self.query_crossings_in_bbox(search_bbox, line_kind="railway")
-            # Create polyline across bbox center if no explicit line was passed
             s, w, n, e = search_bbox
             corridor = [(s, w), (s * 0.5 + n * 0.5, w * 0.5 + e * 0.5), (n, e)]
+            match_res = self.match_corridor_point(
+                corridor_polyline=corridor,
+                crossings=crossings,
+                target_features=target_features,
+                max_deviation_km=1.0,
+            )
 
-        # 2. Match corridor point
-        match_res = self.match_corridor_point(
-            corridor_polyline=corridor,
-            crossings=crossings,
-            target_features=target_features,
-            max_deviation_km=1.0,
-        )
-
-        best_pt = match_res["best_point"]
+        best_pt = match_res.get("best_point")
         if best_pt:
             p_lat = best_pt["lat"]
             p_lon = best_pt["lon"]
@@ -357,29 +441,33 @@ class Stage3Built:
                     "tier": tier,
                 },
             )
-
-            cid_osm = board.add_clue(
+            cid_corridor = board.add_clue(
                 text=f"OSM linear infrastructure corridor match ({'Bridge crossing' if target_features.get('is_bridge') else 'Corridor'})",
                 kind="corridor",
                 status="computed",
             )
-
             board.add_evidence(
-                clue_id=cid_osm,
+                clue_id=cid_corridor,
                 candidate_weights={cand_name: min(20.0, math.exp(score))},
                 rationale="OpenStreetMap linear corridor topology alignment",
                 artifact_path=str(job_dir / "osm_corridor_results.json"),
             )
 
-        board.data["stages_run"].append("stage3_built")
-        board.save()
-
+        building_verified = bool(primary_building_feature or matched_cadastral_list)
         summary = {
             "search_bbox": search_bbox,
-            "target_features": target_features,
             "match_results": match_res,
+            "building_verified": building_verified,
+            "detected_buildings": detected_manifest.get("buildings", []),
+            "building_count": detected_manifest.get("count", 0),
+            "building_overlay": "building_detection_overlay.png" if (job_dir / "building_detection_overlay.png").exists() else None,
+            "matched_cadastral": matched_cadastral_list,
             "crossings_found": len(crossings),
         }
+        if primary_building_feature:
+            summary["osm_feature"] = primary_building_feature
 
+        board.data["stages_run"].append("stage3_built")
+        board.save()
         (job_dir / "osm_corridor_results.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
         return summary, board

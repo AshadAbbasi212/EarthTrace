@@ -157,7 +157,7 @@ class PipelineOrchestrator:
             or any(cand.get("level") == "point" for cand in board.data.get("candidates", {}).values())
         )
         if has_built_cues:
-            self.stage3_built.process(job_dir, board)
+            self.stage3_built.process(job_dir, board, image_path=photo_path)
         else:
             board.data["stages_run"].append("stage3_built")
             summary = {

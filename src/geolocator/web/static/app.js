@@ -100,6 +100,22 @@
   const detailStreetEmptyNote = document.getElementById('detail-street-empty-note');
   const btnStreetSearchWikimedia = document.getElementById('btn-street-search-wikimedia');
 
+  // Building & Facade Intelligence elements
+  const badgeBldg = document.getElementById('badge-bldg');
+  const descBldg = document.getElementById('desc-bldg');
+  const thumbBldg = document.getElementById('thumb-container-bldg');
+
+  const detailBadgeBldg = document.getElementById('detail-badge-bldg');
+  const detailFindingsBldg = document.getElementById('detail-findings-bldg');
+  const detailBldgImg = document.getElementById('detail-bldg-img');
+  const detailBldgEmptyNote = document.getElementById('detail-bldg-empty-note');
+  const detailCountBldg = document.getElementById('detail-count-bldg');
+  const detailCadastralBldg = document.getElementById('detail-cadastral-bldg');
+  const detailBldgCropsContainer = document.getElementById('detail-bldg-crops-container');
+  const detailBldgCropsGrid = document.getElementById('detail-bldg-crops-grid');
+  const btnBldgLightbox = document.getElementById('btn-bldg-lightbox');
+  const btnBldgFocusMap = document.getElementById('btn-bldg-focus-map');
+
   // Lightbox elements
   const lightboxModal = document.getElementById('lightbox-modal');
   const lightboxBackdrop = document.getElementById('lightbox-backdrop');
@@ -995,6 +1011,86 @@
     if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
       btnStreetSearchWikimedia.href = `https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent(lat.toFixed(4) + ' ' + lon.toFixed(4))}`;
     }
+
+    // --- 6. Populate Dedicated Tab 5: Building & Facade Intelligence ---
+    const bldgs = report.detected_buildings || [];
+    const bldgOverlay = report.building_overlay || (bldgs.length > 0 ? 'building_detection_overlay.png' : null);
+    const matchedBldgs = report.matched_cadastral || [];
+
+    const bldgItem = {
+      status: (matchedBldgs.length > 0 || bldgs.length > 0) ? 'used' : 'not_applicable',
+      findings: bldgs.length > 0 
+        ? `Identified ${bldgs.length} structural building facades (${matchedBldgs.length} matched to cadastral entities).`
+        : 'No prominent building facade structures isolated.',
+      artifact_file: bldgOverlay,
+    };
+
+    applyEvidence(
+      badgeBldg,
+      descBldg,
+      thumbBldg,
+      bldgItem,
+      'Architectural facade segmentation, zero-shot taxonomy, and OSM cadastral matching.',
+      jobId,
+      'building_detection_overlay.png'
+    );
+
+    if (detailBadgeBldg) {
+      applyBadge(detailBadgeBldg, bldgItem.status);
+      detailFindingsBldg.textContent = bldgItem.findings;
+      detailCountBldg.textContent = `${bldgs.length} Facades`;
+      
+      if (matchedBldgs.length > 0) {
+        const topMatch = matchedBldgs[0].matched || {};
+        detailCadastralBldg.textContent = `🎯 ${topMatch.name || 'Matched'}`;
+      } else {
+        detailCadastralBldg.textContent = bldgs.length > 0 ? 'Taxonomy Classified' : '--';
+      }
+
+      if (bldgs.length > 0) {
+        const overlayUrl = appendPassphraseParam(`/api/jobs/${jobId}/artifacts/building_detection_overlay.png`);
+        detailBldgImg.src = overlayUrl;
+        detailBldgImg.onload = () => {
+          detailBldgImg.style.display = 'block';
+          detailBldgEmptyNote.style.display = 'none';
+        };
+        detailBldgImg.onerror = () => {
+          detailBldgImg.style.display = 'none';
+          detailBldgEmptyNote.style.display = 'block';
+        };
+
+        if (detailBldgCropsGrid && detailBldgCropsContainer) {
+          detailBldgCropsGrid.innerHTML = '';
+          detailBldgCropsContainer.style.display = 'block';
+
+          bldgs.forEach((b, idx) => {
+            const card = document.createElement('div');
+            card.style.cssText = 'min-width: 140px; max-width: 160px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color); border-radius: 6px; padding: 6px; font-size: 11px; display: flex; flex-direction: column; gap: 4px;';
+            const cropUrl = appendPassphraseParam(`/api/jobs/${jobId}/artifacts/buildings/building_${String(idx+1).padStart(2, '0')}.jpg`);
+            const matchedTag = b.matched_cadastral ? `<div style="color: #10b981; font-weight: 700;">🎯 ${b.matched_cadastral.name}</div>` : '';
+            card.innerHTML = `
+              <div style="height: 90px; overflow: hidden; border-radius: 4px; cursor: pointer;">
+                <img src="${cropUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'">
+              </div>
+              <div style="font-weight: 700; color: var(--cyan); margin-top: 2px;">#${idx+1}: ${b.classification.split(' or ')[0]}</div>
+              <div style="color: #94a3b8; font-size: 10px;">Style: ${b.facade_style.split(' ')[0]}</div>
+              <div style="color: #64748b; font-size: 9px;">Palette: ${b.palette}</div>
+              ${matchedTag}
+            `;
+            const cardImg = card.querySelector('img');
+            if (cardImg) {
+              cardImg.onclick = () => openLightbox(cropUrl, `Building #${idx+1}`, `${b.classification} (${b.facade_style})`);
+            }
+            detailBldgCropsGrid.appendChild(card);
+          });
+        }
+      } else {
+        detailBldgImg.style.display = 'none';
+        detailBldgEmptyNote.style.display = 'block';
+        detailBldgEmptyNote.textContent = 'No urban buildings or facade contours detected in this scene.';
+        if (detailBldgCropsContainer) detailBldgCropsContainer.style.display = 'none';
+      }
+    }
   }
 
   function applyBadge(el, status) {
@@ -1182,6 +1278,41 @@
       }
     }
   });
+
+  if (detailBldgImg) {
+    detailBldgImg.addEventListener('click', () => {
+      if (detailBldgImg.src && detailBldgImg.style.display !== 'none') {
+        openLightbox(detailBldgImg.src, 'Pillar 5: Tactical Cyber-HUD Building Bounding Overlay', detailFindingsBldg ? detailFindingsBldg.textContent : '');
+      }
+    });
+  }
+
+  if (btnBldgLightbox) {
+    btnBldgLightbox.addEventListener('click', () => {
+      if (detailBldgImg.src && detailBldgImg.style.display !== 'none') {
+        openLightbox(detailBldgImg.src, 'Pillar 5: Tactical Cyber-HUD Building Bounding Overlay', detailFindingsBldg ? detailFindingsBldg.textContent : '');
+      }
+    });
+  }
+
+  if (btnBldgFocusMap) {
+    btnBldgFocusMap.addEventListener('click', () => {
+      if (currentReportData) {
+        const top = currentReportData.top_hypothesis || currentReportData.best_location || {};
+        let lat = null, lon = null;
+        if (Array.isArray(top.coordinates) && top.coordinates.length >= 2) {
+          lat = Number(top.coordinates[0]); lon = Number(top.coordinates[1]);
+        } else if (top.coordinates && top.coordinates.latitude !== undefined) {
+          lat = Number(top.coordinates.latitude); lon = Number(top.coordinates.longitude);
+        }
+        if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon) && map) {
+          map.setView([lat, lon], 17);
+          const mapEl = document.getElementById('map');
+          if (mapEl) mapEl.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    });
+  }
 
   // --- 3D Tactical Particle Globe Engine ---
   let globeTargetLat = null;

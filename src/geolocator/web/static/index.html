@@ -272,6 +272,9 @@
             <button type="button" class="evidence-tab-btn" id="tab-btn-street" data-tab="street">
               <span>📸</span> 4. Street Imagery
             </button>
+            <button type="button" class="evidence-tab-btn" id="tab-btn-bldg" data-tab="bldg">
+              <span>🏛️</span> 5. Building Match
+            </button>
           </div>
         </div>
 
@@ -327,6 +330,19 @@
                 Keyless ground-level imagery check (Wikimedia / KartaView). Honest "not available" when unmapped.
               </div>
               <div id="thumb-container-street" style="display: none;"></div>
+              <div class="card-expand-hint">Click to inspect details ↗</div>
+            </div>
+
+            <!-- 5. Building & Facade Intelligence -->
+            <div class="evidence-box clickable-evidence-card" id="evidence-box-bldg" data-target-tab="bldg" title="Click to open detailed Building & Facade tab">
+              <div class="evidence-header">
+                <span class="evidence-name">5. Building Detection</span>
+                <span class="badge-tag tag-not-applicable" id="badge-bldg">Standby</span>
+              </div>
+              <div class="evidence-desc" id="desc-bldg">
+                Structural facade edge segmentation, zero-shot taxonomy, and OSM cadastral matching.
+              </div>
+              <div id="thumb-container-bldg" style="display: none;"></div>
               <div class="card-expand-hint">Click to inspect details ↗</div>
             </div>
           </div>
@@ -528,6 +544,62 @@
               </div>
               <div class="tab-detail-actions">
                 <a href="#" target="_blank" class="btn-secondary" id="btn-street-search-wikimedia">🌐 Search Nearby Photos on Wikimedia</a>
+                <button type="button" class="btn-secondary tab-back-btn" data-back="overview">⬅ Back to Overview</button>
+              </div>
+            </div>
+          </div>
+        <!-- Tab 5: Building & Facade Intelligence Detail Panel -->
+        <div class="evidence-tab-panel" id="panel-bldg">
+          <div class="tab-detail-container">
+            <div class="tab-detail-header">
+              <div class="tab-detail-title-group">
+                <div class="tab-detail-icon">🏛️</div>
+                <div>
+                  <h3 class="tab-detail-title">Pillar 5: Building & Facade Intelligence</h3>
+                  <div class="tab-detail-subtitle">Architectural Structural Edge Detection, Zero-Shot Taxonomy & OSM Cadastral Footprint Match</div>
+                </div>
+              </div>
+              <div class="tab-detail-status">
+                <span class="badge-tag tag-not-applicable" id="detail-badge-bldg">Standby</span>
+              </div>
+            </div>
+            <div class="tab-detail-body">
+              <div class="tab-detail-info-card">
+                <div class="info-metric-label">Building Detection Status & Cadastral Lock</div>
+                <div class="tab-detail-findings" id="detail-findings-bldg">Awaiting geolocation run...</div>
+              </div>
+              <div class="tab-visual-preview-wrapper" id="detail-bldg-preview-wrapper">
+                <div class="preview-title">Tactical Cyber-HUD Building Bounding Overlay:</div>
+                <img id="detail-bldg-img" class="zoomable-preview-img" alt="Building Detection Overlay" style="display: none;">
+                <div class="preview-empty-note" id="detail-bldg-empty-note">Awaiting building facade segmentation...</div>
+              </div>
+              <div class="detected-buildings-crops-container" id="detail-bldg-crops-container" style="display: none; margin-top: 1rem;">
+                <div class="info-metric-label" style="margin-bottom: 0.5rem;">Segmented Facades & Structural Towers:</div>
+                <div class="bldg-crops-grid" id="detail-bldg-crops-grid" style="display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 0.5rem;">
+                  <!-- Facade cards injected dynamically -->
+                </div>
+              </div>
+              <div class="tab-detail-grid" style="margin-top: 1rem;">
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Detection Algorithm</span>
+                  <span class="spec-value">Sobel-X Vertical Morphology</span>
+                </div>
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Buildings Identified</span>
+                  <span class="spec-value" id="detail-count-bldg">0</span>
+                </div>
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Zero-Shot Classifier</span>
+                  <span class="spec-value">StreetCLIP / CLIP-ViT-L</span>
+                </div>
+                <div class="tab-detail-spec">
+                  <span class="spec-label">Cadastral Lock</span>
+                  <span class="spec-value" id="detail-cadastral-bldg">--</span>
+                </div>
+              </div>
+              <div class="tab-detail-actions">
+                <button type="button" class="btn-secondary" id="btn-bldg-lightbox">🔍 Fullscreen Overlay</button>
+                <button type="button" class="btn-secondary" id="btn-bldg-focus-map">🎯 Focus On Point</button>
                 <button type="button" class="btn-secondary tab-back-btn" data-back="overview">⬅ Back to Overview</button>
               </div>
             </div>
