@@ -172,7 +172,7 @@ class PipelineOrchestrator:
         # Stage 4: Verification & Camera Pose Resection
         # ----------------------------------------------------
         report_progress("Stage 4: Satellite & Street Verification", 85)
-        self.stage4.process(job_dir, board)
+        self.stage4.process(job_dir, board, working_image_path=working_img)
 
         # ----------------------------------------------------
         # Stage 5: Final Decision Engine & Report Generation

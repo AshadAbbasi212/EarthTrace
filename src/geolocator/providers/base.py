@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 import urllib.request
 import urllib.error
+import socket
 
 logger = logging.getLogger("geolocator.providers.base")
 
@@ -128,6 +129,7 @@ class BaseProvider:
         last_error = None
         for attempt in range(1, retries + 1):
             try:
+                socket.setdefaulttimeout(self.timeout)
                 req = urllib.request.Request(url, headers=req_headers)
                 with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                     data = resp.read()

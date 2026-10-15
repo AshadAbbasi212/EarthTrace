@@ -138,8 +138,8 @@ class Stage3Terrain:
                         best_score = score
                         best_candidate = entry
 
-        # 2. Fine search around best coarse candidate
-        if best_candidate and best_candidate["score"] > -0.5:
+        # 2. Fine search around best coarse candidate only if promising correlation
+        if best_candidate and best_candidate["score"] >= 0.35:
             ref_lat = best_candidate["lat"]
             ref_lon = best_candidate["lon"]
             ref_heading = best_candidate["heading"]
@@ -331,9 +331,8 @@ class Stage3Terrain:
         best_overall_fit = None
         best_overall_score = -2.0
         chosen_center = candidate_centers[0]
-
-        for c_idx, (c_lat, c_lon) in enumerate(candidate_centers):
-            logger.info("Executing terrain skyline search around (%.4f, %.4f), radius=%.1f km (center %d/%d)", c_lat, c_lon, radius_km, c_idx + 1, len(candidate_centers))
+        for c_idx, (c_lat, c_lon) in enumerate(candidate_centers[:2]):
+            logger.info("Executing terrain skyline search around (%.4f, %.4f), radius=%.1f km (center %d/%d)", c_lat, c_lon, radius_km, c_idx + 1, min(2, len(candidate_centers)))
             fit_res = self.search_viewpoint(
                 photo_profile=photo_profile,
                 center_lat=c_lat,
@@ -346,9 +345,9 @@ class Stage3Terrain:
                 best_overall_fit = fit_res
                 chosen_center = (c_lat, c_lon)
 
-            # If an exceptionally strong viewpoint correlation is confirmed, stop early
-            if best_overall_score >= 0.85:
-                logger.info("Exceptional terrain correlation confirmed (NCC=%.4f >= 0.85); early stopping.", best_overall_score)
+            # If a strong viewpoint correlation is confirmed, stop early
+            if best_overall_score >= 0.65:
+                logger.info("Strong terrain correlation confirmed (NCC=%.4f >= 0.65); early stopping.", best_overall_score)
                 break
 
         fit_results = best_overall_fit if best_overall_fit is not None else {

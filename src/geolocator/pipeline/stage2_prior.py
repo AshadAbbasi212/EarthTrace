@@ -229,9 +229,22 @@ class Stage2Prior:
 
                     # Ensure model device
                     m_dev = next(model.parameters()).device
-                    tensors = [model.image_encoder.preprocess_image(c) for c in crops]
-                    batch = torch.cat(tensors, dim=0).to(m_dev)
                     gps_gal = model.gps_gallery.to(m_dev)
+
+                    # Warmup location encoder to prevent first-call compilation delay
+                    if not hasattr(model, "_warmed_up"):
+                        _ = model.location_encoder(gps_gal[:2])
+                        model._warmed_up = True
+
+                    # Run image encoder per crop to prevent Windows WDDM GPU kernel TDR timeout (>2s)
+                    image_features_list = []
+                    for c in crops:
+                        c_tens = model.image_encoder.preprocess_image(c).to(m_dev)
+                        c_feat = model.image_encoder(c_tens)
+                        image_features_list.append(c_feat)
+                    image_features = torch.cat(image_features_list, dim=0)
+                    image_features = torch.nn.functional.normalize(image_features, dim=1)
+                    logit_scale = model.logit_scale.exp()
 
                     unique_cands: List[Dict[str, Any]] = []
                     if in_country_candidates:
@@ -250,7 +263,17 @@ class Stage2Prior:
                         all_locations = gps_gal
 
                     with torch.no_grad():
-                        logits = model.forward(batch, all_locations)
+                        chunk_size = 10000
+                        num_locs = len(all_locations)
+                        logits_chunks = []
+                        for i_loc in range(0, num_locs, chunk_size):
+                            loc_chunk = all_locations[i_loc : i_loc + chunk_size]
+                            loc_feats = model.location_encoder(loc_chunk)
+                            loc_feats = torch.nn.functional.normalize(loc_feats, dim=1)
+                            chunk_logits = logit_scale * (image_features @ loc_feats.t())
+                            logits_chunks.append(chunk_logits)
+
+                        logits = torch.cat(logits_chunks, dim=1)
                         probs = logits.softmax(dim=-1).mean(dim=0)
 
                         # Top gallery points
@@ -268,7 +291,8 @@ class Stage2Prior:
                                 grid_lats1, grid_lons1 = np.meshgrid(lats1, lons1)
                                 grid1 = np.stack([grid_lats1.ravel(), grid_lons1.ravel()], axis=1)
                                 t_grid1 = torch.tensor(grid1, dtype=torch.float32, device=m_dev)
-                                logits1 = model.forward(batch[0:1], t_grid1)
+                                g_feat1 = torch.nn.functional.normalize(model.location_encoder(t_grid1), dim=1)
+                                logits1 = logit_scale * (image_features[0:1] @ g_feat1.t())
                                 best_i1 = torch.argmax(logits1[0]).item()
                                 b_lat1, b_lon1 = float(grid1[best_i1][0]), float(grid1[best_i1][1])
 
@@ -277,7 +301,8 @@ class Stage2Prior:
                                 grid_lats2, grid_lons2 = np.meshgrid(lats2, lons2)
                                 grid2 = np.stack([grid_lats2.ravel(), grid_lons2.ravel()], axis=1)
                                 t_grid2 = torch.tensor(grid2, dtype=torch.float32, device=m_dev)
-                                logits2 = model.forward(batch[0:1], t_grid2)
+                                g_feat2 = torch.nn.functional.normalize(model.location_encoder(t_grid2), dim=1)
+                                logits2 = logit_scale * (image_features[0:1] @ g_feat2.t())
                                 best_i2 = torch.argmax(logits2[0]).item()
                                 coords_np[top_i][0] = float(grid2[best_i2][0])
                                 coords_np[top_i][1] = float(grid2[best_i2][1])
@@ -335,7 +360,8 @@ class Stage2Prior:
                                         glat1, glon1 = np.meshgrid(lats1, lons1)
                                         grid1 = np.stack([glat1.ravel(), glon1.ravel()], axis=1)
                                         t_grid1 = torch.tensor(grid1, dtype=torch.float32, device=m_dev)
-                                        lg1 = model.forward(batch[0:1], t_grid1)
+                                        ig_feat1 = torch.nn.functional.normalize(model.location_encoder(t_grid1), dim=1)
+                                        lg1 = logit_scale * (image_features[0:1] @ ig_feat1.t())
                                         b_idx1 = torch.argmax(lg1[0]).item()
                                         b_lat1, b_lon1 = float(grid1[b_idx1][0]), float(grid1[b_idx1][1])
 
@@ -345,7 +371,8 @@ class Stage2Prior:
                                         glat2, glon2 = np.meshgrid(lats2, lons2)
                                         grid2 = np.stack([glat2.ravel(), glon2.ravel()], axis=1)
                                         t_grid2 = torch.tensor(grid2, dtype=torch.float32, device=m_dev)
-                                        lg2 = model.forward(batch[0:1], t_grid2)
+                                        ig_feat2 = torch.nn.functional.normalize(model.location_encoder(t_grid2), dim=1)
+                                        lg2 = logit_scale * (image_features[0:1] @ ig_feat2.t())
                                         b_idx2 = torch.argmax(lg2[0]).item()
                                         ref_lat, ref_lon = float(grid2[b_idx2][0]), float(grid2[b_idx2][1])
                                     except Exception as e_cr:

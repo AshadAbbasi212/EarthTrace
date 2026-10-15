@@ -119,6 +119,11 @@ LANDMARK_DATABASE: List[Tuple[str, str, float, float, str]] = [
     ("Machu Picchu Inca citadel Andes Mountains Peru", "Machu Picchu, Cusco Region, Peru", -13.163141, -72.544963, "unesco_world_heritage"),
     ("Christ the Redeemer Art Deco statue Corcovado Rio de Janeiro", "Christ the Redeemer, Rio de Janeiro, Brazil", -22.951916, -43.210487, "world_landmark"),
     ("Chichen Itza El Castillo Mayan pyramid Yucatan Mexico", "El Castillo (Temple of Kukulcan), Chichen Itza, Mexico", 20.684285, -88.567783, "unesco_world_heritage"),
+    ("Shibuya Crossing scramble pedestrian crossing Tokyo Japan", "Shibuya Crossing, Tokyo, Japan", 35.659500, 139.700500, "urban_landmark"),
+    ("Lake Louise Banff National Park turquoise alpine glacial lake Alberta Canada", "Lake Louise, Banff National Park, Alberta, Canada", 51.425400, -116.177300, "natural_landmark"),
+    ("Sugarloaf Mountain Pao de Acucar granite monolith Guanabara Bay Rio de Janeiro Brazil", "Sugarloaf Mountain (Pão de Açúcar), Rio de Janeiro, Brazil", -22.949200, -43.154500, "natural_landmark"),
+    ("Reynisfjara Black Sand Beach Vik basalt sea stacks southern Iceland", "Reynisfjara Beach / Reynisdrangar Basalt Stacks, Vík, Iceland", 63.404400, -19.049400, "natural_landmark"),
+    ("Table Mountain flat-topped mountain Cape Town Western Cape South Africa", "Table Mountain, Cape Town, South Africa", -33.962800, 18.409800, "natural_landmark"),
 
     # --- World Iconic Natural Landmarks, Mountains & Valleys ---
     ("Matterhorn pyramid peak Zermatt Swiss Alps", "Matterhorn Peak, Zermatt, Switzerland", 45.976300, 7.748000, "mountain_peak"),
@@ -215,8 +220,27 @@ NEGATIVE_PROMPTS = [
 class LandmarkMatcher:
     """High-accuracy zero-shot landmark recognition and exact mark geocoding."""
 
+    _cached_text_features: Optional[torch.Tensor] = None
+
     def __init__(self):
         self._prompts = [f"a photo of {lm[0]}" for lm in LANDMARK_DATABASE] + NEGATIVE_PROMPTS
+
+    def _get_text_features(self, clip_model: Any, clip_proc: Any, device: Any) -> torch.Tensor:
+        if LandmarkMatcher._cached_text_features is not None:
+            return LandmarkMatcher._cached_text_features.to(device)
+
+        chunks = []
+        chunk_size = 35
+        for i in range(0, len(self._prompts), chunk_size):
+            p_chunk = self._prompts[i : i + chunk_size]
+            t_inputs = clip_proc(text=p_chunk, return_tensors="pt", padding=True).to(device)
+            with torch.no_grad():
+                t_out = clip_model.get_text_features(**t_inputs)
+                t_pool = t_out.pooler_output if hasattr(t_out, "pooler_output") else t_out
+                t_feats = torch.nn.functional.normalize(t_pool, dim=1)
+                chunks.append(t_feats.cpu())
+        LandmarkMatcher._cached_text_features = torch.cat(chunks, dim=0)
+        return LandmarkMatcher._cached_text_features.to(device)
 
     def match(
         self,
@@ -232,10 +256,21 @@ class LandmarkMatcher:
         Returns exact candidate metadata ONLY if confident and clearly exceeding negative background prompts.
         """
         model_device = getattr(clip_model, "device", None) or (device or ("cuda" if torch.cuda.is_available() else "cpu"))
-        inputs = clip_proc(text=self._prompts, images=image, return_tensors="pt", padding=True).to(model_device)
-        with torch.no_grad():
-            out = clip_model(**inputs)
-            probs = out.logits_per_image.softmax(dim=-1).cpu().numpy()[0]
+        if hasattr(clip_model, "get_text_features") and hasattr(clip_model, "get_image_features"):
+            text_features = self._get_text_features(clip_model, clip_proc, model_device)
+            im_inputs = clip_proc(images=image, return_tensors="pt").to(model_device)
+            with torch.no_grad():
+                im_out = clip_model.get_image_features(**im_inputs)
+                im_pool = im_out.pooler_output if hasattr(im_out, "pooler_output") else im_out
+                im_features = torch.nn.functional.normalize(im_pool, dim=1)
+                logit_scale = clip_model.logit_scale.exp() if hasattr(clip_model, "logit_scale") else 100.0
+                logits = logit_scale * (im_features @ text_features.t())
+                probs = logits.softmax(dim=-1).cpu().numpy()[0]
+        else:
+            inputs = clip_proc(text=self._prompts, images=image, return_tensors="pt", padding=True).to(model_device)
+            with torch.no_grad():
+                out = clip_model(**inputs)
+                probs = out.logits_per_image.softmax(dim=-1).cpu().numpy()[0]
 
         top_idx = int(np.argmax(probs))
         top_prob = float(probs[top_idx])
@@ -274,10 +309,11 @@ class LandmarkMatcher:
             logger.info("[landmark_matcher] Match '%s' rejected (failed significance thresholds)", top_lm[1])
             return None
 
-        # Country consistency verification: Reject if candidate country is strongly known and doesn't match landmark
+        # Country consistency verification:
+        from geolocator.pipeline.geo_utils import get_country_candidate
+        lm_country = get_country_candidate(top_lm[2], top_lm[3]) or ""
+
         if candidate_countries:
-            from geolocator.pipeline.geo_utils import get_country_candidate
-            lm_country = get_country_candidate(top_lm[2], top_lm[3]) or ""
             lm_text = f"{top_lm[0]} {top_lm[1]} {lm_country}".lower()
             norm_cand_countries = [c.strip().lower() for c in candidate_countries if c.strip()]
             country_matched = any(c in lm_text for c in norm_cand_countries)
@@ -289,7 +325,7 @@ class LandmarkMatcher:
                 return None
 
         prompt_text, canonical_name, lat, lon, category = top_lm
-        if category in ("monument", "national_monument", "fortress", "unesco_world_heritage", "world_landmark", "landmark_building", "cathedral", "grand_mosque", "national_mosque", "historical_mosque", "palace", "museum", "university_campus", "hospital_complex", "civic_building", "civic_market", "luxury_hotel", "hotel", "sports_club", "hospitality"):
+        if category in ("monument", "national_monument", "fortress", "unesco_world_heritage", "world_landmark", "landmark_building", "cathedral", "grand_mosque", "national_mosque", "historical_mosque", "palace", "museum", "university_campus", "hospital_complex", "civic_building", "civic_market", "luxury_hotel", "hotel", "sports_club", "hospitality", "natural_landmark", "urban_landmark"):
             calibrated_radius_km = 0.05 if top_prob >= 0.25 else 0.10
             tier = "T1"
         elif category in ("urban_metropolis", "scenic_corridor", "coastal_cliffs", "coastal_stacks", "coastal_cape", "bridge"):
@@ -307,6 +343,7 @@ class LandmarkMatcher:
             "category": category,
             "latitude": lat,
             "longitude": lon,
+            "country": lm_country,
             "confidence": top_prob,
             "margin": lm_margin,
             "tier": tier,

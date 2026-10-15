@@ -970,13 +970,14 @@ class Stage1Clues:
                 lm_res = lm_matcher.match(im, clip_model, clip_proc, device=device, candidate_countries=all_known_countries)
 
                 # Also run LandmarkMatcher on detected building facade crops for high-precision architectural recognition
+                job_path = image_path.parent
                 bldg_crops_dir = job_path / "buildings"
                 bldg_crops = list(bldg_crops_dir.glob("building_*.jpg")) if bldg_crops_dir.exists() else []
                 if not bldg_crops and scene_type in ("urban", "monument", "other"):
                     try:
                         from geolocator.pipeline.building_detector import BuildingDetector
                         b_det = BuildingDetector()
-                        b_man = b_det.detect_building_regions(working_image_path, output_dir=bldg_crops_dir, max_buildings=3)
+                        b_man = b_det.detect_building_regions(image_path, output_dir=bldg_crops_dir, max_buildings=3)
                         bldg_crops = [Path(b["crop_path"]) for b in b_man.get("buildings", []) if Path(b["crop_path"]).exists()]
                         # Record architectural style clues on board
                         for b_obj in b_man.get("buildings", []):
@@ -1009,6 +1010,12 @@ class Stage1Clues:
                     l_lat = lm_res["latitude"]
                     l_lon = lm_res["longitude"]
                     l_conf = lm_res["confidence"]
+                    l_country = lm_res.get("country")
+                    if l_country:
+                        if l_country not in candidate_countries:
+                            candidate_countries.insert(0, l_country)
+                        if l_country not in visual_country_candidates:
+                            visual_country_candidates.insert(0, l_country)
                     reason_desc = "User-requested landmark perception" if user_requested_landmark else "Zero-shot visual landmark identification"
                     region_guesses.append(RegionGuessItem(place=l_name, confidence=l_conf, reason=reason_desc))
                     cand_name = f"Landmark: {l_name}"

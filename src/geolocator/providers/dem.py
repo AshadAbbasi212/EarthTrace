@@ -27,7 +27,7 @@ class DEMProvider(BaseProvider):
         tile_url: str = TERRARIUM_URL,
         cache_dir: str | Path = ".geo-cache",
         offline_mode: bool = False,
-        timeout: float = 30.0,
+        timeout: float = 8.0,
     ):
         super().__init__(name="dem", cache_dir=cache_dir, offline_mode=offline_mode, timeout=timeout)
         self.tile_url = tile_url
@@ -64,7 +64,7 @@ class DEMProvider(BaseProvider):
                 return zeros
 
         try:
-            raw_bytes = self.fetch_bytes(url, cache_key=cache_filename, ext=".png")
+            raw_bytes = self.fetch_bytes(url, cache_key=cache_filename, ext=".png", retries=2, backoff_sec=0.5)
             import io
             im = Image.open(io.BytesIO(raw_bytes)).convert("RGB")
             arr = np.asarray(im, dtype=np.float32)

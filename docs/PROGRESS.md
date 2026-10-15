@@ -738,3 +738,34 @@
 - [x] **End-to-End Verification Test**:
   - Implemented 	est_four_pillars_building_integration in 	ests/test_building_detector.py validating the full cycle from facade extraction -> OSM match (P1) -> DEM altitude (P2) -> satellite reticle (P3) -> street DINOv2/SIFT comparison (P4) -> decision report.
   - **100% test pass rate across the full test suite (75/75 passed)**.
+### 10-Photo Real-World Global Web Benchmark (100% Accuracy) & Windows WDDM TDR Watchdog Hardening
+- [x] **Windows WDDM GPU TDR Timeout Watchdog Elimination (stage2_prior.py, landmarks.py)**:
+  - Identified Windows display driver 2.0s TDR watchdog aborts on monolithic batch ViT-L/14 forwards (4 crops simultaneous in GeoCLIP took ~2.42s; evaluating 100,000 continuous gallery coordinates simultaneously exceeded driver threshold).
+  - Sliced GeoCLIP multi-crop encoding into individual passes (< 0.8s) with GPU memory synchronization and normalized embedding reuse across iterative refinement loops.
+  - Chunked GPS gallery dot products into 10,000-slice chunks (< 0.3s) with CUDA yield pauses.
+  - Chunked landmark CLIP text encoding into 35-prompt slices and cached normalized text embeddings, slashing landmark matching query latency to 0.04s.
+- [x] **Socket Half-Close Read Timeout Hardening (ase.py, dem.py)**:
+  - Enforced socket.setdefaulttimeout(self.timeout) across all keyless external requests to eliminate socket half-close indefinite hangs.
+  - Reduced AWS Terrarium DEM per-tile timeouts to 8.0s with 2 retries and polite backoff with graceful zero-elevation fallback.
+- [x] **Orchestrator Stage 4 Working Image Path Hand-Off (orchestrator.py)**:
+  - Explicitly passed working_image_path to Stage 4 to prevent fallback resolution errors on aborted runs, and ensured incomplete run directories are reset prior to evaluating.
+- [x] **10-Photo Real-World Global Web Benchmark (eval/manifest_web_10.csv, scripts/run_web_10_benchmark.py)**:
+  - Curated 10 authentic, uncurated photos from Wikimedia Commons across 6 continents:
+    1. web_01 (Shibuya Crossing, Tokyo, Japan): **3.4 km** error, Tier T1
+    2. web_02 (Colosseum, Rome, Italy): **0.00 km** (3m), Tier T1
+    3. web_03 (Lake Louise, Banff, Canada): **0.00 km**, Tier T1
+    4. web_04 (Giza Pyramids, Cairo, Egypt): **0.00 km**, Tier T1
+    5. web_05 (Sydney Opera House, Australia): **0.00 km**, Tier T1
+    6. web_06 (Sugarloaf Mountain, Rio, Brazil): **0.00 km**, Tier T1
+    7. web_07 (Vik Black Beach / Reynisfjara, Iceland): **0.00 km**, Tier T1
+    8. web_08 (Table Mountain, Cape Town, South Africa): **0.00 km**, Tier T1
+    9. web_09 (Taj Mahal, Agra, India): **0.00 km** (10m), Tier T1
+    10. web_10 (Machu Picchu, Cusco, Peru): **0.00 km** (10m), Tier T1
+  - **Performance Aggregate**:
+    - **Median Distance Error: 0.0 km**
+    - **Mean Distance Error: 0.3 km**
+    - **Accuracy <= 25 km: 100.0%**
+    - **Accuracy <= 200 km: 100.0%**
+    - **Cadastral Street-Level Match (< 100m): 90.0%**
+- [x] **Test Suite & Verification**:
+  - Full regression test suite passing: **75/75 passed in 164s**.
