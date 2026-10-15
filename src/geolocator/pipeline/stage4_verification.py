@@ -318,7 +318,7 @@ class Stage4Verification:
             )
 
         # 3. Camera Pose Resection Solver
-        heading_hint = target_cand.get("metadata", {}).get("heading", 180.0)
+        heading_hint = target_cand.get("metadata", {}).get("heading", 180.0) if target_cand else 180.0
         pose_res = self.pose.solve_pose_from_correspondences(
             points_2d=[(100.0, 150.0), (300.0, 140.0), (500.0, 160.0)],
             points_3d=[(lat + 0.01, lon, 200.0), (lat + 0.01, lon + 0.01, 250.0), (lat + 0.01, lon - 0.01, 180.0)],

@@ -460,6 +460,24 @@ class Stage2Prior:
                                 "country": cue_c,
                             })
 
+        # Ensure raw_predictions is never completely empty even under total model/device failure
+        if not raw_predictions:
+            logger.warning("[stage2] No raw predictions from GeoCLIP or zero-shot. Populating baseline fallback anchors.")
+            default_countries = ["Pakistan", "United Kingdom", "United States", "Japan", "Egypt", "India", "Germany", "Brazil", "Australia"]
+            for def_c in default_countries:
+                c_anchors = get_country_anchors(def_c, max_anchors=2, terrain=desired_terrain)
+                for a in c_anchors:
+                    c_key = (round(a["lat"], 3), round(a["lon"], 3))
+                    if c_key not in existing_coords:
+                        existing_coords.add(c_key)
+                        raw_predictions.append({
+                            "lat": a["lat"],
+                            "lon": a["lon"],
+                            "prob": 0.01,
+                            "anchor_name": a["name"],
+                            "country": def_c,
+                        })
+
         # 4. Fuse evidence for each candidate point
         country_raw_mass: Dict[str, float] = {}
         for p in raw_predictions:
