@@ -247,6 +247,35 @@ class Stage1Clues:
         if vlm_override:
             clues_result = vlm_override
             visual_country_candidates = []
+        elif (job_path / "clues.json").exists():
+            try:
+                with open(job_path / "clues.json", "r", encoding="utf-8") as f:
+                    clues_dict = json.load(f)
+                clues_result = ClueExtractionResult.model_validate(clues_dict)
+                visual_country_candidates = [rg.place for rg in clues_result.region_guesses]
+                if "environmental_meta" in clues_dict and board:
+                    board.data["environmental_meta"] = clues_dict["environmental_meta"]
+                if "solar_meta" in clues_dict and board:
+                    board.data["solar_meta"] = clues_dict["solar_meta"]
+
+                if board and "environmental_meta" not in board.data:
+                    # Environmental cues not present in cached clues; run perception to populate
+                    clues_result, visual_country_candidates = self._extract_visual_clues_heuristic(
+                        working_image_path,
+                        ocr_snippets,
+                        board=board,
+                        candidate_countries=early_country_context,
+                    )
+                else:
+                    logger.info("[stage1] Loaded cached clues.json with environmental meta from %s", job_path)
+            except Exception as e:
+                logger.warning("[stage1] Failed to load cached clues.json: %s (falling back to perception)", e)
+                clues_result, visual_country_candidates = self._extract_visual_clues_heuristic(
+                    working_image_path,
+                    ocr_snippets,
+                    board=board,
+                    candidate_countries=early_country_context,
+                )
         else:
             clues_result, visual_country_candidates = self._extract_visual_clues_heuristic(
                 working_image_path,
@@ -272,13 +301,20 @@ class Stage1Clues:
         all_place_phrases = []
         for snip in ocr_snippets:
             all_place_phrases.extend(extract_candidate_place_phrases(snip["text"]))
+        for ts in getattr(clues_result, "text_and_signs", []):
+            all_place_phrases.extend(extract_candidate_place_phrases(ts.text))
         unique_phrases = list(dict.fromkeys(all_place_phrases))
         known_synonyms = set(GEO_PHONETIC_SYNONYMS.values())
 
         filtered_phrases = []
         for p in unique_phrases:
             pl = p.strip().lower()
-            if pl not in COMMON_STOP_WORDS and len(pl) >= 2:
+            tokens = [t.lower() for t in re.findall(r"\b\w+\b", pl)]
+            if (
+                pl not in COMMON_STOP_WORDS 
+                and len(pl) >= 2 
+                and not (tokens and all(t in COMMON_STOP_WORDS for t in tokens))
+            ):
                 filtered_phrases.append(p)
 
         filtered_phrases.sort(key=lambda p: (0 if p in known_synonyms else 1, len(p) < 4))
@@ -290,16 +326,25 @@ class Stage1Clues:
         for phrase in filtered_phrases:
             try:
                 query_str = GEO_PHONETIC_SYNONYMS.get(phrase, phrase).strip()
+                query_words = [t.lower() for t in re.findall(r"\b\w+\b", query_str)]
+                if query_words and all(t in COMMON_STOP_WORDS for t in query_words):
+                    logger.debug("[stage1] Skipping token '%s' (all constituent words in COMMON_STOP_WORDS)", query_str)
+                    continue
+
                 is_route_code = bool(re.search(r"\b(US|I|M|A|B|D|N|RN|BR|NH|SH|E|Q|O|Ruta|Route|Hwy|Highway)\s*[\-\.]?\s*(\d{1,4}[A-Z]?)\b", query_str, re.IGNORECASE))
                 
-                # Rule: Only query Nominatim if the token is a recognized route code, a known phonetic synonym,
-                # a multi-word phrase, or a capitalized proper noun of at least 5 letters.
-                # Never query arbitrary 3-4 letter abbreviations/fragments (e.g. BEIT, NYOK, STOP).
+                # Rule: Query Nominatim if token is a recognized route code, a known phonetic synonym,
+                # a multi-word phrase with non-stopword tokens, a capitalized proper noun of >= 5 letters,
+                # or a non-Latin / CJK script place name of at least 2 characters (e.g. 青部, 東京, 京都).
+                is_non_latin_place = any(ord(c) > 127 for c in query_str) and len(query_str) >= 2
+                is_compound_transit = bool(re.search(r"(?i)[a-z]{3,}(station|stn|plaza|junction)", query_str))
                 is_proper_place_query = (
                     is_route_code
                     or (query_str in GEO_PHONETIC_SYNONYMS.values())
-                    or (len(query_str.split()) >= 2)
+                    or (len(query_str.split()) >= 2 and any(t not in COMMON_STOP_WORDS for t in query_words))
                     or (len(query_str) >= 5 and query_str[0].isupper() and query_str.lower() not in COMMON_STOP_WORDS)
+                    or is_non_latin_place
+                    or is_compound_transit
                 )
 
                 if not is_proper_place_query:
@@ -311,18 +356,57 @@ class Stage1Clues:
                     logger.debug("[stage1] Skipping unconstrained route query '%s' without country gating", query_str)
                     continue
 
+                # Prepare query variants (e.g. 青部 -> 青部駅, 青部, AOESTATION -> AOE STATION)
+                queries_to_try = []
+                cjk_clean = None
+                if is_non_latin_place:
+                    cjk_clean = re.sub(r"[驛駅驿站村町市区省]$", "", query_str).strip()
+                    if cjk_clean and len(cjk_clean) >= 2:
+                        queries_to_try.extend([cjk_clean, f"{cjk_clean}駅", f"{cjk_clean} station"])
+                if is_compound_transit:
+                    split_q = re.sub(r"(?i)(station|stn|plaza|junction)", r" \1", query_str).strip()
+                    if split_q and split_q != query_str:
+                        queries_to_try.append(split_q)
+                if query_str not in queries_to_try:
+                    queries_to_try.append(query_str)
+
                 nom_results = []
-                # First try with primary candidate country for maximum geographic fidelity
-                if primary_cc:
-                    nom_results = self.nominatim.search(query_str, country_codes=primary_cc, limit=1)
+                for q_try in queries_to_try:
+                    # First try with primary candidate country for maximum geographic fidelity
+                    if primary_cc:
+                        nom_results = self.nominatim.search(q_try, country_codes=primary_cc, limit=1)
 
-                # Then fallback to all candidate countries if primary had no match
-                if not nom_results and country_codes_param:
-                    nom_results = self.nominatim.search(query_str, country_codes=country_codes_param, limit=1)
+                    # Then fallback to all candidate countries if primary had no match
+                    if not nom_results and country_codes_param:
+                        nom_results = self.nominatim.search(q_try, country_codes=country_codes_param, limit=1)
 
-                # Fallback to global query ONLY for distinct multi-word proper nouns
-                if not nom_results and not is_route_code and len(query_str.split()) >= 2:
-                    nom_results = self.nominatim.search(query_str, limit=1)
+                    # Fallback to global query ONLY for distinct multi-word proper nouns with substantial non-stopword tokens
+                    if not nom_results and not is_route_code and len(q_try.split()) >= 2 and any(t not in COMMON_STOP_WORDS for t in query_words):
+                        nom_results = self.nominatim.search(q_try, limit=1)
+
+                    if nom_results:
+                        hit = nom_results[0]
+                        hit_address = hit.get("address", {})
+                        hit_cc = hit_address.get("country_code", "").lower()
+
+                        # Geographic consistency check: Reject if search returned an unexpected foreign country
+                        if candidate_country_iso_codes and hit_cc and hit_cc not in candidate_country_iso_codes:
+                            logger.info("[stage1] Geocoded hit '%s' in '%s' rejected (mismatch with %s)", q_try, hit_cc, candidate_country_iso_codes)
+                            nom_results = []
+                            continue
+
+                        # Textual fidelity check for CJK / non-Latin place names:
+                        # Prevent Nominatim from returning completely unrelated places based on single-character partial matches
+                        if is_non_latin_place and cjk_clean:
+                            hit_name = str(hit.get("name", ""))
+                            hit_disp = str(hit.get("display_name", ""))
+                            if cjk_clean not in hit_name and cjk_clean not in hit_disp:
+                                logger.info("[stage1] Geocoded hit '%s' rejected (cjk stem '%s' not in hit '%s')", q_try, cjk_clean, hit_name)
+                                nom_results = []
+                                continue
+
+                        query_str = q_try
+                        break
 
                 if nom_results:
                     hit = nom_results[0]
@@ -347,7 +431,13 @@ class Stage1Clues:
                         source="nominatim_geocoding",
                         confidence=0.92,
                     )
-                    is_specific = any(w in display_name.lower() for w in ("road", "expressway", "highway", "point", "hill", "peak", "street", "building", "shrine", "station"))
+                    hit_cat = str(hit.get("category", "")).lower()
+                    hit_typ = str(hit.get("type", "")).lower()
+                    is_specific = (
+                        any(w in display_name.lower() for w in ("road", "expressway", "highway", "point", "hill", "peak", "street", "building", "shrine", "station"))
+                        or hit_cat in ("railway", "highway", "amenity", "building", "tourism")
+                        or hit_typ in ("station", "halt", "bus_stop", "stop", "junction")
+                    )
                     cand_prior = 4.0 if is_specific else 2.0
                     weight = 6.0 if is_specific else 3.0
 
@@ -414,9 +504,15 @@ class Stage1Clues:
             )
             board.add_candidate(cand_name, level="country", prior=1.0 + 3.0 * guess.confidence)
 
-        # Save clues.json
+        # Save clues.json with environmental and solar metadata
+        clues_export = clues_result.model_dump()
+        if board:
+            if "environmental_meta" in board.data:
+                clues_export["environmental_meta"] = board.data["environmental_meta"]
+            if "solar_meta" in board.data:
+                clues_export["solar_meta"] = board.data["solar_meta"]
         (job_path / "clues.json").write_text(
-            json.dumps(clues_result.model_dump(), indent=2, ensure_ascii=False),
+            json.dumps(clues_export, indent=2, ensure_ascii=False),
             encoding="utf-8",
         )
         board.mark_stage_run("stage1_clues")
@@ -808,26 +904,46 @@ class Stage1Clues:
                 overlay_path = image_path.parent / "skyline_overlay.png"
                 sky_info = extractor.extract_from_image(im, save_overlay_path=overlay_path)
                 std_elev = sky_info.get("std_elevation", 0.0)
-                if sky_info.get("is_non_flat", False) or std_elev >= 0.02:
+                is_roofline = sky_info.get("is_manmade_roofline", False)
+                is_urban_built = (
+                    scene_type in ("urban", "building", "indoor")
+                    or architecture in ("historic_monument", "institutional_brick", "urban_modern")
+                )
+
+                if is_roofline or is_urban_built:
+                    logger.info(
+                        "[stage1_skyline] Contour identified as building roofline / architectural silhouette (scene=%s, arch=%s, roofline=%s); preserving natural terrain relief as flat/urban.",
+                        scene_type, architecture, is_roofline
+                    )
+                    # Building rooflines are built environment features, not natural mountain horizons
+                    sky_info["is_non_flat"] = False
+                elif sky_info.get("is_non_flat", False) or std_elev >= 0.02:
                     relief = "mountainous" if std_elev >= 0.055 else "hilly"
                     horizon_visible = True
-                    logger.info("[stage1_skyline] Direct contour inspection confirmed non-flat terrain (std=%.4f, relief=%s)", std_elev, relief)
+                    logger.info("[stage1_skyline] Direct contour inspection confirmed non-flat natural terrain (std=%.4f, relief=%s)", std_elev, relief)
             except Exception as e:
                 logger.debug("[stage1_skyline] Direct contour check error: %s", e)
 
-            # Zero-shot Country Perception Sweep
-            country_prompts = [f"a street or landscape in {c}" for c in GLOBAL_GEOLOC_COUNTRIES]
-            c_inputs = clip_proc(text=country_prompts, images=im, return_tensors="pt", padding=True).to(device)
+            # Multi-template Zero-shot Country Perception Sweep
+            country_templates = [
+                "a street or road photo in {c}",
+                "a scenic landscape or countryside in {c}",
+                "architecture and buildings in {c}",
+                "typical nature and flora in {c}",
+            ]
+            all_country_prompts = [tmpl.format(c=c) for tmpl in country_templates for c in GLOBAL_GEOLOC_COUNTRIES]
+            c_inputs = clip_proc(text=all_country_prompts, images=im, return_tensors="pt", padding=True).to(device)
             with torch.no_grad():
                 c_out = clip_model(**c_inputs)
-                c_probs = c_out.logits_per_image.softmax(dim=-1).cpu().numpy()[0]
+                c_logits_mat = c_out.logits_per_image.view(len(country_templates), len(GLOBAL_GEOLOC_COUNTRIES)).mean(dim=0)
+                c_probs = c_logits_mat.softmax(dim=-1).cpu().numpy()
 
             top_c_indices = np.argsort(c_probs)[::-1]
             top_c1_idx = int(top_c_indices[0])
             top_c1_country = GLOBAL_GEOLOC_COUNTRIES[top_c1_idx]
             top_c1_prob = float(c_probs[top_c1_idx])
             logger.info(
-                "[stage1_country] Top zero-shot countries: %s (%.3f), %s (%.3f), %s (%.3f)",
+                "[stage1_country] Top zero-shot countries (multi-template ensemble): %s (%.3f), %s (%.3f), %s (%.3f)",
                 top_c1_country, top_c1_prob,
                 GLOBAL_GEOLOC_COUNTRIES[int(top_c_indices[1])], float(c_probs[top_c_indices[1]]),
                 GLOBAL_GEOLOC_COUNTRIES[int(top_c_indices[2])], float(c_probs[top_c_indices[2]]),
@@ -840,18 +956,25 @@ class Stage1Clues:
             if top_c1_prob >= 0.18 and not region_guesses:
                 region_guesses.append(RegionGuessItem(place=top_c1_country, confidence=round(top_c1_prob, 3), reason="Vision-language country prior"))
 
-            # Informational landmark perception (with candidate countries consistency filter)
+            # Automatic Landmark Perception:
+            # LandmarkMatcher uses 8 negative prompt rejectors and country consistency checks.
+            # Run whenever scene is not flat empty terrain, or if user explicitly hinted landmarks.
             user_requested_landmark = bool(board and board.data.get("user_hints", {}).get("landmarks"))
             all_known_countries = list(dict.fromkeys((candidate_countries or []) + visual_country_candidates))
-            if user_requested_landmark:
+            should_run_landmark = (
+                user_requested_landmark
+                or scene_type in ("urban", "monument", "mountain", "desert", "coastal", "other")
+            )
+            if should_run_landmark:
                 lm_matcher = LandmarkMatcher()
                 lm_res = lm_matcher.match(im, clip_model, clip_proc, device=device, candidate_countries=all_known_countries)
-                if lm_res and lm_res.get("confidence", 0.0) >= 0.60:
+                if lm_res and lm_res.get("confidence", 0.0) >= 0.50:
                     l_name = lm_res["name"]
                     l_lat = lm_res["latitude"]
                     l_lon = lm_res["longitude"]
                     l_conf = lm_res["confidence"]
-                    region_guesses.append(RegionGuessItem(place=l_name, confidence=l_conf, reason="User-requested landmark perception"))
+                    reason_desc = "User-requested landmark perception" if user_requested_landmark else "Zero-shot visual landmark identification"
+                    region_guesses.append(RegionGuessItem(place=l_name, confidence=l_conf, reason=reason_desc))
                     cand_name = f"Landmark: {l_name}"
                     if board:
                         board.add_candidate(
@@ -859,12 +982,12 @@ class Stage1Clues:
                             level="point",
                             lat=l_lat,
                             lon=l_lon,
-                            prior=2.5,
+                            prior=3.5,
                             metadata={
                                 "landmark": l_name,
-                                "tier": "T2",
-                                "radius_km": lm_res.get("radius_km", 2.0),
-                                "source": "landmark_hint",
+                                "tier": "T1" if l_conf >= 0.70 else "T2",
+                                "radius_km": lm_res.get("radius_km", 2.0) if l_conf >= 0.70 else 50.0,
+                                "source": "landmark_matcher",
                             }
                         )
 

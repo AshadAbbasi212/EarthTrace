@@ -131,3 +131,48 @@ def test_stage3_terrain_process_pipeline(tmp_path):
     top = ranked[0]
     assert "lat" in top
     assert top["lat"] is not None
+
+
+def test_skyline_extractor_rejects_manmade_roofline(tmp_path):
+    """Verify that building rooflines with terracotta/red tile roofs are rejected as non-terrain."""
+    img_path = tmp_path / "church_roof_shot.jpg"
+    w, h = 400, 300
+    im = Image.new("RGB", (w, h), (180, 210, 255))  # Bright sky
+    draw = ImageDraw.Draw(im)
+
+    # Draw pitched red terracotta church roof and steeple
+    roof_pts = [(0, h), (100, 140), (200, 70), (300, 140), (w, h)]
+    draw.polygon(roof_pts, fill=(210, 65, 45))  # Vibrant terracotta red roof
+    im.save(img_path, format="JPEG")
+
+    extractor = SkylineExtractor(target_width=120)
+    overlay_path = tmp_path / "overlay_roof.png"
+    result = extractor.extract_from_image(img_path, save_overlay_path=overlay_path)
+
+    assert result["is_manmade_roofline"] is True
+    assert result["is_non_flat"] is False
+    assert "terracotta" in result["roofline_reason"].lower() or "roof" in result["roofline_reason"].lower()
+
+
+def test_stage3_terrain_bypasses_manmade_roofline(tmp_path):
+    """Verify Stage3Terrain honestly outputs not_applicable on building roofline scenes."""
+    job_dir = tmp_path / "roof_job"
+    job_dir.mkdir(parents=True, exist_ok=True)
+    img_path = job_dir / "working_1024.jpg"
+    w, h = 400, 300
+    im = Image.new("RGB", (w, h), (180, 210, 255))
+    draw = ImageDraw.Draw(im)
+    draw.polygon([(0, h), (200, 80), (w, h)], fill=(215, 60, 40))
+    im.save(img_path, format="JPEG")
+
+    board = CandidateBoard(photo_path=img_path, board_path=job_dir / "board.json")
+    dem = DEMProvider()
+    stage3 = Stage3Terrain(dem_provider=dem)
+    summary, board = stage3.process(job_dir=job_dir, board=board, working_image_path=img_path)
+
+    assert summary["status"] == "not_applicable"
+    assert "roof" in summary["reason"].lower() or "architecture" in summary["reason"].lower()
+    assert summary["fit_results"]["best_viewpoint"] is None
+    # Ensure no spurious viewpoint point candidate was added to the board
+    point_cands = [c for c in board.data.get("candidates", {}).values() if c.get("level") == "point"]
+    assert len(point_cands) == 0

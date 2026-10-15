@@ -25,7 +25,8 @@ def lookup_plate(prefix: str) -> Optional[Dict[str, Any]]:
             table = json.loads(data_file.read_text(encoding="utf-8"))
             prov_char = prefix[0]
             letter = prefix[1:].upper() if len(prefix) > 1 else ""
-            if prov_char in table:
+            # Chinese license plates strictly require a province character followed by an ASCII letter (e.g. 京A, 粤B)
+            if prov_char in table and letter and letter.isalpha() and letter.isascii():
                 info = table[prov_char]
                 letters = info.get("letters", {})
                 detail = letters.get(letter, "")
@@ -291,7 +292,7 @@ SCRIPT_PATTERNS = [
     ("hangul", re.compile(r"[\uAC00-\uD7AF\u1100-\u11FF]"), ["South Korea"]),
     ("japanese_kana", re.compile(r"[\u3040-\u309F\u30A0-\u30FF]"), ["Japan"]),
     ("thai", re.compile(r"[\u0E00-\u0E7F]"), ["Thailand"]),
-    ("hanzi", re.compile(r"[\u4E00-\u9FFF]"), ["China", "Taiwan", "Hong Kong", "Singapore"]),
+    ("hanzi_kanji", re.compile(r"[\u4E00-\u9FFF]"), ["Japan", "China", "Taiwan", "Hong Kong", "Singapore"]),
 ]
 
 COMMON_STOP_WORDS = {
@@ -306,6 +307,12 @@ COMMON_STOP_WORDS = {
     "safe", "safety", "fasten", "buckle", "caution", "danger", "warning", "toll plaza",
     "vehicle", "traffic", "rules", "fine", "penalty", "camera", "km/h", "mph", "post", "check",
     "seat belt", "seat beit",
+    # Generic sign phrases and markers
+    "historic", "historical", "birthplace", "monument", "memorial", "visitor", "visitors",
+    "museum", "famous", "scenic", "byway", "route", "national", "park", "heritage",
+    "lookout", "viewpoint", "preservation", "historical marker", "marker", "welcome to",
+    "welcome", "border", "welcome to the", "landmark", "state line", "country store",
+    "trading post", "mile", "miles", "junction", "intersection", "turnpike",
     # Urdu / Persian / Arabic common words
     "پولیس", "کنٹرول", "سب", "چائے", "ہوٹل", "روڈ", "تھانہ", "ڈویژن", "ضلع", "تحصیل", "شہر", "مرکز",
     "شارع", "طريق", "جادة", "دوار", "منطقة", "محافظة", "ولاية", "بلدية", "مستشفى", "صيدلية", "بنك",

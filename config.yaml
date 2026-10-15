@@ -84,3 +84,10 @@ pipeline:
     biome_climate: 0.25
     vlm_guess: 0.20
     user_hint: 0.20
+
+# Optional Online Co-Pilot (Supports 100% free Google AI Studio Gemini API keys)
+# If api_key is empty or not provided, runs 100% locally and offline without keys.
+online_copilot:
+  enabled: false
+  gemini_api_key: ""
+

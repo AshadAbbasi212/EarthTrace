@@ -199,3 +199,200 @@ def test_stage0_low_light_contrast_enhancement(tmp_path):
     assert Path(intake_summary["working_enhanced"]).exists()
     assert board.data["is_low_light"] is True
 
+
+def test_stage3_built_bypassed_when_no_linear_infrastructure(tmp_path):
+    """Verify Stage3Built returns not_applicable and does not fabricate points without linear clues."""
+    from geolocator.pipeline.stage3_built import Stage3Built
+
+    job_dir = tmp_path / "job_no_infra"
+    photo_path = tmp_path / "desert.jpg"
+    im = Image.new("RGB", (100, 100), (200, 180, 120))
+    im.save(photo_path, format="JPEG")
+
+    board = CandidateBoard(photo_path=photo_path, board_path=job_dir / "board.json")
+    # Natural scene: no bridge, railway, or corridor clues
+    board.add_clue(text="Arid desert dunes", kind="soil_type", status="observed")
+
+    stage3b = Stage3Built()
+    summary, board = stage3b.process(job_dir, board)
+
+    assert summary["status"] == "not_applicable"
+    assert "No linear corridor or bridge" in summary["reason"]
+    # Verify no candidate points were fabricated
+    assert len(board.data["candidates"]) == 0
+
+
+def test_stage3_terrain_does_not_fabricate_point_at_moderate_ncc(tmp_path):
+    """Verify Stage3Terrain does not promote viewpoint candidate if NCC is below 0.72."""
+    from geolocator.pipeline.stage3_terrain import Stage3Terrain
+
+    job_dir = tmp_path / "job_moderate_ncc"
+    photo_path = tmp_path / "photo.jpg"
+    im = Image.new("RGB", (100, 100), (100, 120, 140))
+    im.save(photo_path, format="JPEG")
+
+    board = CandidateBoard(photo_path=photo_path, board_path=job_dir / "board.json")
+    stage3a = Stage3Terrain()
+
+    # Synthetic profile with mock score ~ 0.55
+    # Should not promote candidate point
+    stage3a.search_viewpoint = lambda **kwargs: {
+        "best_viewpoint": {"lat": 34.0, "lon": 73.0, "heading": 180.0},
+        "best_score": 0.58,  # Below 0.72 threshold
+        "calibrated_radius_km": 15.0,
+        "confidence_tier": "T3",
+    }
+
+    mock_profile = [0.1, 0.2, 0.4, 0.3, 0.1, 0.5, 0.3, 0.2]
+    summary, board = stage3a.process(
+        job_dir=job_dir,
+        board=board,
+        photo_skyline_override=mock_profile,
+    )
+
+    # Point candidate should NOT be fabricated
+    point_cands = [c for c in board.data["candidates"].values() if c.get("level") == "point"]
+    assert len(point_cands) == 0
+
+
+def test_online_copilot_disabled_offline_fallback(tmp_path):
+    """Verify OnlineCoPilotProvider is disabled when no key is set and bypasses silently."""
+    from geolocator.providers.online_copilot import OnlineCoPilotProvider
+
+    copilot = OnlineCoPilotProvider(api_key=None)
+    # Ensure environment key is not set
+    import os
+    orig_env = os.environ.get("GEMINI_API_KEY")
+    if orig_env:
+        del os.environ["GEMINI_API_KEY"]
+
+    try:
+        assert copilot.is_enabled() is False
+        job_dir = tmp_path / "job_offline"
+        photo_path = tmp_path / "photo.jpg"
+        im = Image.new("RGB", (50, 50), (100, 100, 100))
+        im.save(photo_path, format="JPEG")
+        board = CandidateBoard(photo_path=photo_path, board_path=job_dir / "board.json")
+
+        result = copilot.process(job_dir, board, photo_path)
+        assert result is None
+        assert len(board.data["candidates"]) == 0
+    finally:
+        if orig_env:
+            os.environ["GEMINI_API_KEY"] = orig_env
+
+
+def test_online_copilot_mock_success(tmp_path):
+    """Verify OnlineCoPilotProvider adds verified candidate when API succeeds."""
+    from geolocator.providers.online_copilot import OnlineCoPilotProvider
+
+    copilot = OnlineCoPilotProvider(api_key="mock_test_key")
+    assert copilot.is_enabled() is True
+
+    # Mock analyze_photo
+    copilot.analyze_photo = lambda *args, **kwargs: {
+        "location_name": "Eiffel Tower, Paris",
+        "country": "France",
+        "state_or_province": "Île-de-France",
+        "city_or_district": "Paris",
+        "latitude": 48.8584,
+        "longitude": 2.2945,
+        "confidence_tier": "T1",
+        "error_radius_km": 0.05,
+        "supporting_clues": ["Wrought-iron lattice tower structure", "Champ de Mars alignment"],
+        "forensic_rationale": "Distinctive architectural silhouette of the Eiffel Tower in Paris.",
+    }
+
+    job_dir = tmp_path / "job_mock_copilot"
+    photo_path = tmp_path / "photo.jpg"
+    im = Image.new("RGB", (50, 50), (100, 100, 100))
+    im.save(photo_path, format="JPEG")
+    board = CandidateBoard(photo_path=photo_path, board_path=job_dir / "board.json")
+
+    res = copilot.process(job_dir, board, photo_path, api_key="mock_test_key")
+    assert res is not None
+    assert "Online Vision: Eiffel Tower, Paris" in board.data["candidates"]
+    top_cand = board.data["candidates"]["Online Vision: Eiffel Tower, Paris"]
+    assert top_cand["lat"] == 48.8584
+    assert top_cand["lon"] == 2.2945
+    assert top_cand["level"] == "point"
+    assert (job_dir / "online_copilot_results.json").exists()
+
+
+def test_sign_stop_words_phrase_filtering():
+    """Verify that generic sign and marker phrases are caught by stop-word filters."""
+    from geolocator.adapters.clues_adapter import COMMON_STOP_WORDS
+    assert "historical marker" in COMMON_STOP_WORDS
+    assert "visitor" in COMMON_STOP_WORDS
+    assert "viewpoint" in COMMON_STOP_WORDS
+    assert "welcome" in COMMON_STOP_WORDS
+
+    # Verify token-level matching rejects composite stop-word phrases
+    test_phrase = "Historical Marker"
+    tokens = [t.lower() for t in test_phrase.split()]
+    assert all(t in COMMON_STOP_WORDS for t in tokens)
+
+
+def test_stage3_built_bbox_clamping():
+    """Verify that oversized bounding boxes in Stage3Built are bounded to <= 0.20 deg."""
+    from geolocator.pipeline.stage3_built import Stage3Built
+    from unittest.mock import MagicMock
+
+    mock_osm = MagicMock()
+    mock_osm.find_co_occurrences.return_value = []
+    stage3 = Stage3Built(osm_provider=mock_osm)
+
+    # Supply an oversized bounding box (e.g. 1.0 deg x 1.0 deg)
+    oversized_bbox = (33.0, 72.0, 34.0, 73.0)
+    stage3.query_crossings_in_bbox(oversized_bbox, line_kind="railway")
+
+    # Assert that find_co_occurrences was called with clamped bounds
+    call_kwargs = mock_osm.find_co_occurrences.call_args[1]
+    assert call_kwargs["north"] - call_kwargs["south"] <= 0.21
+    assert call_kwargs["east"] - call_kwargs["west"] <= 0.21
+
+
+def test_stage2_prior_corroborates_confident_landmarks(tmp_path):
+    """Verify that Stage2Prior accepts high-confidence landmark candidates even without nearby cell prior."""
+    job_dir = tmp_path / "job_landmark_corrob"
+    job_dir.mkdir(parents=True)
+    photo_path = tmp_path / "photo.jpg"
+    im = Image.new("RGB", (50, 50), (120, 120, 120))
+    im.save(photo_path, format="JPEG")
+
+    board = CandidateBoard(photo_path=photo_path, board_path=job_dir / "board.json")
+    # Add a high-confidence T1 landmark candidate
+    board.add_candidate(
+        name="Landmark: Faisal Mosque",
+        level="point",
+        lat=33.7299,
+        lon=73.0373,
+        prior=5.0,
+        metadata={
+            "landmark": "Faisal Mosque",
+            "tier": "T1",
+            "radius_km": 0.05,
+            "source": "landmark_matcher",
+        },
+    )
+
+    stage2 = Stage2Prior()
+    # Mock GeoCLIP predictions far away to test landmark exception
+    mock_preds = [{"lat": 24.86, "lon": 67.00, "prob": 0.05}]  # Karachi ~1100 km away
+    summary, updated_board = stage2.process(
+        job_dir=job_dir,
+        board=board,
+        working_image_path=photo_path,
+        mock_predictions=mock_preds,
+    )
+
+    # Verify that the landmark point candidate was retained in search bboxes
+    assert (job_dir / "prior_results.json").exists()
+    search_bboxes = updated_board.data.get("search_bboxes", [])
+    has_landmark_bbox = any(
+        abs(b["center"][0] - 33.7299) < 0.1 for b in search_bboxes
+    )
+    assert has_landmark_bbox
+
+
+

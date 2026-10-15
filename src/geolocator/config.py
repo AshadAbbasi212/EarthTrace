@@ -119,6 +119,11 @@ class PipelineConfig(BaseModel):
     weights: PipelineWeightsConfig = Field(default_factory=PipelineWeightsConfig)
 
 
+class OnlineCoPilotConfig(BaseModel):
+    enabled: bool = False
+    gemini_api_key: str = ""
+
+
 class AppConfig(BaseSettings):
     server: ServerConfig = Field(default_factory=ServerConfig)
     storage: StorageConfig = Field(default_factory=StorageConfig)
@@ -126,6 +131,7 @@ class AppConfig(BaseSettings):
     models: ModelsConfig = Field(default_factory=ModelsConfig)
     providers: ProvidersConfig = Field(default_factory=ProvidersConfig)
     pipeline: PipelineConfig = Field(default_factory=PipelineConfig)
+    online_copilot: OnlineCoPilotConfig = Field(default_factory=OnlineCoPilotConfig)
     offline_mode: bool = False
 
     @classmethod
@@ -146,6 +152,9 @@ class AppConfig(BaseSettings):
             data.setdefault("server", {})["passphrase_enabled"] = True
         if os.getenv("OFFLINE_MODE"):
             data["offline_mode"] = os.getenv("OFFLINE_MODE", "").lower() in ("true", "1", "yes")
+        if os.getenv("GEMINI_API_KEY"):
+            data.setdefault("online_copilot", {})["gemini_api_key"] = os.getenv("GEMINI_API_KEY")
+            data.setdefault("online_copilot", {})["enabled"] = True
 
         return cls(**data)
 
