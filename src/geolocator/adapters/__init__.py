@@ -13,6 +13,7 @@ from geolocator.adapters.clues_adapter import (
     GEO_PHONETIC_SYNONYMS,
     COMMON_STOP_WORDS,
     country_to_iso,
+    iso_to_country,
 )
 from geolocator.adapters.ocr_adapter import get_ocr, LocalOCR
 
@@ -31,6 +32,7 @@ __all__ = [
     "GEO_PHONETIC_SYNONYMS",
     "COMMON_STOP_WORDS",
     "country_to_iso",
+    "iso_to_country",
     "get_ocr",
     "LocalOCR",
 ]

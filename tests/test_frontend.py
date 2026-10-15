@@ -110,3 +110,44 @@ def test_alternative_hypotheses_and_map_marks(client):
     assert "__cycleNextHypothesis" in js_res.text
     assert "allHypotheses" in js_res.text
 
+
+def test_five_pillars_tab_sliding_and_building_panel(client):
+    """Verify 5th evidence pillar tab, independent #panel-bldg, and smooth horizontal sliding."""
+    html_res = client.get("/")
+    assert html_res.status_code == 200
+    html = html_res.text
+
+    # 5 Pillars tab buttons exist
+    assert 'id="tab-btn-bldg"' in html
+    assert "5. Building Match" in html
+    assert "5 Pillars" in html
+    assert 'id="panel-bldg"' in html
+
+    # Crucial layout guarantee: #panel-bldg must be an independent sibling, NOT nested inside #panel-street
+    street_panel_start = html.find('id="panel-street"')
+    assert street_panel_start != -1
+    bldg_panel_start = html.find('id="panel-bldg"')
+    assert bldg_panel_start != -1
+    assert bldg_panel_start > street_panel_start
+
+    # Confirm there is a closing </div> between panel-street and panel-bldg
+    intermediate_html = html[street_panel_start:bldg_panel_start]
+    assert "</div>" in intermediate_html
+
+    # CSS sliding animations & horizontal bar scrolling
+    css_res = client.get("/style.css")
+    assert css_res.status_code == 200
+    css = css_res.text
+    assert "overflow-x: auto" in css
+    assert "scroll-behavior: smooth" in css
+    assert "tabSlideIn" in css
+
+    # JS sliding interaction
+    js_res = client.get("/app.js")
+    assert js_res.status_code == 200
+    js = js_res.text
+    assert "scrollIntoView" in js
+    assert "detailBadgeBldg" in js
+    assert "detailFindingsBldg" in js
+
+

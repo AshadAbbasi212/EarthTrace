@@ -39,6 +39,9 @@ LANDMARK_DATABASE: List[Tuple[str, str, float, float, str]] = [
     ("Katas Raj Temples sacred pond Chakwal", "Katas Raj Temples, Chakwal, Punjab", 32.724722, 72.951667, "historical_temple"),
 
     # --- Pakistan: Famous Religious, National & Civic Monuments ---
+    ("Pakistan Air Force Sabre F-86 fighter aircraft monument Lower Topa Murree", "PAF Aircraft Monument, Lower Topa, Murree, Pakistan", 33.9115, 73.4150, "aircraft_monument"),
+    ("PAF aircraft monument installed roundabout Lower Topa Murree", "PAF Aircraft Monument, Lower Topa, Murree, Pakistan", 33.9115, 73.4150, "aircraft_monument"),
+    ("Pakistan Air Force fighter jet aircraft monument installed park Pakistan", "PAF Aircraft Monument, Pakistan", 33.9070, 73.3943, "aircraft_monument"),
     ("Badshahi Mosque red sandstone Lahore", "Badshahi Mosque, Lahore", 31.588056, 74.310833, "historical_mosque"),
     ("Faisal Mosque Islamabad white tent architecture Margalla", "Faisal Mosque, Islamabad", 33.729600, 73.037200, "national_mosque"),
     ("Wazir Khan Mosque fresco tilework Lahore", "Wazir Khan Mosque, Walled City, Lahore", 31.583333, 74.321667, "historical_mosque"),
@@ -226,7 +229,7 @@ class LandmarkMatcher:
         self._prompts = [f"a photo of {lm[0]}" for lm in LANDMARK_DATABASE] + NEGATIVE_PROMPTS
 
     def _get_text_features(self, clip_model: Any, clip_proc: Any, device: Any) -> torch.Tensor:
-        if LandmarkMatcher._cached_text_features is not None:
+        if LandmarkMatcher._cached_text_features is not None and LandmarkMatcher._cached_text_features.shape[0] == len(self._prompts):
             return LandmarkMatcher._cached_text_features.to(device)
 
         chunks = []
@@ -325,7 +328,7 @@ class LandmarkMatcher:
                 return None
 
         prompt_text, canonical_name, lat, lon, category = top_lm
-        if category in ("monument", "national_monument", "fortress", "unesco_world_heritage", "world_landmark", "landmark_building", "cathedral", "grand_mosque", "national_mosque", "historical_mosque", "palace", "museum", "university_campus", "hospital_complex", "civic_building", "civic_market", "luxury_hotel", "hotel", "sports_club", "hospitality", "natural_landmark", "urban_landmark"):
+        if category in ("monument", "national_monument", "fortress", "unesco_world_heritage", "world_landmark", "landmark_building", "cathedral", "grand_mosque", "national_mosque", "historical_mosque", "palace", "museum", "university_campus", "hospital_complex", "civic_building", "civic_market", "luxury_hotel", "hotel", "sports_club", "hospitality", "natural_landmark", "urban_landmark", "aircraft_monument", "military_monument"):
             calibrated_radius_km = 0.05 if top_prob >= 0.25 else 0.10
             tier = "T1"
         elif category in ("urban_metropolis", "scenic_corridor", "coastal_cliffs", "coastal_stacks", "coastal_cape", "bridge"):

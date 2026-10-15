@@ -281,6 +281,30 @@ class ReportGenerator:
                 "artifact": None,
             }
 
+        # Evidence 5: Building & Facade Intelligence
+        bldg_manifest_path = job_dir / "buildings" / "detected_buildings.json"
+        bldg_reason = None
+        if bldg_manifest_path.exists():
+            try:
+                bldg_info = json.loads(bldg_manifest_path.read_text(encoding="utf-8"))
+                bldg_reason = bldg_info.get("reason")
+            except Exception:
+                pass
+
+        if detected_buildings:
+            building_evidence = {
+                "name": "Building & Facade Intelligence",
+                "status": "used",
+                "findings": f"Identified {len(detected_buildings)} distinct structural facades ({len(matched_cadastral)} matched to cadastral entities).",
+                "artifact": "buildings/building_detection_overlay.png" if building_overlay else "buildings/detected_buildings.json",
+            }
+        else:
+            building_evidence = {
+                "name": "Building & Facade Intelligence",
+                "status": "not applicable",
+                "findings": bldg_reason or "Scene contains no prominent architectural building facades; zero-shot detection bypassed.",
+                "artifact": None,
+            }
 
         reasoning_timeline = [
             {
@@ -311,15 +335,8 @@ class ReportGenerator:
             osm_evidence,
             sat_evidence,
             street_evidence,
+            building_evidence,
         ]
-
-        if detected_buildings:
-            reasoning_timeline.append({
-                "step": "Stage 3b: Automated Building & Facade Detection",
-                "status": "computed",
-                "findings": f"Identified {len(detected_buildings)} distinct structural facades; classified architectural style, palette, and cadastral correspondence.",
-                "artifact": "buildings/building_detection_overlay.png" if building_overlay else "buildings/detected_buildings.json",
-            })
 
         formatted_alternatives = []
         for i, alt in enumerate(alternatives[:4]):
@@ -401,6 +418,7 @@ class ReportGenerator:
                 "elevation_skyline": dem_evidence,
                 "satellite_imagery": sat_evidence,
                 "street_imagery": street_evidence,
+                "building_matching": building_evidence,
             },
             "detected_buildings": detected_buildings,
             "building_count": len(detected_buildings),
@@ -412,6 +430,7 @@ class ReportGenerator:
                 "elevation_skylines": dem_evidence["status"],
                 "satellite_imagery": sat_evidence["status"],
                 "street_level_imagery": street_evidence["status"],
+                "building_matching": building_evidence["status"],
             },
             "limitations_and_advice": [
                 "Providing season, month, or country narrows candidate cells significantly.",

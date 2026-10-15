@@ -53,6 +53,12 @@ class NominatimProvider(BaseProvider):
             if offline_hits:
                 logger.info("[nominatim] Resolved '%s' via offline local gazetteer (%d hits)", query, len(offline_hits))
                 return offline_hits[:limit]
+            # Fallback: if country-filtered lookup yielded 0 hits, test offline gazetteer globally
+            if first_cc:
+                offline_global = query_offline_gazetteer(query)
+                if offline_global:
+                    logger.info("[nominatim] Resolved '%s' globally via offline local gazetteer (%d hits)", query, len(offline_global))
+                    return offline_global[:limit]
         except Exception as e:
             logger.debug("[nominatim] Offline gazetteer check bypass: %s", e)
 

@@ -258,6 +258,8 @@ class Stage3Built:
                 # Copy tactical HUD overlay to job_dir root for convenience
                 if detected_manifest.get("overlay_path") and Path(detected_manifest["overlay_path"]).exists():
                     shutil.copy2(detected_manifest["overlay_path"], job_dir / "building_detection_overlay.png")
+                else:
+                    (job_dir / "building_detection_overlay.png").unlink(missing_ok=True)
 
                 detected_buildings = detected_manifest.get("buildings", [])
                 if detected_buildings:
@@ -508,7 +510,7 @@ class Stage3Built:
             "building_verified": building_verified,
             "detected_buildings": detected_manifest.get("buildings", []),
             "building_count": detected_manifest.get("count", 0),
-            "building_overlay": "building_detection_overlay.png" if (job_dir / "building_detection_overlay.png").exists() else None,
+            "building_overlay": "building_detection_overlay.png" if (job_dir / "building_detection_overlay.png").exists() and detected_manifest.get("count", 0) > 0 else None,
             "matched_cadastral": matched_cadastral_list,
             "crossings_found": len(crossings),
         }

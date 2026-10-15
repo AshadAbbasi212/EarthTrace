@@ -1042,15 +1042,16 @@
 
 
     // --- 6. Populate Dedicated Tab 5: Building & Facade Intelligence ---
+    const bldgEvidenceObj = report.evidence && (report.evidence.building_matching || report.evidence.building_intelligence);
     const bldgs = report.detected_buildings || [];
     const bldgOverlay = report.building_overlay || (bldgs.length > 0 ? 'building_detection_overlay.png' : null);
     const matchedBldgs = report.matched_cadastral || [];
 
-    const bldgItem = {
+    const bldgItem = bldgEvidenceObj || {
       status: (matchedBldgs.length > 0 || bldgs.length > 0) ? 'used' : 'not_applicable',
       findings: bldgs.length > 0 
         ? `Identified ${bldgs.length} structural building facades (${matchedBldgs.length} matched to cadastral entities).`
-        : 'No prominent building facade structures isolated.',
+        : 'Zero-shot verification confirmed no architectural building facades in scene.',
       artifact_file: bldgOverlay,
     };
 
@@ -1116,7 +1117,7 @@
       } else {
         detailBldgImg.style.display = 'none';
         detailBldgEmptyNote.style.display = 'block';
-        detailBldgEmptyNote.textContent = 'No urban buildings or facade contours detected in this scene.';
+        detailBldgEmptyNote.textContent = bldgItem.findings || 'No urban buildings or facade contours detected in this scene.';
         if (detailBldgCropsContainer) detailBldgCropsContainer.style.display = 'none';
       }
     }
@@ -1171,21 +1172,41 @@
     const tabButtons = document.querySelectorAll('.evidence-tab-btn');
     const tabPanels = document.querySelectorAll('.evidence-tab-panel');
 
+    let activeBtn = null;
     tabButtons.forEach(btn => {
       if (btn.getAttribute('data-tab') === tabKey) {
         btn.classList.add('active');
+        activeBtn = btn;
       } else {
         btn.classList.remove('active');
       }
     });
 
+    // Smoothly slide the active tab button into view within the horizontal tab bar
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+
+    let activePanel = null;
     tabPanels.forEach(panel => {
       if (panel.id === `panel-${tabKey}`) {
         panel.classList.add('active');
+        activePanel = panel;
       } else {
         panel.classList.remove('active');
       }
     });
+
+    // Ensure the activated panel is smoothly visible on screen
+    if (activePanel && tabKey !== 'overview') {
+      const evidenceCard = document.getElementById('evidence-section');
+      if (evidenceCard) {
+        const rect = evidenceCard.getBoundingClientRect();
+        if (rect.top < 30 || rect.bottom > (window.innerHeight + 150)) {
+          evidenceCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    }
   }
 
   // Tab button click listeners

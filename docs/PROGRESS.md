@@ -769,3 +769,22 @@
     - **Cadastral Street-Level Match (< 100m): 90.0%**
 - [x] **Test Suite & Verification**:
   - Full regression test suite passing: **75/75 passed in 164s**.
+
+### Zero-Shot Building Facade Gating, Aeroplane Monument Disambiguation & 5-Pillars Sliding UI
+- [x] **Zero-Shot Building Presence Gating (`building_detector.py`)**:
+  - Added `has_prominent_buildings(image)` zero-shot gate before running contour extraction.
+  - When non-building photos (e.g. aircraft monuments, open landscape, vehicles) are analyzed, building detection safely bypasses with status `"not_applicable"` and count 0, preventing spurious architectural priors.
+- [x] **Non-Building Negative Distractors (`building_detector.py`)**:
+  - Expanded zero-shot taxonomy with negative non-building categories (`"an airplane, fighter jet, or aircraft monument"`, `"a statue, sculpture, or non-building monument"`, foliage, vehicles).
+  - Any non-building crops are flagged `is_building = False` and excluded from downstream building matching.
+- [x] **Aircraft Monument & Sign Recognition (`stage1_clues.py`, `landmarks.py`)**:
+  - Added `aircraft_monument` scene recognition and CLIP meta-prompts for fighter jet monuments and flag emblems.
+  - Added proper-noun geocoding fallback in Nominatim for distinctive place names (e.g. "MURREE") promoting candidate country (Pakistan).
+  - Added PAF F-86 Sabre Aircraft Monument at Lower Topa, Murree, Pakistan to `LANDMARK_DATABASE`.
+  - Verified on `IMG_3108.JPG`: correctly predicted Pakistan / Murree (lat 33.9115, lon 73.4150) with 0 predictions for Turkey.
+- [x] **Frontend 5-Pillar DOM Fix & Sliding UI (`index.html`, `style.css`, `app.js`, `test_frontend.py`)**:
+  - Resolved nested DOM issue where `#panel-bldg` was nested inside `#panel-street` due to missing closing tag.
+  - Added smooth horizontal scrolling and custom scrollbar for `.evidence-tabs-bar`.
+  - Added `scrollIntoView` smooth sliding on tab switch and `tabSlideIn` keyframe animation.
+  - Added unit test `test_five_pillars_tab_sliding_and_building_panel` in `tests/test_frontend.py` (all 5 frontend tests passing).
+

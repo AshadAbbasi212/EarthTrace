@@ -23,6 +23,7 @@ from geolocator.adapters import (
     GEO_PHONETIC_SYNONYMS,
     COMMON_STOP_WORDS,
     country_to_iso,
+    iso_to_country,
 )
 from geolocator.providers.nominatim import NominatimProvider
 from geolocator.pipeline.board import CandidateBoard
@@ -380,8 +381,16 @@ class Stage1Clues:
                     if not nom_results and country_codes_param:
                         nom_results = self.nominatim.search(q_try, country_codes=country_codes_param, limit=1)
 
-                    # Fallback to global query ONLY for distinct multi-word proper nouns with substantial non-stopword tokens
-                    if not nom_results and not is_route_code and len(q_try.split()) >= 2 and any(t not in COMMON_STOP_WORDS for t in query_words):
+                    # Fallback to global query for distinct multi-word proper nouns, recognized phonetic synonyms,
+                    # or single-word proper place names (>= 4 chars) when country-gated search had no match
+                    allow_global = (
+                        (len(q_try.split()) >= 2 and any(t not in COMMON_STOP_WORDS for t in query_words))
+                        or (q_try in GEO_PHONETIC_SYNONYMS.values())
+                        or (len(q_try) >= 4 and q_try[0].isupper() and q_try.lower() not in COMMON_STOP_WORDS)
+                        or is_non_latin_place
+                        or not user_hint_countries
+                    )
+                    if not nom_results and not is_route_code and allow_global:
                         nom_results = self.nominatim.search(q_try, limit=1)
 
                     if nom_results:
@@ -389,11 +398,25 @@ class Stage1Clues:
                         hit_address = hit.get("address", {})
                         hit_cc = hit_address.get("country_code", "").lower()
 
-                        # Geographic consistency check: Reject if search returned an unexpected foreign country
-                        if candidate_country_iso_codes and hit_cc and hit_cc not in candidate_country_iso_codes:
-                            logger.info("[stage1] Geocoded hit '%s' in '%s' rejected (mismatch with %s)", q_try, hit_cc, candidate_country_iso_codes)
-                            nom_results = []
-                            continue
+                        # Geographic consistency check:
+                        if user_hint_countries:
+                            user_hint_isos = [country_to_iso(c) for c in user_hint_countries if country_to_iso(c)]
+                            if user_hint_isos and hit_cc and hit_cc not in user_hint_isos:
+                                logger.info("[stage1] Geocoded hit '%s' in '%s' rejected (mismatch with user hint %s)", q_try, hit_cc, user_hint_isos)
+                                nom_results = []
+                                continue
+                        elif candidate_country_iso_codes and hit_cc and hit_cc not in candidate_country_iso_codes:
+                            promoted_country = iso_to_country(hit_cc) or hit_address.get("country")
+                            if promoted_country:
+                                logger.info("[stage1] Geocoded hit '%s' in '%s' promoted country '%s' to candidates", q_try, hit_cc, promoted_country)
+                                if promoted_country not in all_candidate_countries:
+                                    all_candidate_countries.insert(0, promoted_country)
+                                if hit_cc not in candidate_country_iso_codes:
+                                    candidate_country_iso_codes.insert(0, hit_cc)
+                            else:
+                                logger.info("[stage1] Geocoded hit '%s' in '%s' rejected (mismatch with %s)", q_try, hit_cc, candidate_country_iso_codes)
+                                nom_results = []
+                                continue
 
                         # Textual fidelity check for CJK / non-Latin place names:
                         # Prevent Nominatim from returning completely unrelated places based on single-character partial matches
@@ -413,10 +436,12 @@ class Stage1Clues:
                     hit_address = hit.get("address", {})
                     hit_cc = hit_address.get("country_code", "").lower()
 
-                    # Geographic consistency check: Reject if search returned an unexpected foreign country
-                    if candidate_country_iso_codes and hit_cc and hit_cc not in candidate_country_iso_codes:
-                        logger.info("[stage1] Geocoded hit '%s' in '%s' rejected (mismatch with %s)", query_str, hit_cc, candidate_country_iso_codes)
-                        continue
+                    # Final check against user hints if user supplied explicit country
+                    if user_hint_countries:
+                        user_hint_isos = [country_to_iso(c) for c in user_hint_countries if country_to_iso(c)]
+                        if user_hint_isos and hit_cc and hit_cc not in user_hint_isos:
+                            logger.info("[stage1] Geocoded hit '%s' in '%s' rejected (mismatch with user hint %s)", query_str, hit_cc, user_hint_isos)
+                            continue
 
                     p_lat = float(hit["lat"])
                     p_lon = float(hit["lon"])
@@ -572,6 +597,7 @@ class Stage1Clues:
             categories = [
                 ("urban", "an urban brick institutional building or university campus or hospital block", "flat", False, "institutional_brick"),
                 ("urban", "a photo of a modern city building or urban street architecture", "flat", False, "urban_modern"),
+                ("other", "a decommissioned military aircraft, fighter jet, or airplane monument on an outdoor display pedestal", "hilly", False, "aircraft_monument"),
                 ("urban", "a famous historical monument, fort, or architectural landmark", "flat", False, "historic_monument"),
                 ("mountain", "a natural mountain range with rugged ridgelines and peaks", "mountainous", True, "none"),
                 ("desert", "a flat arid desert landscape with sand or dry ground", "flat", True, "none"),
@@ -599,6 +625,9 @@ class Stage1Clues:
 
             # Geoguessr Meta-Feature Classification (Vehicles, road infrastructure, regional architecture, soil, flora)
             meta_prompts = [
+                ("pakistan_flag_emblem", "a green and white Pakistani national flag, crescent and star, or green Pakistan Air Force roundel emblem on aircraft or pole"),
+                ("turkey_flag_emblem", "a red national flag of Turkey with white crescent moon and star"),
+                ("aircraft_monument", "an outdoor installed military fighter aircraft or fighter jet monument on a display pedestal"),
                 ("rickshaw", "an auto rickshaw, three-wheeled vehicle, or motorized tuk tuk in traffic"),
                 ("truck_art", "a brightly painted Bedford truck or commercial lorry with vibrant South Asian truck art patterns"),
                 ("south_asian_arch", "flat roof red brick or concrete South Asian architecture"),
@@ -634,7 +663,43 @@ class Stage1Clues:
 
             for m_idx, (m_key, m_desc) in enumerate(meta_prompts):
                 m_prob = float(meta_probs[m_idx])
-                if m_key == "rickshaw" and m_prob >= 0.35:
+                if m_key == "pakistan_flag_emblem" and m_prob >= 0.20:
+                    if board:
+                        board.add_clue(
+                            text="Pakistani national flag / Pakistan Air Force roundel emblem observed",
+                            kind="national_flag",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    if "Pakistan" not in visual_country_candidates:
+                        visual_country_candidates.insert(0, "Pakistan")
+                    if candidate_countries is not None and "Pakistan" not in candidate_countries:
+                        candidate_countries.insert(0, "Pakistan")
+                    env_meta["national_symbol"] = "pakistan_flag"
+                elif m_key == "turkey_flag_emblem" and m_prob >= 0.35:
+                    if board:
+                        board.add_clue(
+                            text="Turkish national flag observed in scene",
+                            kind="national_flag",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    if "Turkey" not in visual_country_candidates:
+                        visual_country_candidates.append("Turkey")
+                    env_meta["national_symbol"] = "turkey_flag"
+                elif m_key == "aircraft_monument" and m_prob >= 0.22:
+                    if board:
+                        board.add_clue(
+                            text="Installed military aircraft or fighter jet monument observed",
+                            kind="monument_type",
+                            status="observed",
+                            source="clip_meta",
+                            confidence=round(m_prob, 2),
+                        )
+                    env_meta["monument_type"] = "aircraft_monument"
+                elif m_key == "rickshaw" and m_prob >= 0.35:
                     if board:
                         board.add_clue(
                             text="Auto-rickshaw / three-wheeled vehicle observed in scene",
@@ -972,25 +1037,40 @@ class Stage1Clues:
                 # Also run LandmarkMatcher on detected building facade crops for high-precision architectural recognition
                 job_path = image_path.parent
                 bldg_crops_dir = job_path / "buildings"
-                bldg_crops = list(bldg_crops_dir.glob("building_*.jpg")) if bldg_crops_dir.exists() else []
+                bldg_crops = []
+                manifest_file = bldg_crops_dir / "detected_buildings.json"
+                if manifest_file.exists():
+                    try:
+                        m_data = json.loads(manifest_file.read_text(encoding="utf-8"))
+                        if m_data.get("count", 0) > 0:
+                            bldg_crops = [Path(b["crop_path"]) for b in m_data.get("buildings", []) if Path(b.get("crop_path", "")).exists()]
+                    except Exception:
+                        pass
+                elif bldg_crops_dir.exists():
+                    bldg_crops = list(bldg_crops_dir.glob("building_*.jpg"))
+
                 if not bldg_crops and scene_type in ("urban", "monument", "other"):
                     try:
                         from geolocator.pipeline.building_detector import BuildingDetector
                         b_det = BuildingDetector()
-                        b_man = b_det.detect_building_regions(image_path, output_dir=bldg_crops_dir, max_buildings=3)
-                        bldg_crops = [Path(b["crop_path"]) for b in b_man.get("buildings", []) if Path(b["crop_path"]).exists()]
-                        # Record architectural style clues on board
-                        for b_obj in b_man.get("buildings", []):
-                            f_style = b_obj.get("facade_style")
-                            b_class = b_obj.get("classification")
-                            b_pal = b_obj.get("palette")
-                            if f_style and f_style != "unknown" and board:
-                                board.add_clue(
-                                    text=f"Architectural facade style: {f_style} ({b_class}, palette: {b_pal})",
-                                    kind="architecture",
-                                    status="observed",
-                                    confidence=b_obj.get("confidence", 0.6),
-                                )
+                        # Strict gating: only run building detection if prominent building facades are present!
+                        if b_det.has_prominent_buildings(im):
+                            b_man = b_det.detect_building_regions(image_path, output_dir=bldg_crops_dir, max_buildings=3)
+                            bldg_crops = [Path(b["crop_path"]) for b in b_man.get("buildings", []) if Path(b["crop_path"]).exists()]
+                            # Record architectural style clues on board
+                            for b_obj in b_man.get("buildings", []):
+                                f_style = b_obj.get("facade_style")
+                                b_class = b_obj.get("classification")
+                                b_pal = b_obj.get("palette")
+                                if f_style and f_style != "unknown" and board:
+                                    board.add_clue(
+                                        text=f"Architectural facade style: {f_style} ({b_class}, palette: {b_pal})",
+                                        kind="architecture",
+                                        status="observed",
+                                        confidence=b_obj.get("confidence", 0.6),
+                                    )
+                        else:
+                            logger.info("[stage1] Gating building extraction: no prominent buildings detected in scene.")
                     except Exception as e_bd:
                         logger.debug("[stage1] Early building extraction bypass: %s", e_bd)
 

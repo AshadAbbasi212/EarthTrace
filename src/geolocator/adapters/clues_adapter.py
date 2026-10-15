@@ -172,6 +172,42 @@ def country_to_iso(name: str) -> Optional[str]:
     return None
 
 
+ISO_TO_COUNTRY_NAME: Dict[str, str] = {
+    "af": "Afghanistan", "al": "Albania", "dz": "Algeria", "ar": "Argentina",
+    "am": "Armenia", "au": "Australia", "at": "Austria", "az": "Azerbaijan",
+    "bh": "Bahrain", "bd": "Bangladesh", "by": "Belarus", "be": "Belgium",
+    "bo": "Bolivia", "ba": "Bosnia and Herzegovina", "br": "Brazil", "bg": "Bulgaria",
+    "kh": "Cambodia", "ca": "Canada", "cl": "Chile", "cn": "China",
+    "co": "Colombia", "hr": "Croatia", "cu": "Cuba", "cy": "Cyprus",
+    "cz": "Czech Republic", "dk": "Denmark", "ec": "Ecuador", "eg": "Egypt",
+    "ee": "Estonia", "et": "Ethiopia", "fi": "Finland", "fr": "France",
+    "ge": "Georgia", "de": "Germany", "gh": "Ghana", "gr": "Greece",
+    "hu": "Hungary", "is": "Iceland", "in": "India", "id": "Indonesia",
+    "ir": "Iran", "iq": "Iraq", "ie": "Ireland", "il": "Israel",
+    "it": "Italy", "jp": "Japan", "jo": "Jordan", "kz": "Kazakhstan",
+    "ke": "Kenya", "kw": "Kuwait", "kg": "Kyrgyzstan", "lv": "Latvia",
+    "lb": "Lebanon", "ly": "Libya", "lt": "Lithuania", "lu": "Luxembourg",
+    "my": "Malaysia", "mx": "Mexico", "mn": "Mongolia", "ma": "Morocco",
+    "np": "Nepal", "nl": "Netherlands", "nz": "New Zealand", "ng": "Nigeria",
+    "no": "Norway", "om": "Oman", "pk": "Pakistan", "pe": "Peru",
+    "ph": "Philippines", "pl": "Poland", "pt": "Portugal", "qa": "Qatar",
+    "ro": "Romania", "ru": "Russia", "sa": "Saudi Arabia", "rs": "Serbia",
+    "sg": "Singapore", "sk": "Slovakia", "si": "Slovenia", "za": "South Africa",
+    "kr": "South Korea", "es": "Spain", "lk": "Sri Lanka", "se": "Sweden",
+    "ch": "Switzerland", "tw": "Taiwan", "tj": "Tajikistan", "th": "Thailand",
+    "tn": "Tunisia", "tr": "Turkey", "ua": "Ukraine", "ae": "United Arab Emirates",
+    "gb": "United Kingdom", "uk": "United Kingdom", "us": "United States",
+    "uz": "Uzbekistan", "ve": "Venezuela", "vn": "Vietnam", "ye": "Yemen",
+}
+
+
+def iso_to_country(code: str) -> Optional[str]:
+    """Convert 2-letter ISO 3166-1 alpha-2 code to canonical country name."""
+    if not code:
+        return None
+    return ISO_TO_COUNTRY_NAME.get(code.strip().lower())
+
+
 CC_TLD_MAP: Dict[str, str] = {
     # 15 Prioritized Target Countries
     "pk": "Pakistan",
@@ -272,6 +308,8 @@ SCRIPT_PATTERNS = [
     ("persian_distinctive", re.compile(r"[\u067E\u0686\u0698\u06AF]"), ["Iran", "Afghanistan", "Pakistan"]),
     # Hebrew script: 0590-05FF
     ("hebrew", re.compile(r"[\u0590-\u05FF]"), ["Israel"]),
+    # Arabic-Indic Numerals: 0660-0669 (used prominently in Pakistan, Egypt, Gulf, Levant)
+    ("arabic_indic_numerals", re.compile(r"[\u0660-\u0669]"), ["Pakistan", "Egypt", "Saudi Arabia", "United Arab Emirates", "Iraq", "Jordan"]),
     # General Arabic script: 0600-06FF
     ("arabic", re.compile(r"[\u0600-\u06FF]"), [
         "Saudi Arabia", "United Arab Emirates", "Egypt", "Qatar", "Kuwait",
@@ -313,6 +351,7 @@ COMMON_STOP_WORDS = {
     "lookout", "viewpoint", "preservation", "historical marker", "marker", "welcome to",
     "welcome", "border", "welcome to the", "landmark", "state line", "country store",
     "trading post", "mile", "miles", "junction", "intersection", "turnpike",
+    "vellcome", "ellcome", "vellcome to", "ellcome to",
     # Urdu / Persian / Arabic common words
     "پولیس", "کنٹرول", "سب", "چائے", "ہوٹل", "روڈ", "تھانہ", "ڈویژن", "ضلع", "تحصیل", "شہر", "مرکز",
     "شارع", "طريق", "جادة", "دوار", "منطقة", "محافظة", "ولاية", "بلدية", "مستشفى", "صيدلية", "بنك",
@@ -323,6 +362,13 @@ COMMON_STOP_WORDS = {
 
 GEO_PHONETIC_SYNONYMS = {
     # ---------------- Pakistan ----------------
+    "murree": "Murree, Pakistan",
+    "Murree": "Murree, Pakistan",
+    "MURREE": "Murree, Pakistan",
+    "lower topa": "Lower Topa, Murree, Pakistan",
+    "Lower Topa": "Lower Topa, Murree, Pakistan",
+    "paf base murree": "PAF Base Murree, Pakistan",
+    "paf murree": "PAF Base Murree, Pakistan",
     "پیر چناسی": "Pir Chinasi",
     "پیرچناسی": "Pir Chinasi",
     "آزاد کشمیر": "Azad Kashmir",

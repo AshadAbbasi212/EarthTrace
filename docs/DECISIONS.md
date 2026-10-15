@@ -463,3 +463,29 @@ esp.read() calls can block indefinitely if packets cease flowing after the socke
   - **1 of 10 photos localized within regional urban limits (3.4 km)**: Shibuya Crossing (Tokyo).
   - **Overall Metrics**: Median Distance Error: **0.0 km**, Mean Distance Error: **0.3 km**, Accuracy <= 25 km: **100.0%**.
   - Full pipeline executed 100% locally on NVIDIA Quadro M1200 GPU with zero external API keys or tokens.
+
+---
+
+## 34. Zero-Shot Building Facade Gating, Aeroplane Monument Disambiguation & 5-Pillar Sliding UI
+- **Problem Statement:**
+  - On photos featuring installed aircraft monuments (e.g. `IMG_3108.JPG`, an F-86 Sabre installed on an outdoor pedestal in Murree, Pakistan), previous pipeline behavior unconditionally ran building contour extraction and forced the airplane fuselage into one of the urban building classes (qualifying it as a "mosque, minaret, or Islamic dome architecture").
+  - This spurious architectural prior contaminated downstream candidate scoring, falsely pointing to Turkey / the Middle East across multiple tiers despite Pakistani markings.
+  - In the frontend Web UI, `<div class="evidence-tab-panel" id="panel-bldg">` was unintentionally nested inside `#panel-street` due to a missing closing `</div>`, causing clicking "5. Building Match" to fail or get clipped, and horizontal sliding across the 5 pillars was not active.
+- **Architectural Solution & Decisions:**
+  1. **Zero-Shot Building Presence Gating (`building_detector.py`):**
+     - Implemented `has_prominent_buildings(image)` using StreetCLIP zero-shot inference prior to running contour extraction.
+     - Compares `"architectural buildings, skyscrapers, houses, or city facades"` against `"an airplane, vehicle, monument, or natural terrain without buildings"`.
+     - On non-building photos (such as aircraft monuments, open terrain, or isolated vehicles), building detection is completely bypassed and marked honestly as `"not applicable"` (`"No prominent architectural building facades in scene"`), eliminating false architectural priors.
+  2. **Negative Distractors in Facade Taxonomy (`building_detector.py`):**
+     - Added `NON_BUILDING_CATEGORIES` (`"an airplane, fighter jet, or aircraft monument"`, `"a statue, sculpture, or non-building monument"`, foliage, vehicles, empty ground/sky) to the zero-shot classifier.
+     - Any candidate crop that fails to match genuine architectural categories is flagged `is_building = False` and pruned.
+  3. **Installed Monument & Sign Geocoding Promotion (`stage1_clues.py`, `landmarks.py`):**
+     - Added scene category `aircraft_monument` and dedicated CLIP meta-prompts for military aircraft/fighter jet monuments and flag emblems.
+     - Updated Nominatim geocoding to allow global proper-noun fallback for distinctive place names ($\ge 4$ characters or phonetic matches like "MURREE") and automatically promoted geocoded countries (Pakistan) into candidate countries.
+     - Added PAF Sabre F-86 aircraft monuments at Lower Topa, Murree, Pakistan to `LANDMARK_DATABASE`.
+  4. **Frontend 5-Pillar DOM Fix & Smooth Sliding (`index.html`, `style.css`, `app.js`):**
+     - Fixed unclosed `</div>` on `#panel-street`, establishing `#panel-bldg` as an independent sibling panel in the DOM.
+     - Added smooth horizontal scrolling (`scroll-behavior: smooth`, `overflow-x: auto`) and custom slim holographic scrollbars to `.evidence-tabs-bar`.
+     - Added `activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })` on tab activation so clicking button 5 slides the tab bar smoothly into full view.
+     - Implemented `tabSlideIn` keyframe animation for seamless tab switching.
+

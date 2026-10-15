@@ -26,7 +26,7 @@ logger = logging.getLogger("geolocator.pipeline.building_detector")
 # Zero-shot building categories for CLIP classification
 BUILDING_CATEGORIES = [
     "luxury hotel or hospitality building",
-    "commercial office skyscraper or modern glass tower",
+    "commercial office skyscraper, glass tower, or blue glass curtain facade",
     "historical colonial edifice or palace with arched facade",
     "sports club or cricket pavilion or sports facility",
     "mosque or minaret or religious dome",
@@ -34,8 +34,18 @@ BUILDING_CATEGORIES = [
     "university campus or academic hall",
     "government parliament or civic courthouse",
     "residential apartment building or condominium",
+    "red brick masonry building, house, or hotel facade",
     "shopping mall or commercial department store",
     "generic urban building or street storefront",
+]
+
+NON_BUILDING_CATEGORIES = [
+    "an airplane, fighter jet, or aircraft monument",
+    "a statue, sculpture, or non-building monument",
+    "trees, forest, foliage, or natural vegetation",
+    "a vehicle, car, bus, or truck",
+    "empty open sky or asphalt road with no architecture",
+    "outdoor park, open field, or recreation ground without buildings",
 ]
 
 FACADE_STYLES = [
@@ -54,6 +64,34 @@ class BuildingDetector:
     def __init__(self, model_manager: Optional[ModelManager] = None):
         self.model_manager = model_manager or get_model_manager()
 
+    def has_prominent_buildings(self, image: Image.Image | Path | str) -> bool:
+        """Fast zero-shot verification to ensure scene genuinely features architectural building facades."""
+        try:
+            if isinstance(image, (str, Path)):
+                p = Path(image)
+                if not p.exists():
+                    return False
+                with Image.open(p) as img_file:
+                    pil_img = img_file.convert("RGB")
+                    return self.has_prominent_buildings(pil_img)
+
+            self._ensure_reranker_registered()
+            with self.model_manager.acquire("geo_reranker") as (processor, model):
+                device = next(model.parameters()).device
+                prompts = [
+                    "architectural buildings, skyscrapers, houses, or city facades",
+                    "an airplane, vehicle, monument, or natural terrain without buildings",
+                ]
+                inputs = processor(text=prompts, images=image, return_tensors="pt", padding=True).to(device)
+                with torch.no_grad():
+                    probs = model(**inputs).logits_per_image.softmax(dim=-1).cpu().numpy()[0]
+                has_bldg = float(probs[0]) >= 0.40
+                logger.info("[building_detector] Building presence check: bldg=%.3f, non_bldg=%.3f -> %s", probs[0], probs[1], has_bldg)
+                return has_bldg
+        except Exception as e:
+            logger.debug("[building_detector] Building presence check bypass: %s", e)
+            return True
+
     def detect_building_regions(
         self,
         image_path: Path | str,
@@ -71,6 +109,20 @@ class BuildingDetector:
         pil_img = Image.open(str(img_p)).convert("RGB")
         w_orig, h_orig = pil_img.size
 
+        # Zero-shot gating: If image does not feature prominent building facades, bypass immediately!
+        if not self.has_prominent_buildings(pil_img):
+            logger.info("[building_detector] Bypassing detection: image does not contain prominent building facades.")
+            manifest_path = out_path / "detected_buildings.json"
+            manifest_data = {
+                "count": 0,
+                "buildings": [],
+                "overlay_path": None,
+                "status": "not_applicable",
+                "reason": "No prominent architectural building facades detected in scene.",
+            }
+            manifest_path.write_text(json.dumps(manifest_data, indent=2), encoding="utf-8")
+            return manifest_data
+
         # Resize working copy for computer vision contour detection
         max_dim = 1024
         scale = min(1.0, max_dim / max(w_orig, h_orig))
@@ -87,25 +139,27 @@ class BuildingDetector:
         sobel_x = np.uint8(np.absolute(sobel_x))
         _, thresh = cv2.threshold(sobel_x, 35, 255, cv2.THRESH_BINARY)
 
-        # Morphological vertical dilation to bridge building floors into unified blocks
-        kernel_vert = cv2.getStructuringElement(cv2.MORPH_RECT, (int(w_proc * 0.02) | 1, int(h_proc * 0.08) | 1))
+        # Morphological vertical dilation to bridge building floors and columns into unified blocks
+        kernel_vert = cv2.getStructuringElement(cv2.MORPH_RECT, (int(w_proc * 0.06) | 1, int(h_proc * 0.08) | 1))
         dilated = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel_vert)
 
         contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # Filter contours by aspect ratio and area (excluding ground and sky)
-        min_area = w_proc * h_proc * 0.03
+        min_area = w_proc * h_proc * 0.02
         raw_boxes = []
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area < min_area:
-                continue
             x, y, bw, bh = cv2.boundingRect(cnt)
+            # Check contour area or bounding box area
+            effective_area = max(area, bw * bh * 0.40)
+            if effective_area < min_area:
+                continue
             # Buildings typically have height >= 0.3 of width, and are located above the extreme bottom
             if bh / max(1, bw) >= 0.35 and (y + bh) > int(h_proc * 0.30):
                 # Ensure it doesn't span the entire full image horizontally (which is usually sky or ground)
                 if bw < int(w_proc * 0.95):
-                    raw_boxes.append((x, y, x + bw, y + bh, area))
+                    raw_boxes.append((x, y, x + bw, y + bh, effective_area))
 
         # Sort by area descending
         raw_boxes.sort(key=lambda b: b[4], reverse=True)
@@ -132,22 +186,19 @@ class BuildingDetector:
             if len(merged_boxes) >= max_buildings:
                 break
 
-        # Fallback: If heuristic found fewer than 2 prominent buildings in an urban scene,
-        # generate salient vertical partition windows across the midground
-        if len(merged_boxes) < 2 and h_proc > 200:
-            mid_y1 = int(h_proc * 0.20)
-            mid_y2 = int(h_proc * 0.85)
-            # Left, center, right vertical columns
-            col_candidates = [
-                (0, mid_y1, int(w_proc * 0.45), mid_y2),
-                (int(w_proc * 0.30), mid_y1, int(w_proc * 0.70), mid_y2),
-                (int(w_proc * 0.55), mid_y1, w_proc, mid_y2),
-            ]
-            for cb in col_candidates:
-                if not any(abs(cb[0] - mb[0]) < 50 for mb in merged_boxes):
-                    merged_boxes.append(cb)
-                if len(merged_boxes) >= max_buildings:
-                    break
+        # If no genuine building contours isolated, do not hallucinate buildings!
+        if not merged_boxes:
+            logger.info("[building_detector] No prominent structural building contours isolated.")
+            manifest_path = out_path / "detected_buildings.json"
+            manifest_data = {
+                "count": 0,
+                "buildings": [],
+                "overlay_path": None,
+                "status": "not_applicable",
+                "reason": "No prominent architectural building facades detected in scene.",
+            }
+            manifest_path.write_text(json.dumps(manifest_data, indent=2), encoding="utf-8")
+            return manifest_data
 
         # Map bounding boxes back to original coordinate system
         inv_scale = 1.0 / scale
@@ -200,11 +251,27 @@ class BuildingDetector:
                 "facade_style": "unknown",
                 "ocr_text": "",
                 "matched_cadastral": None,
+                "is_building": True,
             })
 
         # 2. Zero-Shot Vision-Language Classification for Each Building Crop
         if detected_buildings:
             self._classify_buildings(detected_buildings)
+            # Filter out non-building crops (e.g. aircraft, vehicles, trees, ground)
+            detected_buildings = [b for b in detected_buildings if b.get("is_building", True)]
+
+        if not detected_buildings:
+            logger.info("[building_detector] All candidate crops classified as non-building objects.")
+            manifest_path = out_path / "detected_buildings.json"
+            manifest_data = {
+                "count": 0,
+                "buildings": [],
+                "overlay_path": None,
+                "status": "not_applicable",
+                "reason": "No prominent architectural building facades detected in scene.",
+            }
+            manifest_path.write_text(json.dumps(manifest_data, indent=2), encoding="utf-8")
+            return manifest_data
 
         # 3. Create Tactical Cyber HUD Overlay Image
         overlay_path = out_path / "building_detection_overlay.png"
@@ -216,6 +283,7 @@ class BuildingDetector:
             "count": len(detected_buildings),
             "buildings": detected_buildings,
             "overlay_path": str(overlay_path),
+            "status": "used",
         }
         manifest_path.write_text(json.dumps(manifest_data, indent=2), encoding="utf-8")
 
@@ -235,16 +303,25 @@ class BuildingDetector:
                     crop_p = bldg["crop_path"]
                     with Image.open(crop_p) as c_img:
                         c_rgb = c_img.convert("RGB")
-                        # Category inference
-                        cat_prompts = [f"a photograph of a {c}" for c in BUILDING_CATEGORIES]
+                        # Category inference with non-building negative distractors
+                        all_cats = BUILDING_CATEGORIES + NON_BUILDING_CATEGORIES
+                        cat_prompts = [f"a photograph of {c}" for c in all_cats]
                         inputs_cat = processor(text=cat_prompts, images=c_rgb, return_tensors="pt", padding=True).to(device)
                         with torch.no_grad():
                             logits_cat = model(**inputs_cat).logits_per_image
                             probs_cat = logits_cat.softmax(dim=-1).cpu().numpy()[0]
 
                         best_cat_idx = int(np.argmax(probs_cat))
-                        bldg["classification"] = BUILDING_CATEGORIES[best_cat_idx]
-                        bldg["confidence"] = round(float(probs_cat[best_cat_idx]), 3)
+                        if best_cat_idx < len(BUILDING_CATEGORIES):
+                            bldg["is_building"] = True
+                            bldg["classification"] = BUILDING_CATEGORIES[best_cat_idx]
+                            bldg["confidence"] = round(float(probs_cat[best_cat_idx]), 3)
+                        else:
+                            bldg["is_building"] = False
+                            bldg["classification"] = all_cats[best_cat_idx]
+                            bldg["confidence"] = round(float(probs_cat[best_cat_idx]), 3)
+                            logger.info("[building_detector] Crop %s rejected as non-building: %s (conf=%.3f)",
+                                        Path(crop_p).name, all_cats[best_cat_idx], probs_cat[best_cat_idx])
 
                         # Facade style inference
                         style_prompts = [f"architecture featuring {s}" for s in FACADE_STYLES]
