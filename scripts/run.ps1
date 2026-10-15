@@ -37,7 +37,7 @@ if (-not (Test-Path $VenvPython)) {
 # Port Collision & Address Resolution
 # ------------------------------------------------------------------------------
 function Test-PortOccupied([int]$CheckPort) {
-    $connections = Get-NetTCPConnection -LocalPort $CheckPort -ErrorAction SilentlyContinue
+    $connections = Get-NetTCPConnection -LocalPort $CheckPort -ErrorAction SilentlyContinue | Where-Object { $_.State -eq 'Listen' }
     if ($null -ne $connections -and $connections.Count -gt 0) {
         return $true
     }
@@ -46,20 +46,22 @@ function Test-PortOccupied([int]$CheckPort) {
 
 $RequestedPort = $Port
 
-if ($KillExisting) {
-    $existingConns = Get-NetTCPConnection -LocalPort $RequestedPort -ErrorAction SilentlyContinue
-    if ($existingConns) {
-        $procIds = $existingConns.OwningProcess | Where-Object { $_ -gt 0 } | Select-Object -Unique
-        foreach ($pidToKill in $procIds) {
-            Write-Host "[CLEANUP] Stopping existing process (PID $pidToKill) on port $RequestedPort..." -ForegroundColor Yellow
+# Automatically clean up any previous Python/Uvicorn server instances listening on the requested port
+$existingListening = Get-NetTCPConnection -LocalPort $RequestedPort -ErrorAction SilentlyContinue | Where-Object { $_.State -eq 'Listen' -and $_.OwningProcess -gt 0 }
+if ($existingListening) {
+    $procIds = $existingListening.OwningProcess | Select-Object -Unique
+    foreach ($pidToKill in $procIds) {
+        $proc = Get-Process -Id $pidToKill -ErrorAction SilentlyContinue
+        if ($proc -and ($proc.ProcessName -match "python" -or $KillExisting)) {
+            Write-Host "[CLEANUP] Stopping previous server instance (PID ${pidToKill} - $($proc.ProcessName)) on port $RequestedPort..." -ForegroundColor Yellow
             Stop-Process -Id $pidToKill -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Milliseconds 600
         }
-        Start-Sleep -Milliseconds 800
     }
 }
 
 if (Test-PortOccupied -CheckPort $Port) {
-    Write-Host "[NOTICE] Address http://${HostAddress}:${Port} is already in use or locked by Windows TCP." -ForegroundColor Yellow
+    Write-Host "[NOTICE] Address http://${HostAddress}:${Port} is actively in use by an external service." -ForegroundColor Yellow
     $OriginalPort = $Port
     while (Test-PortOccupied -CheckPort $Port) {
         $Port++
@@ -101,4 +103,15 @@ if ($Reload) {
     $UvicornArgs += "--reload"
 }
 
-& $VenvPython $UvicornArgs
+try {
+    & $VenvPython $UvicornArgs
+}
+catch {
+    # Ignore terminal interrupt exceptions
+}
+
+# If process exited cleanly or was gracefully terminated via Ctrl+C (SIGINT exit codes: 0, 1, 130, 0xC000013A), reset exit code
+if ($LASTEXITCODE -in @(0, 1, 130, 3221225786, -1073741510)) {
+    $global:LASTEXITCODE = 0
+    exit 0
+}

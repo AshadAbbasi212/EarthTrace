@@ -75,6 +75,10 @@ def test_static_assets_and_vendor_leaflet(client):
     assert layers_2x_png.status_code == 200
     assert len(layers_2x_png.content) > 0
 
+    favicon = client.get("/favicon.ico")
+    assert favicon.status_code == 200
+    assert len(favicon.content) > 0
+
 
 def test_health_api(client):
     """Verify /api/health endpoint functions seamlessly alongside web UI."""
