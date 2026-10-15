@@ -14,7 +14,7 @@ from geolocator.config import AppConfig, get_config
 from geolocator.providers.dem import DEMProvider
 from geolocator.pipeline.board import CandidateBoard
 from geolocator.pipeline.skyline_extractor import SkylineExtractor
-from geolocator.pipeline.geo_utils import haversine_distance_km
+from geolocator.pipeline.geo_utils import haversine_distance_km, get_country_anchors
 
 logger = logging.getLogger("geolocator.pipeline.stage3_terrain")
 
@@ -177,10 +177,10 @@ class Stage3Terrain:
 
         # Calibrated error radius based on skyline correlation score and physical DEM viewing distance
         if best_score > 0.85:
-            calibrated_radius_km = 4.5
+            calibrated_radius_km = 8.0
             tier = "T2"
-        elif best_score > 0.65:
-            calibrated_radius_km = 30.0
+        elif best_score > 0.70:
+            calibrated_radius_km = 25.0
             tier = "T2"
         elif best_score > 0.45:
             calibrated_radius_km = 45.0
@@ -204,7 +204,7 @@ class Stage3Terrain:
         working_image_path: Optional[Path] = None,
         search_center: Optional[Tuple[float, float]] = None,
         photo_skyline_override: Optional[List[float]] = None,
-        radius_km: float = 15.0,
+        radius_km: float = 20.0,
     ) -> Tuple[Dict[str, Any], CandidateBoard]:
         """Execute Stage 3a Natural Terrain Branch and write artifacts/candidates to board."""
         job_dir = Path(job_dir)
@@ -240,7 +240,7 @@ class Stage3Terrain:
 
         # Check if the extracted horizon is a man-made building roofline or scene is urban architecture
         is_roofline = skyline_info.get("is_manmade_roofline", False)
-        clues_data = board.data.get("clues_data", {})
+        clues_data = board.data.get("visual_cues") or board.data.get("clues_data", {})
         scene_type = clues_data.get("scene_type", "")
         arch = clues_data.get("built_environment", {}).get("architecture", "")
         user_hint = (board.data.get("user_hints", {}).get("raw_hint") or "").lower()
@@ -290,14 +290,40 @@ class Stage3Terrain:
             candidate_centers.append(search_center)
         else:
             bboxes = board.data.get("search_bboxes", [])
-            for b in bboxes[:3]:
+            top_country = bboxes[0].get("country") if bboxes else None
+            if not top_country:
+                for c in board.rank()[:5]:
+                    cntry = c.get("metadata", {}).get("country") or (c.get("name") if c.get("level") == "country" else None)
+                    if cntry:
+                        top_country = cntry
+                        break
+
+            # 1. If top country from Stage 2 has curated mountain anchors, prioritize them FIRST
+            if top_country:
+                m_anchors = get_country_anchors(top_country, max_anchors=4, terrain="mountain")
+                for ma in m_anchors:
+                    m_pt = (float(ma["lat"]), float(ma["lon"]))
+                    if not any(haversine_distance_km(m_pt[0], m_pt[1], ep[0], ep[1]) < 40.0 for ep in candidate_centers):
+                        candidate_centers.append(m_pt)
+                    if len(candidate_centers) >= 2:
+                        break
+
+            # 2. Collect spatially distinct candidate centers from Stage 2 bboxes (separated by >= 50 km)
+            for b in bboxes:
                 if "center" in b:
-                    candidate_centers.append((float(b["center"][0]), float(b["center"][1])))
+                    c_pt = (float(b["center"][0]), float(b["center"][1]))
+                    if not any(haversine_distance_km(c_pt[0], c_pt[1], ep[0], ep[1]) < 50.0 for ep in candidate_centers):
+                        candidate_centers.append(c_pt)
+                if len(candidate_centers) >= 3:
+                    break
+
             if not candidate_centers:
                 ranked = board.rank()
                 for cand in ranked[:3]:
                     if cand.get("lat") is not None and cand.get("lon") is not None:
-                        candidate_centers.append((float(cand["lat"]), float(cand["lon"])))
+                        c_pt = (float(cand["lat"]), float(cand["lon"]))
+                        if not any(haversine_distance_km(c_pt[0], c_pt[1], ep[0], ep[1]) < 50.0 for ep in candidate_centers):
+                            candidate_centers.append(c_pt)
             if not candidate_centers:
                 candidate_centers.append((35.4983, 138.7688))
 
@@ -321,7 +347,8 @@ class Stage3Terrain:
                 chosen_center = (c_lat, c_lon)
 
             # If an exceptionally strong viewpoint correlation is confirmed, stop early
-            if best_overall_score >= 0.65:
+            if best_overall_score >= 0.85:
+                logger.info("Exceptional terrain correlation confirmed (NCC=%.4f >= 0.85); early stopping.", best_overall_score)
                 break
 
         fit_results = best_overall_fit if best_overall_fit is not None else {
@@ -366,7 +393,7 @@ class Stage3Terrain:
             )
 
             # Likelihood ratio weight
-            weight = math.exp(min(3.5, max(-3.5, score * 3.5)))
+            weight = math.exp(min(4.5, max(-3.5, score * 4.5)))
             board.add_evidence(
                 clue_id=cid_skyline,
                 candidate_weights={cand_name: weight},

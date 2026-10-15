@@ -247,6 +247,35 @@ class Stage1Clues:
         if vlm_override:
             clues_result = vlm_override
             visual_country_candidates = []
+        elif (job_path / "clues.json").exists():
+            try:
+                with open(job_path / "clues.json", "r", encoding="utf-8") as f:
+                    clues_dict = json.load(f)
+                clues_result = ClueExtractionResult.model_validate(clues_dict)
+                visual_country_candidates = [rg.place for rg in clues_result.region_guesses]
+                if "environmental_meta" in clues_dict and board:
+                    board.data["environmental_meta"] = clues_dict["environmental_meta"]
+                if "solar_meta" in clues_dict and board:
+                    board.data["solar_meta"] = clues_dict["solar_meta"]
+
+                if board and "environmental_meta" not in board.data:
+                    # Environmental cues not present in cached clues; run perception to populate
+                    clues_result, visual_country_candidates = self._extract_visual_clues_heuristic(
+                        working_image_path,
+                        ocr_snippets,
+                        board=board,
+                        candidate_countries=early_country_context,
+                    )
+                else:
+                    logger.info("[stage1] Loaded cached clues.json with environmental meta from %s", job_path)
+            except Exception as e:
+                logger.warning("[stage1] Failed to load cached clues.json: %s (falling back to perception)", e)
+                clues_result, visual_country_candidates = self._extract_visual_clues_heuristic(
+                    working_image_path,
+                    ocr_snippets,
+                    board=board,
+                    candidate_countries=early_country_context,
+                )
         else:
             clues_result, visual_country_candidates = self._extract_visual_clues_heuristic(
                 working_image_path,
@@ -272,6 +301,8 @@ class Stage1Clues:
         all_place_phrases = []
         for snip in ocr_snippets:
             all_place_phrases.extend(extract_candidate_place_phrases(snip["text"]))
+        for ts in getattr(clues_result, "text_and_signs", []):
+            all_place_phrases.extend(extract_candidate_place_phrases(ts.text))
         unique_phrases = list(dict.fromkeys(all_place_phrases))
         known_synonyms = set(GEO_PHONETIC_SYNONYMS.values())
 
@@ -302,14 +333,18 @@ class Stage1Clues:
 
                 is_route_code = bool(re.search(r"\b(US|I|M|A|B|D|N|RN|BR|NH|SH|E|Q|O|Ruta|Route|Hwy|Highway)\s*[\-\.]?\s*(\d{1,4}[A-Z]?)\b", query_str, re.IGNORECASE))
                 
-                # Rule: Only query Nominatim if the token is a recognized route code, a known phonetic synonym,
-                # a multi-word phrase with non-stopword tokens, or a capitalized proper noun of at least 5 letters.
-                # Never query arbitrary 3-4 letter abbreviations/fragments (e.g. BEIT, NYOK, STOP).
+                # Rule: Query Nominatim if token is a recognized route code, a known phonetic synonym,
+                # a multi-word phrase with non-stopword tokens, a capitalized proper noun of >= 5 letters,
+                # or a non-Latin / CJK script place name of at least 2 characters (e.g. 青部, 東京, 京都).
+                is_non_latin_place = any(ord(c) > 127 for c in query_str) and len(query_str) >= 2
+                is_compound_transit = bool(re.search(r"(?i)[a-z]{3,}(station|stn|plaza|junction)", query_str))
                 is_proper_place_query = (
                     is_route_code
                     or (query_str in GEO_PHONETIC_SYNONYMS.values())
                     or (len(query_str.split()) >= 2 and any(t not in COMMON_STOP_WORDS for t in query_words))
                     or (len(query_str) >= 5 and query_str[0].isupper() and query_str.lower() not in COMMON_STOP_WORDS)
+                    or is_non_latin_place
+                    or is_compound_transit
                 )
 
                 if not is_proper_place_query:
@@ -321,18 +356,57 @@ class Stage1Clues:
                     logger.debug("[stage1] Skipping unconstrained route query '%s' without country gating", query_str)
                     continue
 
+                # Prepare query variants (e.g. 青部 -> 青部駅, 青部, AOESTATION -> AOE STATION)
+                queries_to_try = []
+                cjk_clean = None
+                if is_non_latin_place:
+                    cjk_clean = re.sub(r"[驛駅驿站村町市区省]$", "", query_str).strip()
+                    if cjk_clean and len(cjk_clean) >= 2:
+                        queries_to_try.extend([cjk_clean, f"{cjk_clean}駅", f"{cjk_clean} station"])
+                if is_compound_transit:
+                    split_q = re.sub(r"(?i)(station|stn|plaza|junction)", r" \1", query_str).strip()
+                    if split_q and split_q != query_str:
+                        queries_to_try.append(split_q)
+                if query_str not in queries_to_try:
+                    queries_to_try.append(query_str)
+
                 nom_results = []
-                # First try with primary candidate country for maximum geographic fidelity
-                if primary_cc:
-                    nom_results = self.nominatim.search(query_str, country_codes=primary_cc, limit=1)
+                for q_try in queries_to_try:
+                    # First try with primary candidate country for maximum geographic fidelity
+                    if primary_cc:
+                        nom_results = self.nominatim.search(q_try, country_codes=primary_cc, limit=1)
 
-                # Then fallback to all candidate countries if primary had no match
-                if not nom_results and country_codes_param:
-                    nom_results = self.nominatim.search(query_str, country_codes=country_codes_param, limit=1)
+                    # Then fallback to all candidate countries if primary had no match
+                    if not nom_results and country_codes_param:
+                        nom_results = self.nominatim.search(q_try, country_codes=country_codes_param, limit=1)
 
-                # Fallback to global query ONLY for distinct multi-word proper nouns with substantial non-stopword tokens
-                if not nom_results and not is_route_code and len(query_str.split()) >= 2 and any(t not in COMMON_STOP_WORDS for t in query_words):
-                    nom_results = self.nominatim.search(query_str, limit=1)
+                    # Fallback to global query ONLY for distinct multi-word proper nouns with substantial non-stopword tokens
+                    if not nom_results and not is_route_code and len(q_try.split()) >= 2 and any(t not in COMMON_STOP_WORDS for t in query_words):
+                        nom_results = self.nominatim.search(q_try, limit=1)
+
+                    if nom_results:
+                        hit = nom_results[0]
+                        hit_address = hit.get("address", {})
+                        hit_cc = hit_address.get("country_code", "").lower()
+
+                        # Geographic consistency check: Reject if search returned an unexpected foreign country
+                        if candidate_country_iso_codes and hit_cc and hit_cc not in candidate_country_iso_codes:
+                            logger.info("[stage1] Geocoded hit '%s' in '%s' rejected (mismatch with %s)", q_try, hit_cc, candidate_country_iso_codes)
+                            nom_results = []
+                            continue
+
+                        # Textual fidelity check for CJK / non-Latin place names:
+                        # Prevent Nominatim from returning completely unrelated places based on single-character partial matches
+                        if is_non_latin_place and cjk_clean:
+                            hit_name = str(hit.get("name", ""))
+                            hit_disp = str(hit.get("display_name", ""))
+                            if cjk_clean not in hit_name and cjk_clean not in hit_disp:
+                                logger.info("[stage1] Geocoded hit '%s' rejected (cjk stem '%s' not in hit '%s')", q_try, cjk_clean, hit_name)
+                                nom_results = []
+                                continue
+
+                        query_str = q_try
+                        break
 
                 if nom_results:
                     hit = nom_results[0]
@@ -357,7 +431,13 @@ class Stage1Clues:
                         source="nominatim_geocoding",
                         confidence=0.92,
                     )
-                    is_specific = any(w in display_name.lower() for w in ("road", "expressway", "highway", "point", "hill", "peak", "street", "building", "shrine", "station"))
+                    hit_cat = str(hit.get("category", "")).lower()
+                    hit_typ = str(hit.get("type", "")).lower()
+                    is_specific = (
+                        any(w in display_name.lower() for w in ("road", "expressway", "highway", "point", "hill", "peak", "street", "building", "shrine", "station"))
+                        or hit_cat in ("railway", "highway", "amenity", "building", "tourism")
+                        or hit_typ in ("station", "halt", "bus_stop", "stop", "junction")
+                    )
                     cand_prior = 4.0 if is_specific else 2.0
                     weight = 6.0 if is_specific else 3.0
 
@@ -424,9 +504,15 @@ class Stage1Clues:
             )
             board.add_candidate(cand_name, level="country", prior=1.0 + 3.0 * guess.confidence)
 
-        # Save clues.json
+        # Save clues.json with environmental and solar metadata
+        clues_export = clues_result.model_dump()
+        if board:
+            if "environmental_meta" in board.data:
+                clues_export["environmental_meta"] = board.data["environmental_meta"]
+            if "solar_meta" in board.data:
+                clues_export["solar_meta"] = board.data["solar_meta"]
         (job_path / "clues.json").write_text(
-            json.dumps(clues_result.model_dump(), indent=2, ensure_ascii=False),
+            json.dumps(clues_export, indent=2, ensure_ascii=False),
             encoding="utf-8",
         )
         board.mark_stage_run("stage1_clues")
@@ -900,7 +986,7 @@ class Stage1Clues:
                             metadata={
                                 "landmark": l_name,
                                 "tier": "T1" if l_conf >= 0.70 else "T2",
-                                "radius_km": lm_res.get("radius_km", 2.0),
+                                "radius_km": lm_res.get("radius_km", 2.0) if l_conf >= 0.70 else 50.0,
                                 "source": "landmark_matcher",
                             }
                         )

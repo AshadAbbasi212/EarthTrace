@@ -293,7 +293,23 @@ class Stage2Prior:
 
                         # In-country continuous neural location scoring & hierarchical refinement
                         if unique_cands:
-                            cand_probs = probs[len(gps_gal):].cpu().numpy()
+                            # Group candidates by country and compute per-country conditional softmax probabilities
+                            cand_logits_all = logits[:, len(gps_gal):].mean(dim=0).cpu().numpy()
+                            country_cand_map: Dict[str, List[int]] = {}
+                            for idx_c, c_obj in enumerate(unique_cands):
+                                c_c = c_obj.get("country") or "Global"
+                                country_cand_map.setdefault(c_c, []).append(idx_c)
+
+                            cand_probs = np.zeros(len(unique_cands), dtype=np.float32)
+                            for c_c, idx_list in country_cand_map.items():
+                                sub_l = cand_logits_all[idx_list]
+                                max_sub = np.max(sub_l)
+                                exp_sub = np.exp(sub_l - max_sub)
+                                sum_exp = np.sum(exp_sub)
+                                p_sub = exp_sub / sum_exp if sum_exp > 0 else np.full_like(sub_l, 1.0 / len(sub_l))
+                                for sub_pos, orig_idx in enumerate(idx_list):
+                                    cand_probs[orig_idx] = p_sub[sub_pos]
+
                             sorted_cand_indices = np.argsort(cand_probs)[::-1]
                             top_cand_indices = list(sorted_cand_indices[:min(60, len(unique_cands))])
                             # Ensure all curated regional anchors are included alongside grid points
@@ -307,8 +323,11 @@ class Stage2Prior:
                                 orig_cand = unique_cands[c_idx]
                                 c_lat, c_lon = float(orig_cand["lat"]), float(orig_cand["lon"])
                                 ref_lat, ref_lon = c_lat, c_lon
+                                c_name = orig_cand.get("name") or orig_cand.get("anchor_name") or ""
+                                is_named_anchor = bool(c_name and "Grid" not in c_name)
 
-                                if rank_i < 5:
+                                # Only refine generic/anonymous grid points; preserve exact surveyed coordinates for named anchors
+                                if rank_i < 5 and not is_named_anchor:
                                     try:
                                         # Level 1: coarse grid +/- 0.5 degrees (15x15 = 225 points)
                                         lats1 = np.linspace(c_lat - 0.5, c_lat + 0.5, 15)
@@ -612,7 +631,7 @@ class Stage2Prior:
             lat = p["lat"]
             lon = p["lon"]
             prob = max(1e-12, float(p.get("prob", p.get("score", 1.0))))
-            country = get_country_candidate(lat, lon)
+            country = p.get("country") or get_country_candidate(lat, lon)
 
             # Hierarchical visual prior: P(point | image) = P(country | image) * P(point | country)
             # Both P(country) and P(point) are globally normalized probabilities.
@@ -650,6 +669,20 @@ class Stage2Prior:
                     climate_lr += 3.0
                 elif climate_info.get("group") in ("D", "E") or is_in_region(lat, lon, "scandinavia"):
                     climate_lr -= 14.0
+
+            # Brazil biome distinction: lush green vegetation/river matches Southern Plateau (Cfb, Paraná/Santa Catarina), not tropical savanna (Aw, Minas Gerais/Cerrado)
+            if country == "Brazil" and veg_cue >= 0.5:
+                if lat < -23.0 and "C" in koeppen:
+                    climate_lr += 3.0
+                elif lat > -22.0:
+                    climate_lr -= 2.0
+
+            # Finland / Scandinavia biome distinction: non-snow pastoral/urban/agricultural land matches Southwest Finland (Dfb), not subarctic Lapland taiga (Dfc/ET)
+            if country == "Finland" and not snow_cue:
+                if lat < 62.5:
+                    climate_lr += 3.0
+                elif lat > 64.5:
+                    climate_lr -= 3.0
 
             # Hint alignment
             hint_lr = 0.0

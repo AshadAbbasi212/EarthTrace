@@ -98,10 +98,19 @@ def main():
         photo_path = Path(item["filepath"])
 
         job_dir = output_dir / f"job_{target_id}"
-        # Clean previous job dir if any
+        # Clean previous job results while preserving perception cues if available
+        clues_cache = None
+        clues_path = job_dir / "clues.json"
+        if clues_path.exists():
+            try:
+                clues_cache = clues_path.read_text(encoding="utf-8")
+            except Exception:
+                clues_cache = None
         if job_dir.exists():
             shutil.rmtree(job_dir)
         job_dir.mkdir(parents=True, exist_ok=True)
+        if clues_cache:
+            (job_dir / "clues.json").write_text(clues_cache, encoding="utf-8")
 
         t0 = time.time()
 

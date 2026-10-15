@@ -25,7 +25,8 @@ def lookup_plate(prefix: str) -> Optional[Dict[str, Any]]:
             table = json.loads(data_file.read_text(encoding="utf-8"))
             prov_char = prefix[0]
             letter = prefix[1:].upper() if len(prefix) > 1 else ""
-            if prov_char in table:
+            # Chinese license plates strictly require a province character followed by an ASCII letter (e.g. 京A, 粤B)
+            if prov_char in table and letter and letter.isalpha() and letter.isascii():
                 info = table[prov_char]
                 letters = info.get("letters", {})
                 detail = letters.get(letter, "")

@@ -1015,7 +1015,15 @@ def get_country_candidate(lat: float, lon: float) -> Optional[str]:
                 return "Finland"
             if lon >= 17.5 and lat <= 68.5:
                 return "Sweden"
-            return "Norway"
+    # 0b. Spain vs France vs Portugal border disambiguation (Iberian Peninsula)
+    if 35.5 <= lat <= 44.5 and -9.8 <= lon <= 4.0:
+        if 36.9 <= lat <= 42.2 and lon <= -6.3:
+            return "Portugal"
+        if lat < 42.4 or lon < -1.8:
+            return "Spain"
+        if lat >= 42.8 and lon > 0.0:
+            return "France"
+        return "Spain"
 
     # 1. High-precision border disambiguation for South Asia
     # Pakistan vs India border logic
@@ -1115,7 +1123,8 @@ def get_country_candidate(lat: float, lon: float) -> Optional[str]:
             "pakistan", "india", "nepal", "bangladesh", "sri lanka",
             "bahrain", "qatar", "kuwait", "united arab emirates", "oman",
             "yemen", "israel", "syria", "iraq", "saudi arabia", "iran",
-            "turkey", "turkiye", "egypt", "norway", "sweden", "finland"
+            "turkey", "turkiye", "egypt", "norway", "sweden", "finland",
+            "spain", "france", "portugal"
         ):
             continue
         if point_in_bbox(lat, lon, bbox):
@@ -1543,6 +1552,21 @@ def cluster_points(
                 "best_score": score,
                 "country": pt.get("country", get_country_candidate(lat, lon)),
             })
+
+    # For each cluster, if it contains curated named anchors (not generic grid points),
+    # snap the cluster center to the highest scoring named anchor.
+    for c in clusters:
+        named_anchors = [
+            p for p in c["points"]
+            if p.get("anchor_name") and "grid" not in str(p.get("anchor_name")).lower()
+        ]
+        if named_anchors:
+            best_anchor = max(named_anchors, key=lambda p: p.get("score", p.get("prob", 0.0)))
+            c["center_lat"] = best_anchor["lat"]
+            c["center_lon"] = best_anchor["lon"]
+            if best_anchor.get("country"):
+                c["country"] = best_anchor["country"]
+            c["best_anchor_name"] = best_anchor["anchor_name"]
 
     # Sort clusters by best score
     clusters.sort(key=lambda c: c["best_score"], reverse=True)
