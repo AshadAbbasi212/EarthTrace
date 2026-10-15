@@ -942,7 +942,9 @@
       descStreet,
       thumbStreet,
       evidence.street_imagery,
-      'Ground-level imagery checked via open repositories.'
+      'Ground-level imagery checked via open repositories.',
+      jobId,
+      'street_evidence.png'
     );
 
     // --- 2. Populate Dedicated Tab 1: OSM Geometry ---
@@ -1011,6 +1013,33 @@
     if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
       btnStreetSearchWikimedia.href = `https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent(lat.toFixed(4) + ' ' + lon.toFixed(4))}`;
     }
+    const detailStreetImg = document.getElementById('detail-street-img');
+    const detailStreetEmptyNote = document.getElementById('detail-street-empty-note');
+    const detailNodeStreet = document.getElementById('detail-node-street');
+    if (detailNodeStreet) {
+      detailNodeStreet.textContent = street.status === 'used' ? 'Ground Photo Corroborated' : 'Unmapped / Wilderness';
+    }
+    if (detailStreetImg) {
+      if (street.status === 'used' && street.artifact && street.artifact.endsWith('.png')) {
+        const streetArtifactUrl = appendPassphraseParam(`/api/jobs/${jobId}/artifacts/street_evidence.png`);
+        detailStreetImg.src = streetArtifactUrl;
+        detailStreetImg.onload = () => {
+          detailStreetImg.style.display = 'block';
+          if (detailStreetEmptyNote) detailStreetEmptyNote.style.display = 'none';
+        };
+        detailStreetImg.onerror = () => {
+          detailStreetImg.style.display = 'none';
+          if (detailStreetEmptyNote) detailStreetEmptyNote.style.display = 'block';
+        };
+      } else {
+        detailStreetImg.style.display = 'none';
+        if (detailStreetEmptyNote) {
+          detailStreetEmptyNote.style.display = 'block';
+          detailStreetEmptyNote.textContent = street.findings || 'Keyless ground coverage: honestly reported as unmapped in wilderness/rural areas.';
+        }
+      }
+    }
+
 
     // --- 6. Populate Dedicated Tab 5: Building & Facade Intelligence ---
     const bldgs = report.detected_buildings || [];

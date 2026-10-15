@@ -726,3 +726,15 @@
   - Created `tests/test_building_detector.py` covering contour extraction, color analysis, zero-shot classification, cadastral matching, and Stage 3 pipeline integration.
   - Verified 100% test pass rate across building detector and Stage 3 tests: **6/6 passed in 64s**.
 
+
+### Deep 4-Pillar Integration of Building Facade Detection & Visual Place Recognition (VPR)
+- [x] **Cross-Pillar Architectural Fusion Completed**:
+  - **Pillar 1 (OSM Cadastral Geometry)**: Unified Overpass QL query across 5 architectural categories (	ourism, menity, uilding, historic, leisure) with 3D aspect ratio geometry and color palette matching.
+  - **Pillar 2 (DEM Elevation Physical Altitude)**: Linked DEMProvider directly into Stage3Built. Every matched cadastral candidate queries self.dem.get_elevation(lat, lon) to determine exact meters ASL, populating cand_alt in the decision report.
+  - **Pillar 3 (High-Resolution Satellite Orthoimagery)**: Stage 4 targets the building coordinate with high-resolution satellite orthoimagery (zoom 17), draws a tactical cyan cadastral reticle target over the building polygon, and evaluates DINOv2 foundation ViT cosine similarity against the building facade crop.
+  - **Pillar 4 (Ground-Level Photo Verification via DINOv2 & SIFT)**: Downloads lead ground photo from Wikimedia Commons to street_evidence.png, and evaluates DINOv2 ViT cosine representation and classical SIFT keypoint inliers directly against the building facade crop, awarding up to 3.5x board likelihood weight.
+  - **Stage 1 & 2 Prior Likelihood Conditioning**: Early extraction of building facade crops in Stage 1; Stage 2 applies an architectural log-likelihood adjustment (rch_lr) to the prior before spatial clustering.
+  - **Report & Web UI Telemetry Synchronized**: ReportGenerator links all 4 evidence sections with real DINOv2/SIFT/DEM values; Web UI Tab 4 renders live street-level photographic evidence.
+- [x] **End-to-End Verification Test**:
+  - Implemented 	est_four_pillars_building_integration in 	ests/test_building_detector.py validating the full cycle from facade extraction -> OSM match (P1) -> DEM altitude (P2) -> satellite reticle (P3) -> street DINOv2/SIFT comparison (P4) -> decision report.
+  - **100% test pass rate across the full test suite (75/75 passed)**.

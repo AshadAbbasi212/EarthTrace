@@ -839,10 +839,32 @@ class Stage2Prior:
                 elif tf == "coast" and country:
                     copilot_lr += 1.5
 
+            # 4e. Architectural Style Prior from Building Perception
+            arch_lr = 0.0
+            if country:
+                for c in board.data.get("clues", {}).values():
+                    if isinstance(c, dict) and c.get("kind") == "architecture":
+                        txt = c.get("text", "").lower()
+                        if "mughal" in txt or "islamic" in txt:
+                            if country in ("Pakistan", "India", "Bangladesh", "Turkey", "Iran", "Egypt", "Morocco", "Saudi Arabia", "United Arab Emirates", "Jordan", "Uzbekistan"):
+                                arch_lr += 2.5
+                            elif country in ("United Kingdom", "France", "Germany", "United States", "Canada", "Australia", "Japan"):
+                                arch_lr -= 2.0
+                        elif "colonial" in txt or "classical" in txt:
+                            if country in ("United Kingdom", "France", "Spain", "Italy", "Pakistan", "India", "United States", "Australia", "Canada"):
+                                arch_lr += 1.8
+                        elif "gothic" in txt:
+                            if country in ("United Kingdom", "France", "Germany", "Czech Republic", "Poland", "United States", "Canada", "Australia"):
+                                arch_lr += 2.0
+                        elif "modern_glass" in txt:
+                            if country in ("United States", "China", "United Arab Emirates", "Japan", "United Kingdom", "Germany", "Singapore", "Australia", "South Korea", "Saudi Arabia", "Qatar"):
+                                arch_lr += 1.2
+
             combined_score = (
                 base_log_prior + climate_lr + hint_lr + driving_lr + meta_lr
-                + reranker_lr + solar_lr + env_lr + copilot_lr + subnational_lr + radius_lr
+                + reranker_lr + solar_lr + env_lr + copilot_lr + subnational_lr + radius_lr + arch_lr
             )
+
 
             scored_points.append({
                 "lat": lat,

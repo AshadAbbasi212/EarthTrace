@@ -396,3 +396,27 @@ This document records all deviations from `PROJECT_BRIEF.md`, architectural deci
   5. **Dedicated Web UI Pillar 5 ("🏛️ 5. Building Match"):**
      - Integrated Tab 5 in the analysis workbench with interactive crop gallery, dominant color swatches, architectural style chips, full-screen lightbox modal preview, and one-click "📍 Pinpoint on Map" focus.
 
+
+---
+
+## 30. Deep 4-Pillar Integration of Building Facade Detection & Visual Place Recognition (VPR)
+- **Problem Statement:**
+  - Building detection was initially an isolated module that extracted crops and visualized HUD overlays, but did not feed directly into or verify against the other 4 core geolocation evidence pillars (OSM geometry, elevation skylines, satellite orthoimagery, and street-level imagery).
+  - SOTA VPR literature (e.g. MixVPR, AnyLoc, OpenFACADES) confirms that isolated building facade crops bridge ground-to-overhead and cross-view domain gaps significantly better than whole-scene matching, which suffers from transient foreground clutter (vehicles, pedestrians, trees).
+- **Architectural Solution & Decisions:**
+  1. **Crop-Level Zero-Shot Landmark Perception (uilding_detector.py):**
+     - Evaluates isolated building crops directly with CLIP/StreetCLIP embeddings against the global and regional landmark database while resident in VRAM. Confident matches ($\ge 0.40$ with margin $\ge 0.15$ over negative distractors) immediately identify landmark coordinates with high precision.
+  2. **Pillar 1 Fusion (OSM Cadastral Geometry):**
+     - Unified Overpass QL querying across 5 architectural categories (	ourism, menity, uilding, historic, leisure) into a single non-blocking query with fallback to local curated cadastre.
+     - Performs 3D geometry consistency checks (uilding:levels and height vs aspect ratio) and dominant color palette matching.
+  3. **Pillar 2 Fusion (DEM Physical Altitude ASL):**
+     - Every matched cadastral building candidate is verified through DEMProvider.get_elevation(lat, lon) to determine exact ground elevation above sea level, physically grounding candidate altitude in the DEM and populating cand_alt in the decision report.
+  4. **Pillar 3 Fusion (High-Resolution Satellite Orthoimagery):**
+     - Stage 4 targets the building candidate with high-resolution satellite imagery (zoom 17), paints a tactical cyan cadastral reticle target over the building parcel, and computes DINOv2 foundation ViT cosine similarity against the building facade crop.
+  5. **Pillar 4 Fusion (Ground-Level Photo Verification via DINOv2 & SIFT):**
+     - Keyless ground-level photos fetched from Wikimedia Commons are saved to street_evidence.png.
+     - Direct cross-matching between the detected building crop and ground photo is evaluated via DINOv2 ViT cosine similarity and SIFT keypoint inlier matching, awarding up to 3.5x board likelihood boost.
+  6. **Stage 1 & Stage 2 Prior Likelihood Conditioning:**
+     - Stage 1 extracts building facade crops early and identifies architectural style; Stage 2 applies an architectural log-likelihood adjustment (rch_lr) to the prior before spatial clustering.
+  7. **Full Report & Web UI Synchrony:**
+     - ReportGenerator links all 4 evidence sections directly with real DINOv2, SIFT, and DEM altitude values, and pp.js renders live street-level photographic evidence in Tab 4.

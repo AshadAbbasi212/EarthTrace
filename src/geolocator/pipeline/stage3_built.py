@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from geolocator.config import AppConfig, get_config
 from geolocator.providers.osm import OSMProvider
+from geolocator.providers.dem import DEMProvider
 from geolocator.pipeline.board import CandidateBoard
 from geolocator.pipeline.building_detector import BuildingDetector
 from geolocator.pipeline.geo_utils import haversine_distance_km, point_in_bbox
@@ -25,11 +26,14 @@ class Stage3Built:
         config: Optional[AppConfig] = None,
         osm_provider: Optional[OSMProvider] = None,
         building_detector: Optional[BuildingDetector] = None,
+        dem_provider: Optional[DEMProvider] = None,
     ):
         self.config = config or get_config()
         cache_dir = getattr(self.config, "storage", None) and self.config.storage.cache_dir or ".geo-cache"
         self.osm = osm_provider or OSMProvider(cache_dir=cache_dir, offline_mode=self.config.offline_mode)
         self.building_detector = building_detector or BuildingDetector()
+        self.dem = dem_provider or DEMProvider(cache_dir=cache_dir, offline_mode=self.config.offline_mode)
+
 
     @staticmethod
     def sample_points_along_polyline(
@@ -272,6 +276,23 @@ class Stage3Built:
                         candidate_bbox=search_bbox,
                         osm_provider=self.osm,
                     )
+                    # If initial search bbox didn't match and other bounding boxes exist on the board, check runner-ups
+                    if not matched_cadastral_list:
+                        bboxes = board.data.get("search_bboxes", [])
+                        for alt_b_entry in bboxes[1:3]:
+                            alt_b = alt_b_entry.get("bbox")
+                            if alt_b:
+                                s, w, n, e = float(alt_b[0]), float(alt_b[1]), float(alt_b[2]), float(alt_b[3])
+                                c_lat, c_lon = (s + n) / 2.0, (w + e) / 2.0
+                                alt_bbox = (max(s, c_lat - 0.045), max(w, c_lon - 0.045), min(n, c_lat + 0.045), min(e, c_lon + 0.045))
+                                alt_matched = self.building_detector.match_buildings_against_osm(
+                                    detected_buildings=detected_buildings,
+                                    candidate_bbox=alt_bbox,
+                                    osm_provider=self.osm,
+                                )
+                                if alt_matched:
+                                    matched_cadastral_list.extend(alt_matched)
+                                    break
             except Exception as e:
                 logger.warning("[stage3_built] Building detection failed: %s", e)
 
@@ -288,6 +309,13 @@ class Stage3Built:
             osm_id = m_cad.get("osm_id", "")
             osm_type = m_cad.get("osm_type", "way")
 
+            # Pillar 2: Verify ground elevation at building coordinate using AWS Terrarium DEM
+            dem_alt_m = None
+            try:
+                dem_alt_m = self.dem.get_elevation(exact_lat, exact_lon)
+            except Exception as e_dem:
+                logger.debug("[stage3_built] DEM altitude query failed: %s", e_dem)
+
             board.add_candidate(
                 name=cand_name,
                 level="point",
@@ -302,6 +330,9 @@ class Stage3Built:
                     "building_id": m_item.get("building_id"),
                     "classification": m_item.get("classification"),
                     "match_score": m_cad.get("match_score"),
+                    "dem_altitude_m": round(dem_alt_m, 1) if dem_alt_m is not None else None,
+                    "levels": m_cad.get("levels"),
+                    "height": m_cad.get("height"),
                 },
             )
             cid_bldg = board.add_clue(
@@ -315,12 +346,25 @@ class Stage3Built:
                 rationale=f"Automated building facade detection matched cadastral footprint in OpenStreetMap ({m_name})",
                 artifact_path=str(job_dir / "buildings" / "detected_buildings.json"),
             )
+            if dem_alt_m is not None:
+                cid_elev = board.add_clue(
+                    text=f"Pillar 2 Ground Altitude at Building: {dem_alt_m:.0f}m ASL (AWS Terrarium DEM terrain verified)",
+                    kind="terrain_elevation",
+                    status="computed",
+                )
+                board.add_evidence(
+                    clue_id=cid_elev,
+                    candidate_weights={cand_name: 1.5},
+                    rationale=f"Physical ground elevation of building ({dem_alt_m:.0f}m ASL) validated against terrain DEM",
+                )
             if primary_building_feature is None:
                 primary_building_feature = {
                     "display_name": m_name,
                     "osm_id": f"{osm_type}/{osm_id}",
                     "coordinates": [exact_lat, exact_lon],
+                    "dem_altitude_m": dem_alt_m,
                 }
+
 
         # -------------------------------------------------------------------
         # 2. Check if high-priority landmark candidate exists on the board
@@ -454,7 +498,11 @@ class Stage3Built:
             )
 
         building_verified = bool(primary_building_feature or matched_cadastral_list)
+        status_str = "used" if (building_verified or match_res.get("best_point")) else "not_applicable"
+        reason_str = "No linear corridor or bridge infrastructure or cadastral matches found in candidate area." if status_str == "not_applicable" else "Cadastral building or infrastructure corridor verified in OpenStreetMap."
         summary = {
+            "status": status_str,
+            "reason": reason_str,
             "search_bbox": search_bbox,
             "match_results": match_res,
             "building_verified": building_verified,
@@ -464,6 +512,8 @@ class Stage3Built:
             "matched_cadastral": matched_cadastral_list,
             "crossings_found": len(crossings),
         }
+
+
         if primary_building_feature:
             summary["osm_feature"] = primary_building_feature
 

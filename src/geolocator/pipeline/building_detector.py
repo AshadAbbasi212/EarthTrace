@@ -256,11 +256,42 @@ class BuildingDetector:
                         best_style_idx = int(np.argmax(probs_style))
                         bldg["facade_style"] = FACADE_STYLES[best_style_idx]
 
+                        # Zero-shot Landmark Perception on the isolated facade crop
+                        try:
+                            from geolocator.pipeline.landmarks import LANDMARK_DATABASE, NEGATIVE_PROMPTS
+                            lm_prompts = [f"a photograph of {lm[0]}" for lm in LANDMARK_DATABASE] + [f"a photograph of {p}" for p in NEGATIVE_PROMPTS[:4]]
+                            inputs_lm = processor(text=lm_prompts, images=c_rgb, return_tensors="pt", padding=True).to(device)
+                            with torch.no_grad():
+                                logits_lm = model(**inputs_lm).logits_per_image
+                                probs_lm = logits_lm.softmax(dim=-1).cpu().numpy()[0]
+
+                            top_lm_idx = int(np.argmax(probs_lm))
+                            top_lm_prob = float(probs_lm[top_lm_idx])
+                            # Check if top match is within landmark database (not negative prompt)
+                            if top_lm_idx < len(LANDMARK_DATABASE):
+                                neg_probs = probs_lm[len(LANDMARK_DATABASE):]
+                                max_neg = float(np.max(neg_probs)) if len(neg_probs) > 0 else 0.0
+                                if top_lm_prob >= 0.40 and (top_lm_prob - max_neg) >= 0.15:
+                                    matched_entry = LANDMARK_DATABASE[top_lm_idx]
+                                    bldg["matched_landmark"] = {
+                                        "name": matched_entry[1],
+                                        "lat": matched_entry[2],
+                                        "lon": matched_entry[3],
+                                        "category": matched_entry[4],
+                                        "confidence": round(top_lm_prob, 3),
+                                        "margin": round(top_lm_prob - max_neg, 3),
+                                    }
+                                    logger.info("[building_detector] Crop %s matched landmark '%s' (conf=%.3f, margin=%.3f)",
+                                                bldg["id"], matched_entry[1], top_lm_prob, top_lm_prob - max_neg)
+                        except Exception as e_lm:
+                            logger.debug("[building_detector] Crop landmark matching bypass: %s", e_lm)
+
         except Exception as e:
             logger.warning("[building_detector] Zero-shot building classification bypass: %s", e)
             for bldg in buildings:
                 bldg["classification"] = "urban_commercial_building"
                 bldg["confidence"] = 0.50
+
 
     def _reranker_loader(self):
         from transformers import CLIPProcessor, CLIPModel
@@ -379,12 +410,43 @@ class BuildingDetector:
         # Deduplicate and populate OSM/Cadastral elements
         unique_osm = {}
 
-        # 1. Cross-reference with curated local landmark database within candidate bbox first
+        # 1. First, check if any building was already matched via zero-shot landmark recognition
+        for bldg in detected_buildings:
+            if bldg.get("matched_landmark"):
+                lm = bldg["matched_landmark"]
+                best_match = {
+                    "name": lm["name"],
+                    "osm_id": f"landmark_{lm['name'].replace(' ', '_')}",
+                    "osm_type": "landmark",
+                    "tags": {"name": lm["name"], "category": lm["category"]},
+                    "lat": lm["lat"],
+                    "lon": lm["lon"],
+                    "match_score": round(lm["confidence"], 2),
+                }
+                bldg["matched_cadastral"] = best_match
+                matched_records.append({
+                    "building_id": bldg["id"],
+                    "classification": bldg["classification"],
+                    "matched": best_match,
+                })
+                logger.info("[building_detector] Direct crop landmark match accepted for %s: '%s'",
+                            bldg["id"], lm["name"])
+
+        # 2. Cross-reference with curated local and global landmark database
         try:
             from geolocator.pipeline.landmarks import LANDMARK_DATABASE
+            combined_ocr_tokens = []
+            for bldg in detected_buildings:
+                ocr_str = bldg.get("ocr_text", "").lower()
+                if ocr_str:
+                    combined_ocr_tokens.extend([w for w in ocr_str.split() if len(w) >= 4])
+
             for entry in LANDMARK_DATABASE:
                 _, lm_name, lm_lat, lm_lon, lm_cat = entry
-                if south <= lm_lat <= north and west <= lm_lon <= east:
+                lm_name_lower = lm_name.lower()
+                in_bbox = (south <= lm_lat <= north and west <= lm_lon <= east)
+                ocr_hit = any(token in lm_name_lower for token in combined_ocr_tokens)
+                if in_bbox or ocr_hit:
                     lid = f"landmark_{lm_name.replace(' ', '_')}"
                     tags = {"name": lm_name, "category": lm_cat}
                     if "hotel" in lm_cat:
@@ -393,6 +455,10 @@ class BuildingDetector:
                         tags["leisure"] = "club"
                     elif "mosque" in lm_cat or "temple" in lm_cat or "cathedral" in lm_cat:
                         tags["amenity"] = "place_of_worship"
+                    elif "university" in lm_cat or "campus" in lm_cat:
+                        tags["amenity"] = "university"
+                    elif "palace" in lm_cat or "fort" in lm_cat or "unesco" in lm_cat:
+                        tags["historic"] = "palace"
                     unique_osm[lid] = {
                         "type": "cadastral_landmark",
                         "id": lid,
@@ -401,24 +467,50 @@ class BuildingDetector:
                         "tags": tags,
                     }
         except Exception as e:
-            logger.debug("[building_detector] Local landmark cross-reference bypass: %s", e)
+            logger.debug("[building_detector] Landmark database cross-reference bypass: %s", e)
 
-        # 2. Query OSM for prominent named buildings, hotels, and clubs in a single request
+        # 3. Query OSM across architectural and civic categories in bounded area
+        # Use a single consolidated Overpass QL query to minimize network round-trips and prevent gateway timeouts
         try:
-            osm_elements = osm.find_features(
-                south, west, north, east,
-                tag_filter='["tourism"~"^(hotel|resort)$"]["name"]'
-            )
-            for el in osm_elements:
-                eid = f"{el.get('type')}_{el.get('id')}"
-                if eid not in unique_osm:
-                    unique_osm[eid] = el
+            ql = f"""[out:json][timeout:20];
+(
+  node["tourism"~"^(hotel|resort|attraction|museum|guest_house)$"]["name"]({south},{west},{north},{east});
+  way["tourism"~"^(hotel|resort|attraction|museum|guest_house)$"]["name"]({south},{west},{north},{east});
+  node["amenity"~"^(place_of_worship|university|college|hospital|townhall|courthouse|library|theatre)$"]["name"]({south},{west},{north},{east});
+  way["amenity"~"^(place_of_worship|university|college|hospital|townhall|courthouse|library|theatre)$"]["name"]({south},{west},{north},{east});
+  node["building"~"^(hotel|commercial|civic|public|mosque|church|cathedral|temple|train_station|stadium|apartments|historic)$"]["name"]({south},{west},{north},{east});
+  way["building"~"^(hotel|commercial|civic|public|mosque|church|cathedral|temple|train_station|stadium|apartments|historic)$"]["name"]({south},{west},{north},{east});
+  node["historic"~"^(monument|memorial|castle|palace|fort|ruins|building|manor)$"]["name"]({south},{west},{north},{east});
+  way["historic"~"^(monument|memorial|castle|palace|fort|ruins|building|manor)$"]["name"]({south},{west},{north},{east});
+  node["leisure"~"^(sports_centre|stadium|club)$"]["name"]({south},{west},{north},{east});
+  way["leisure"~"^(sports_centre|stadium|club)$"]["name"]({south},{west},{north},{east});
+);
+out center tags qt;"""
+            data = osm.query_ql(ql)
+            for el in data.get("elements", []):
+                lat = el.get("lat") or el.get("center", {}).get("lat")
+                lon = el.get("lon") or el.get("center", {}).get("lon")
+                if lat is not None and lon is not None:
+                    eid = f"{el.get('type')}_{el.get('id')}"
+                    if eid not in unique_osm:
+                        unique_osm[eid] = {
+                            "id": el.get("id"),
+                            "type": el.get("type"),
+                            "lat": float(lat),
+                            "lon": float(lon),
+                            "tags": el.get("tags", {}),
+                        }
         except Exception as e:
-            logger.debug("[building_detector] OSM element query bypass: %s", e)
+            logger.debug("[building_detector] OSM consolidated query bypass: %s", e)
 
         for bldg in detected_buildings:
+            if bldg.get("matched_cadastral"):
+                continue  # Already matched via direct landmark perception
+
             b_class = bldg["classification"].lower()
             b_ocr = bldg.get("ocr_text", "").lower()
+            b_aspect = float(bldg.get("aspect_ratio", 1.0))
+            b_palette = bldg.get("palette", "")
             best_match = None
             best_score = 0.0
 
@@ -454,11 +546,43 @@ class BuildingDetector:
                     if "cathedral" in name_lower or "church" in name_lower or tags.get("amenity") == "place_of_worship":
                         score += 0.40
                 elif "palace" in b_class or "colonial" in b_class or "civic" in b_class or "historical" in b_class:
-                    if "palace" in name_lower or "hall" in name_lower or "market" in name_lower:
+                    if "palace" in name_lower or "hall" in name_lower or "market" in name_lower or tags.get("historic"):
+                        score += 0.40
+                elif "educational" in b_class or "campus" in b_class:
+                    if tags.get("amenity") in ("university", "college", "school") or "university" in name_lower or "college" in name_lower or "campus" in name_lower:
                         score += 0.40
                 elif "residential" in b_class or "apartment" in b_class or "generic" in b_class:
                     if tags.get("building") in ("apartments", "residential", "hotel", "commercial", "civic_building") or "tower" in name_lower or "court" in name_lower or "hall" in name_lower or "hotel" in name_lower:
                         score += 0.35
+
+                # 3. 3D Geometric Aspect Ratio & Levels consistency cross-check
+                levels = tags.get("building:levels")
+                height_str = tags.get("height")
+                try:
+                    num_levels = int(levels) if levels else None
+                except Exception:
+                    num_levels = None
+                try:
+                    height_m = float(str(height_str).replace("m", "").strip()) if height_str else None
+                except Exception:
+                    height_m = None
+
+                if (num_levels and num_levels >= 6) or (height_m and height_m >= 20.0):
+                    if b_aspect >= 1.1:
+                        score += 0.20  # Vertical tower geometry confirmed
+                elif (num_levels and num_levels <= 3) or (height_m and height_m <= 12.0):
+                    if b_aspect < 1.0:
+                        score += 0.15  # Low-rise sprawling geometry confirmed
+
+                # 4. Color / Palette consistency
+                bldg_color = (tags.get("building:colour") or tags.get("roof:colour") or "").lower()
+                if bldg_color:
+                    if "red" in bldg_color and "red" in b_palette:
+                        score += 0.15
+                    elif ("beige" in bldg_color or "sand" in bldg_color) and ("beige" in b_palette or "stone" in b_palette):
+                        score += 0.15
+                    elif ("blue" in bldg_color or "glass" in bldg_color) and "blue" in b_palette:
+                        score += 0.15
 
                 if score > best_score:
                     best_score = score
@@ -472,6 +596,8 @@ class BuildingDetector:
                         "lat": round(el_lat, 6),
                         "lon": round(el_lon, 6),
                         "match_score": round(score, 2),
+                        "levels": num_levels,
+                        "height": height_m,
                     }
 
             if best_match and best_score >= 0.35:
@@ -485,3 +611,4 @@ class BuildingDetector:
                             bldg["id"], best_match["name"], best_match["lat"], best_match["lon"])
 
         return matched_records
+

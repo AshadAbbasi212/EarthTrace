@@ -112,6 +112,19 @@ class BaseProvider:
         if headers:
             req_headers.update(headers)
 
+        if url.startswith("file://"):
+            try:
+                from urllib.request import url2pathname
+                from urllib.parse import urlparse
+                parsed = urlparse(url)
+                p = Path(url2pathname(parsed.path))
+                if p.exists():
+                    data = p.read_bytes()
+                    self.write_cached_bytes(key, data, ext=ext)
+                    return data
+            except Exception as e_file:
+                logger.debug("[%s] Local file fetch error: %s", self.name, e_file)
+
         last_error = None
         for attempt in range(1, retries + 1):
             try:

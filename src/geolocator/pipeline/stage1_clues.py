@@ -968,6 +968,42 @@ class Stage1Clues:
             if should_run_landmark:
                 lm_matcher = LandmarkMatcher()
                 lm_res = lm_matcher.match(im, clip_model, clip_proc, device=device, candidate_countries=all_known_countries)
+
+                # Also run LandmarkMatcher on detected building facade crops for high-precision architectural recognition
+                bldg_crops_dir = job_path / "buildings"
+                bldg_crops = list(bldg_crops_dir.glob("building_*.jpg")) if bldg_crops_dir.exists() else []
+                if not bldg_crops and scene_type in ("urban", "monument", "other"):
+                    try:
+                        from geolocator.pipeline.building_detector import BuildingDetector
+                        b_det = BuildingDetector()
+                        b_man = b_det.detect_building_regions(working_image_path, output_dir=bldg_crops_dir, max_buildings=3)
+                        bldg_crops = [Path(b["crop_path"]) for b in b_man.get("buildings", []) if Path(b["crop_path"]).exists()]
+                        # Record architectural style clues on board
+                        for b_obj in b_man.get("buildings", []):
+                            f_style = b_obj.get("facade_style")
+                            b_class = b_obj.get("classification")
+                            b_pal = b_obj.get("palette")
+                            if f_style and f_style != "unknown" and board:
+                                board.add_clue(
+                                    text=f"Architectural facade style: {f_style} ({b_class}, palette: {b_pal})",
+                                    kind="architecture",
+                                    status="observed",
+                                    confidence=b_obj.get("confidence", 0.6),
+                                )
+                    except Exception as e_bd:
+                        logger.debug("[stage1] Early building extraction bypass: %s", e_bd)
+
+                for c_path in bldg_crops:
+                    try:
+                        with Image.open(c_path) as c_img:
+                            c_res = lm_matcher.match(c_img.convert("RGB"), clip_model, clip_proc, device=device, candidate_countries=all_known_countries)
+                            if c_res and (lm_res is None or c_res.get("confidence", 0) > lm_res.get("confidence", 0)):
+                                lm_res = c_res
+                                logger.info("[stage1] Landmark match boosted by building facade crop %s: %s (conf=%.3f)",
+                                            c_path.name, c_res["name"], c_res["confidence"])
+                    except Exception as e_cr:
+                        logger.debug("[stage1] Crop landmark eval bypass: %s", e_cr)
+
                 if lm_res and lm_res.get("confidence", 0.0) >= 0.50:
                     l_name = lm_res["name"]
                     l_lat = lm_res["latitude"]
@@ -990,6 +1026,7 @@ class Stage1Clues:
                                 "source": "landmark_matcher",
                             }
                         )
+
 
             # Offload CLIP model to CPU and purge VRAM for subsequent stages
             if clip_model is not None:

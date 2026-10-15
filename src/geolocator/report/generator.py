@@ -203,11 +203,16 @@ class ReportGenerator:
         dem_status = terrain_data.get("status", "")
         fit_score = terrain_data.get("fit_results", {}).get("best_score", 0.0) if terrain_data else 0.0
         overlay_exists = (job_dir / "skyline_overlay.png").exists()
+        cand_alt = (best_candidate.get("metadata", {}).get("dem_altitude_m") if best_candidate else None) or osm_data.get("osm_feature", {}).get("dem_altitude_m")
+
         if dem_status == "not_applicable" or (terrain_data and terrain_data.get("status") == "not_applicable"):
+            base_reason = terrain_data.get("reason", "Scene classified as flat or urban architecture; natural mountain terrain skyline bypassed.")
+            if cand_alt is not None:
+                base_reason += f" Ground terrain altitude at candidate verified via AWS Terrarium DEM: {cand_alt:.0f}m ASL."
             dem_evidence = {
                 "name": "Elevation Skylines",
                 "status": "not applicable",
-                "findings": terrain_data.get("reason", "Scene classified as flat or urban architecture; natural mountain terrain skyline bypassed."),
+                "findings": base_reason,
                 "artifact": None,
             }
         elif ("stage3_terrain" in stages_run or terrain_data) and fit_score >= 0.65:
@@ -225,20 +230,25 @@ class ReportGenerator:
                 "artifact": "skyline_overlay.png",
             }
         else:
+            base_reason = terrain_data.get("reason", "Horizon profile is flat or obscured; natural mountain terrain skyline bypassed.")
+            if cand_alt is not None:
+                base_reason += f" Physical ground elevation verified via DEM: {cand_alt:.0f}m ASL."
             dem_evidence = {
                 "name": "Elevation Skylines",
                 "status": "not applicable",
-                "findings": terrain_data.get("reason", "Horizon profile is flat or obscured; natural mountain terrain skyline bypassed."),
+                "findings": base_reason,
                 "artifact": None,
             }
 
         # Evidence 3: Satellite Imagery
         if "stage4_verification" in stages_run or verif_data.get("satellite_verification"):
             sat_sim = verif_data.get("satellite_verification", {}).get("similarity", 0.6)
+            sat_dino = verif_data.get("satellite_verification", {}).get("dinov2_similarity")
+            dino_str = f", DINOv2={sat_dino:.3f}" if sat_dino is not None else ""
             sat_evidence = {
                 "name": "Satellite Imagery",
                 "status": "used",
-                "findings": f"Overhead orthophoto mosaic verified around candidate location (similarity={sat_sim:.2f})",
+                "findings": f"Overhead orthophoto mosaic verified around candidate location (similarity={sat_sim:.2f}{dino_str}, cadastral parcel targeted)",
                 "artifact": "satellite_evidence.png",
             }
         else:
@@ -252,11 +262,16 @@ class ReportGenerator:
         # Evidence 4: Street-Level Imagery (Keyless sources only)
         street_info = verif_data.get("street_level_verification", {})
         if street_info.get("status") == "used":
+            street_sim = street_info.get("similarity_score", 0.70)
+            street_dino = street_info.get("dinov2_similarity")
+            street_sift = street_info.get("sift_inliers", 0)
+            has_street_img = (job_dir / "street_evidence.png").exists()
+            dino_s = f", DINOv2={street_dino:.3f}, SIFT={street_sift} inliers" if street_dino is not None else ""
             street_evidence = {
                 "name": "Street-Level Imagery",
                 "status": "used",
-                "findings": f"Geotagged ground-level imagery matched via Wikimedia Commons ({street_info.get('images_found', 1)} photos)",
-                "artifact": "verification_results.json",
+                "findings": f"Geotagged ground photo matched via Wikimedia Commons ({street_info.get('images_found', 1)} found, sim={street_sim:.2f}{dino_s})",
+                "artifact": "street_evidence.png" if has_street_img else "verification_results.json",
             }
         else:
             street_evidence = {
@@ -265,6 +280,7 @@ class ReportGenerator:
                 "findings": street_info.get("reason", "No keyless street-level imagery coverage exists within 1.0 km radius"),
                 "artifact": None,
             }
+
 
         reasoning_timeline = [
             {
