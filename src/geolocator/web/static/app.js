@@ -115,6 +115,12 @@
   const detailBldgCropsGrid = document.getElementById('detail-bldg-crops-grid');
   const btnBldgLightbox = document.getElementById('btn-bldg-lightbox');
   const btnBldgFocusMap = document.getElementById('btn-bldg-focus-map');
+  const detailBldgNaBanner = document.getElementById('detail-bldg-na-banner');
+  const detailBldgNaDesc = document.getElementById('detail-bldg-na-desc');
+  const detailBldgPreviewWrapper = document.getElementById('detail-bldg-preview-wrapper');
+  const tabSliderPrev = document.getElementById('tab-slider-prev');
+  const tabSliderNext = document.getElementById('tab-slider-next');
+  const evidenceTabsBar = document.getElementById('evidence-tabs-bar');
 
   // Lightbox elements
   const lightboxModal = document.getElementById('lightbox-modal');
@@ -1078,6 +1084,8 @@
       }
 
       if (bldgs.length > 0) {
+        if (detailBldgNaBanner) detailBldgNaBanner.style.display = 'none';
+        if (detailBldgPreviewWrapper) detailBldgPreviewWrapper.style.display = 'block';
         const overlayUrl = appendPassphraseParam(`/api/jobs/${jobId}/artifacts/building_detection_overlay.png`);
         detailBldgImg.src = overlayUrl;
         detailBldgImg.onload = () => {
@@ -1115,9 +1123,15 @@
           });
         }
       } else {
+        // Honest Not Applicable disposition
+        if (detailBldgNaBanner) {
+          detailBldgNaBanner.style.display = 'flex';
+          if (detailBldgNaDesc && bldgItem.findings) {
+            detailBldgNaDesc.textContent = bldgItem.findings;
+          }
+        }
+        if (detailBldgPreviewWrapper) detailBldgPreviewWrapper.style.display = 'none';
         detailBldgImg.style.display = 'none';
-        detailBldgEmptyNote.style.display = 'block';
-        detailBldgEmptyNote.textContent = bldgItem.findings || 'No urban buildings or facade contours detected in this scene.';
         if (detailBldgCropsContainer) detailBldgCropsContainer.style.display = 'none';
       }
     }
@@ -1167,10 +1181,19 @@
     }
   }
 
-  // --- Interactive Tabs Switching Logic ---
+  // --- Interactive Tabs Switching Logic & Sliding Carousel ---
+  const TAB_ORDER = ['overview', 'osm', 'dem', 'sat', 'street', 'bldg'];
+  let currentActiveTab = 'overview';
+
   function switchEvidenceTab(tabKey) {
+    if (!tabKey) return;
     const tabButtons = document.querySelectorAll('.evidence-tab-btn');
     const tabPanels = document.querySelectorAll('.evidence-tab-panel');
+
+    const oldIndex = TAB_ORDER.indexOf(currentActiveTab);
+    const newIndex = TAB_ORDER.indexOf(tabKey);
+    const isSlideFromLeft = (newIndex >= 0 && oldIndex >= 0 && newIndex < oldIndex);
+    currentActiveTab = tabKey;
 
     let activeBtn = null;
     tabButtons.forEach(btn => {
@@ -1182,7 +1205,7 @@
       }
     });
 
-    // Smoothly slide the active tab button into view within the horizontal tab bar
+    // Smoothly slide the active tab button into center view in the horizontal tabs bar
     if (activeBtn) {
       activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
@@ -1191,9 +1214,15 @@
     tabPanels.forEach(panel => {
       if (panel.id === `panel-${tabKey}`) {
         panel.classList.add('active');
+        if (isSlideFromLeft) {
+          panel.classList.add('slide-from-left');
+        } else {
+          panel.classList.remove('slide-from-left');
+        }
         activePanel = panel;
       } else {
         panel.classList.remove('active');
+        panel.classList.remove('slide-from-left');
       }
     });
 
@@ -1207,6 +1236,58 @@
         }
       }
     }
+  }
+
+  // Sliding arrows click listeners
+  if (tabSliderPrev && evidenceTabsBar) {
+    tabSliderPrev.addEventListener('click', () => {
+      evidenceTabsBar.scrollBy({ left: -220, behavior: 'smooth' });
+    });
+  }
+  if (tabSliderNext && evidenceTabsBar) {
+    tabSliderNext.addEventListener('click', () => {
+      evidenceTabsBar.scrollBy({ left: 220, behavior: 'smooth' });
+    });
+  }
+
+  // Smooth mouse drag-to-scroll for horizontal tabs bar
+  if (evidenceTabsBar) {
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    evidenceTabsBar.addEventListener('mousedown', (e) => {
+      isDown = true;
+      evidenceTabsBar.classList.add('is-dragging');
+      startX = e.pageX - evidenceTabsBar.offsetLeft;
+      scrollLeft = evidenceTabsBar.scrollLeft;
+    });
+
+    evidenceTabsBar.addEventListener('mouseleave', () => {
+      isDown = false;
+      evidenceTabsBar.classList.remove('is-dragging');
+    });
+
+    evidenceTabsBar.addEventListener('mouseup', () => {
+      isDown = false;
+      evidenceTabsBar.classList.remove('is-dragging');
+    });
+
+    evidenceTabsBar.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - evidenceTabsBar.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      evidenceTabsBar.scrollLeft = scrollLeft - walk;
+    });
+
+    // Mouse wheel horizontal scroll conversion
+    evidenceTabsBar.addEventListener('wheel', (e) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        evidenceTabsBar.scrollLeft += e.deltaY * 0.9;
+      }
+    }, { passive: false });
   }
 
   // Tab button click listeners
@@ -1229,6 +1310,14 @@
   document.querySelectorAll('.tab-back-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       switchEvidenceTab('overview');
+    });
+  });
+
+  // Sequential pillar slide buttons
+  document.querySelectorAll('.tab-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const gotoKey = btn.getAttribute('data-goto');
+      if (gotoKey) switchEvidenceTab(gotoKey);
     });
   });
 

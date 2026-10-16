@@ -814,6 +814,38 @@
   - Added canonical probability aggregation across prompt aliases, combining visual evidence for true landmarks without alias cannibalization.
 - [x] **End-to-End Verification on User Mountain Photo (`IMG_3545.JPG`)**:
   - Fresh Stage 1 execution correctly classifies scene as `mountain` and visual landmark as **Mushkpuri Peak, Nathia Gali, KPK, Pakistan** (conf=0.715, prior=3.5, lat=34.0625, lon=73.4358).
+  - End-to-end pipeline run produces:
+    - **Location**: `Landmark: Mushkpuri Peak, Nathia Gali, KPK, Pakistan` (Tier T1, calibrated radius 0.05 km)
+    - **Top Alternative**: `Terrain Ridgeline Viewpoint` (Tier T2, score 27.19)
+    - **DEM Ridgeline Correlation**: NCC = 0.762 with Terrarium DEM.
+    - **Building Intelligence Disposition**: Honest `"not applicable"` disposition with zero fabricated contours.
   - All **76 tests in the test suite pass with 100% success**.
+
+### Multimodal 5-Pillars Sliding Carousel, Touch/Mouse Drag Navigation & Aviation Monuments
+- [x] **Sliding Horizontal Tabs Carousel (`index.html`, `style.css`, `app.js`)**:
+  - Wrapped `.evidence-tabs-bar` with `.evidence-tabs-container` and added tactical cyan cyber-hud slide arrow buttons (`#tab-slider-prev ◀` and `#tab-slider-next ▶`).
+  - Added mouse drag-to-scroll (`mousedown`, `mousemove`, `mouseup`) and mouse-wheel horizontal conversion so desktop and laptop users can slide through all 5 pillars effortlessly.
+  - Implemented directional panel sliding animations (`tabSlideInRight` vs `tabSlideInLeft`) based on relative tab indices.
+  - Styled `#evidence-box-bldg` in the overview grid to span full-width (`grid-column: 1 / -1`) for balanced desktop presentation.
+- [x] **Sequential Pillar Action Navigation (`index.html`, `app.js`)**:
+  - Added sequential pillar navigation buttons in each detail action bar:
+    - Pillar 1 (OSM): `Pillar 2 (Skyline) ➡`
+    - Pillar 2 (DEM): `⬅ Pillar 1 (OSM)` | `Pillar 3 (Satellite) ➡`
+    - Pillar 3 (Sat): `⬅ Pillar 2 (Skyline)` | `Pillar 4 (Street) ➡`
+    - Pillar 4 (Street): `⬅ Pillar 3 (Satellite)` | `Pillar 5 (Building) ➡`
+    - Pillar 5 (Building): `⬅ Pillar 4 (Street)` | `⬅ Back to Overview`
+- [x] **Building Intelligence Gating & Tactical Banner (`index.html`, `app.js`, `stage3_built.py`)**:
+  - Implemented `#detail-bldg-na-banner` with clean green HUD badge and explanation when a photo is classified as natural/open terrain without buildings.
+  - Gated Stage 3 Built pipeline so it reuses Stage 1 manifest and avoids re-running expensive contour detectors on non-building photos.
+- [x] **Pakistani Aircraft & Military Monuments Database (`landmarks.py`, `geo_utils.py`)**:
+  - Added prominent Pakistani aircraft display installations and memorials:
+    - **PAF Museum Karachi** (`24.8876, 67.0984`, outdoor aviation park)
+    - **PAF Base Sargodha Club Chowk F-86 Sabre Monument** (`32.0620, 72.6710`)
+    - **PAF Aircraft Monument Rawalpindi** (`33.5950, 73.0800`, Chandni Chowk / Old Airport)
+    - **PAF Mirage Aircraft Monument** (`33.6150, 73.0950`)
+  - Added aviation anchors to `COUNTRY_ANCHORS["pakistan"]` in `geo_utils.py`.
+- [x] **Full Regression Verification**:
+  - Complete 76-test suite passed in 620s.
+
 
 

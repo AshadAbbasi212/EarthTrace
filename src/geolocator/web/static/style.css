@@ -926,19 +926,76 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
   margin-bottom: 1.25rem;
 }
 
+/* Sliding Horizontal Tabs Carousel Wrapper */
+.evidence-tabs-container {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  width: 100%;
+  position: relative;
+}
+
+.tab-slider-arrow {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  color: var(--cyan);
+  border-radius: 6px;
+  width: 32px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+  font-size: 0.85rem;
+  user-select: none;
+  z-index: 5;
+}
+
+.tab-slider-arrow:hover {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: var(--cyan);
+  color: #fff;
+  transform: scale(1.08);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
+}
+
+.tab-slider-arrow:active {
+  transform: scale(0.95);
+}
+
+.tab-slider-arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
 .evidence-tabs-bar {
+  flex: 1;
+  min-width: 0;
   display: flex;
   gap: 0.45rem;
   background: rgba(6, 10, 20, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0.4rem;
+  padding: 0.4rem 0.3rem;
   border-radius: var(--radius-sm);
   overflow-x: auto;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  margin-top: 1rem;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 240, 255, 0.35) transparent;
+  cursor: grab;
+}
+
+.evidence-tabs-bar.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+  scroll-behavior: auto;
 }
 
 .evidence-tabs-bar::-webkit-scrollbar {
@@ -998,13 +1055,17 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
   display: block;
   opacity: 1;
   transform: translateX(0);
-  animation: tabSlideIn 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: tabSlideInRight 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes tabSlideIn {
+.evidence-tab-panel.active.slide-from-left {
+  animation: tabSlideInLeft 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes tabSlideInRight {
   from {
     opacity: 0;
-    transform: translateX(24px);
+    transform: translateX(28px);
   }
   to {
     opacity: 1;
@@ -1012,11 +1073,59 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
   }
 }
 
-/* Overview 4-Pillar Grid */
+@keyframes tabSlideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Building Not-Applicable Tactical Banner */
+.bldg-not-applicable-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 1.15rem;
+  margin-top: 1rem;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.08);
+}
+
+.bldg-na-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.bldg-na-title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--emerald);
+  margin-bottom: 0.3rem;
+}
+
+.bldg-na-desc {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+/* Overview 5-Pillar Grid */
 .evidence-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
+}
+
+#evidence-box-bldg {
+  grid-column: 1 / -1;
 }
 
 @media (max-width: 640px) {

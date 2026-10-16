@@ -256,26 +256,30 @@
           <div class="card-title" style="margin-bottom: 0;">
             <span class="icon">🔬</span> Multimodal Verification Evidence (5 Pillars)
           </div>
-          <!-- Navigation Tabs Bar -->
-          <div class="evidence-tabs-bar" role="tablist">
-            <button type="button" class="evidence-tab-btn active" id="tab-btn-overview" data-tab="overview">
-              <span>🗂️</span> Overview
-            </button>
-            <button type="button" class="evidence-tab-btn" id="tab-btn-osm" data-tab="osm">
-              <span>🛣️</span> 1. OSM Geometry
-            </button>
-            <button type="button" class="evidence-tab-btn" id="tab-btn-dem" data-tab="dem">
-              <span>🏔️</span> 2. Elevation Skyline
-            </button>
-            <button type="button" class="evidence-tab-btn" id="tab-btn-sat" data-tab="sat">
-              <span>🛰️</span> 3. Satellite Imagery
-            </button>
-            <button type="button" class="evidence-tab-btn" id="tab-btn-street" data-tab="street">
-              <span>📸</span> 4. Street Imagery
-            </button>
-            <button type="button" class="evidence-tab-btn" id="tab-btn-bldg" data-tab="bldg">
-              <span>🏛️</span> 5. Building Match
-            </button>
+          <!-- Navigation Tabs Bar with Sliding Controls -->
+          <div class="evidence-tabs-container">
+            <button type="button" class="tab-slider-arrow tab-slider-prev" id="tab-slider-prev" title="Slide tabs left" aria-label="Previous tabs">◀</button>
+            <div class="evidence-tabs-bar" id="evidence-tabs-bar" role="tablist">
+              <button type="button" class="evidence-tab-btn active" id="tab-btn-overview" data-tab="overview">
+                <span>🗂️</span> Overview
+              </button>
+              <button type="button" class="evidence-tab-btn" id="tab-btn-osm" data-tab="osm">
+                <span>🛣️</span> 1. OSM Geometry
+              </button>
+              <button type="button" class="evidence-tab-btn" id="tab-btn-dem" data-tab="dem">
+                <span>🏔️</span> 2. Elevation Skyline
+              </button>
+              <button type="button" class="evidence-tab-btn" id="tab-btn-sat" data-tab="sat">
+                <span>🛰️</span> 3. Satellite Imagery
+              </button>
+              <button type="button" class="evidence-tab-btn" id="tab-btn-street" data-tab="street">
+                <span>📸</span> 4. Street Imagery
+              </button>
+              <button type="button" class="evidence-tab-btn" id="tab-btn-bldg" data-tab="bldg">
+                <span>🏛️</span> 5. Building Match
+              </button>
+            </div>
+            <button type="button" class="tab-slider-arrow tab-slider-next" id="tab-slider-next" title="Slide tabs right" aria-label="Next tabs">▶</button>
           </div>
         </div>
 
@@ -389,8 +393,9 @@
               </div>
               <div class="tab-detail-actions">
                 <button type="button" class="btn-secondary" id="btn-osm-focus-map">🎯 Focus On Map</button>
-                <a href="#" target="_blank" class="btn-secondary" id="btn-osm-open-external">🌐 Open in OpenStreetMap</a>
+                <a href="#" target="_blank" class="btn-secondary" id="btn-osm-open-external">🌐 Open in OSM</a>
                 <button type="button" class="btn-secondary tab-back-btn" data-back="overview">⬅ Back to Overview</button>
+                <button type="button" class="btn-secondary tab-nav-btn tab-next-pillar" data-goto="dem">Pillar 2 (Skyline) ➡</button>
               </div>
             </div>
           </div>
@@ -440,9 +445,11 @@
                 </div>
               </div>
               <div class="tab-detail-actions">
+                <button type="button" class="btn-secondary tab-nav-btn tab-prev-pillar" data-goto="osm">⬅ Pillar 1 (OSM)</button>
                 <button type="button" class="btn-secondary" id="btn-dem-lightbox">🔍 Fullscreen Skyline</button>
                 <button type="button" class="btn-secondary" id="btn-dem-focus-map">🎯 Focus On Point</button>
-                <button type="button" class="btn-secondary tab-back-btn" data-back="overview">⬅ Back to Overview</button>
+                <button type="button" class="btn-secondary tab-back-btn" data-back="overview">⬅ Overview</button>
+                <button type="button" class="btn-secondary tab-nav-btn tab-next-pillar" data-goto="sat">Pillar 3 (Satellite) ➡</button>
               </div>
             </div>
           </div>
@@ -492,9 +499,11 @@
                 </div>
               </div>
               <div class="tab-detail-actions">
-                <button type="button" class="btn-secondary" id="btn-sat-switch-map">🛰️ Switch Leaflet Map to Satellite</button>
-                <button type="button" class="btn-secondary" id="btn-sat-lightbox">🔍 Fullscreen Satellite</button>
-                <button type="button" class="btn-secondary tab-back-btn" data-back="overview">⬅ Back to Overview</button>
+                <button type="button" class="btn-secondary tab-nav-btn tab-prev-pillar" data-goto="dem">⬅ Pillar 2 (Skyline)</button>
+                <button type="button" class="btn-secondary" id="btn-sat-switch-map">🛰️ Basemap</button>
+                <button type="button" class="btn-secondary" id="btn-sat-lightbox">🔍 Fullscreen</button>
+                <button type="button" class="btn-secondary tab-back-btn" data-back="overview">⬅ Overview</button>
+                <button type="button" class="btn-secondary tab-nav-btn tab-next-pillar" data-goto="street">Pillar 4 (Street) ➡</button>
               </div>
             </div>
           </div>
@@ -544,8 +553,10 @@
                 </div>
               </div>
               <div class="tab-detail-actions">
-                <a href="#" target="_blank" class="btn-secondary" id="btn-street-search-wikimedia">🌐 Search Nearby Photos on Wikimedia</a>
-                <button type="button" class="btn-secondary tab-back-btn" data-back="overview">⬅ Back to Overview</button>
+                <button type="button" class="btn-secondary tab-nav-btn tab-prev-pillar" data-goto="sat">⬅ Pillar 3 (Satellite)</button>
+                <a href="#" target="_blank" class="btn-secondary" id="btn-street-search-wikimedia">🌐 Search Wikimedia</a>
+                <button type="button" class="btn-secondary tab-back-btn" data-back="overview">⬅ Overview</button>
+                <button type="button" class="btn-secondary tab-nav-btn tab-next-pillar" data-goto="bldg">Pillar 5 (Building) ➡</button>
               </div>
             </div>
           </div>
@@ -570,6 +581,15 @@
               <div class="tab-detail-info-card">
                 <div class="info-metric-label">Building Detection Status & Cadastral Lock</div>
                 <div class="tab-detail-findings" id="detail-findings-bldg">Awaiting geolocation run...</div>
+              </div>
+              <div class="bldg-not-applicable-banner" id="detail-bldg-na-banner" style="display: none;">
+                <div class="bldg-na-icon">🌿</div>
+                <div class="bldg-na-body">
+                  <div class="bldg-na-title">Building Detection: Not Applicable</div>
+                  <div class="bldg-na-desc" id="detail-bldg-na-desc">
+                    Multi-modal scene perception verified no architectural building facades in this photograph (open natural topography). Structural contour filtering and cadastral queries were deliberately bypassed.
+                  </div>
+                </div>
               </div>
               <div class="tab-visual-preview-wrapper" id="detail-bldg-preview-wrapper">
                 <div class="preview-title">Tactical Cyber-HUD Building Bounding Overlay:</div>
@@ -601,6 +621,7 @@
                 </div>
               </div>
               <div class="tab-detail-actions">
+                <button type="button" class="btn-secondary tab-nav-btn tab-prev-pillar" data-goto="street">⬅ Pillar 4 (Street)</button>
                 <button type="button" class="btn-secondary" id="btn-bldg-lightbox">🔍 Fullscreen Overlay</button>
                 <button type="button" class="btn-secondary" id="btn-bldg-focus-map">🎯 Focus On Point</button>
                 <button type="button" class="btn-secondary tab-back-btn" data-back="overview">⬅ Back to Overview</button>

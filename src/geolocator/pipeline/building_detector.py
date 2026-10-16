@@ -85,7 +85,7 @@ class BuildingDetector:
                 inputs = processor(text=prompts, images=image, return_tensors="pt", padding=True).to(device)
                 with torch.no_grad():
                     probs = model(**inputs).logits_per_image.softmax(dim=-1).cpu().numpy()[0]
-                has_bldg = float(probs[0]) >= 0.40
+                has_bldg = float(probs[0]) >= 0.52 and float(probs[0]) > float(probs[1])
                 logger.info("[building_detector] Building presence check: bldg=%.3f, non_bldg=%.3f -> %s", probs[0], probs[1], has_bldg)
                 return has_bldg
         except Exception as e:

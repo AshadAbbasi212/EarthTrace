@@ -106,6 +106,8 @@ COUNTRY_BBOXES: Dict[str, Tuple[float, float, float, float]] = {
 COUNTRY_ANCHORS: Dict[str, List[Dict[str, Any]]] = {
     "pakistan": [
         # Hill stations, mountain ridges and high valleys
+        {"name": "Mushkpuri Peak / Nathia Gali Galyat", "lat": 34.0625, "lon": 73.4358, "terrain": "mountain"},
+        {"name": "Miranjani Peak / Nathia Gali", "lat": 34.1167, "lon": 73.4333, "terrain": "mountain"},
         {"name": "Murree / Galyat Ridge", "lat": 33.9062, "lon": 73.3903, "terrain": "mountain"},
         {"name": "Nathia Gali / Abbottabad Hills", "lat": 34.0722, "lon": 73.3833, "terrain": "mountain"},
         {"name": "Ayubia / Dunga Gali Ridge", "lat": 34.0298, "lon": 73.4011, "terrain": "mountain"},
@@ -140,6 +142,8 @@ COUNTRY_ANCHORS: Dict[str, List[Dict[str, Any]]] = {
         {"name": "Gujranwala / Sialkot Corridor", "lat": 32.1877, "lon": 74.1945, "terrain": "urban"},
         {"name": "Quetta Highlands", "lat": 30.1798, "lon": 66.9750, "terrain": "urban"},
         {"name": "Sukkur Indus Basin", "lat": 27.7052, "lon": 68.8574, "terrain": "urban"},
+        {"name": "PAF Museum / Shahrah-e-Faisal Karachi", "lat": 24.8876, "lon": 67.0984, "terrain": "urban"},
+        {"name": "Sargodha / PAF Base City of Eagles", "lat": 32.0620, "lon": 72.6710, "terrain": "urban"},
         {"name": "Hyderabad Sindh", "lat": 25.3960, "lon": 68.3578, "terrain": "urban"},
         # Coastal & arid regions
         {"name": "Karachi Coastal Corridor", "lat": 24.8607, "lon": 67.0011, "terrain": "coast"},

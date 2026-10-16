@@ -125,6 +125,9 @@ class ReportGenerator:
             elif meta.get("source") == "exif_gps":
                 tier = "T1"
                 calibrated_radius_km = 0.02
+            elif meta.get("source") == "landmark_matcher" or "Landmark:" in top_name:
+                tier = meta.get("tier", "T1" if score >= 3.5 else "T2")
+                calibrated_radius_km = float(meta.get("radius_km", 10.0 if "mountain" in meta.get("category", "") else 3.0))
             elif best_candidate.get("level") == "point":
                 tier = "T2" if margin > 1.5 else "T3"
                 calibrated_radius_km = 3.0 if tier == "T2" else 15.0
@@ -703,7 +706,7 @@ class ReportGenerator:
     </div>
 
     <div class="card">
-      <h3 style="margin-top: 0;">Four Mandatory Evidence Modalities</h3>
+      <h3 style="margin-top: 0;">Multimodal Verification Evidence (5 Modalities)</h3>
       <table>
         <thead>
           <tr>

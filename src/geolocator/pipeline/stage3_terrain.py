@@ -289,6 +289,17 @@ class Stage3Terrain:
         if search_center is not None:
             candidate_centers.append(search_center)
         else:
+            # 0. If board has high-confidence point landmark candidates from Stage 1, prioritize them!
+            for cand in board.rank()[:5]:
+                if cand.get("level") == "point" and cand.get("lat") is not None and cand.get("lon") is not None:
+                    c_pt = (float(cand["lat"]), float(cand["lon"]))
+                    if not any(haversine_distance_km(c_pt[0], c_pt[1], ep[0], ep[1]) < 25.0 for ep in candidate_centers):
+                        candidate_centers.insert(0, c_pt)
+                        logger.info("[stage3_terrain] Prioritizing landmark candidate as DEM center: %s at (%.4f, %.4f)",
+                                    cand.get("name"), c_pt[0], c_pt[1])
+                    if len(candidate_centers) >= 2:
+                        break
+
             bboxes = board.data.get("search_bboxes", [])
             top_country = bboxes[0].get("country") if bboxes else None
             if not top_country:
@@ -298,14 +309,14 @@ class Stage3Terrain:
                         top_country = cntry
                         break
 
-            # 1. If top country from Stage 2 has curated mountain anchors, prioritize them FIRST
+            # 1. If top country from Stage 2 has curated mountain anchors, prioritize them
             if top_country:
                 m_anchors = get_country_anchors(top_country, max_anchors=4, terrain="mountain")
                 for ma in m_anchors:
                     m_pt = (float(ma["lat"]), float(ma["lon"]))
-                    if not any(haversine_distance_km(m_pt[0], m_pt[1], ep[0], ep[1]) < 40.0 for ep in candidate_centers):
+                    if not any(haversine_distance_km(m_pt[0], m_pt[1], ep[0], ep[1]) < 25.0 for ep in candidate_centers):
                         candidate_centers.append(m_pt)
-                    if len(candidate_centers) >= 2:
+                    if len(candidate_centers) >= 3:
                         break
 
             # 2. Collect spatially distinct candidate centers from Stage 2 bboxes (separated by >= 50 km)
@@ -314,7 +325,7 @@ class Stage3Terrain:
                     c_pt = (float(b["center"][0]), float(b["center"][1]))
                     if not any(haversine_distance_km(c_pt[0], c_pt[1], ep[0], ep[1]) < 50.0 for ep in candidate_centers):
                         candidate_centers.append(c_pt)
-                if len(candidate_centers) >= 3:
+                if len(candidate_centers) >= 4:
                     break
 
             if not candidate_centers:
@@ -331,8 +342,8 @@ class Stage3Terrain:
         best_overall_fit = None
         best_overall_score = -2.0
         chosen_center = candidate_centers[0]
-        for c_idx, (c_lat, c_lon) in enumerate(candidate_centers[:2]):
-            logger.info("Executing terrain skyline search around (%.4f, %.4f), radius=%.1f km (center %d/%d)", c_lat, c_lon, radius_km, c_idx + 1, min(2, len(candidate_centers)))
+        for c_idx, (c_lat, c_lon) in enumerate(candidate_centers[:3]):
+            logger.info("Executing terrain skyline search around (%.4f, %.4f), radius=%.1f km (center %d/%d)", c_lat, c_lon, radius_km, c_idx + 1, min(3, len(candidate_centers)))
             fit_res = self.search_viewpoint(
                 photo_profile=photo_profile,
                 center_lat=c_lat,
@@ -346,8 +357,8 @@ class Stage3Terrain:
                 chosen_center = (c_lat, c_lon)
 
             # If a strong viewpoint correlation is confirmed, stop early
-            if best_overall_score >= 0.65:
-                logger.info("Strong terrain correlation confirmed (NCC=%.4f >= 0.65); early stopping.", best_overall_score)
+            if best_overall_score >= 0.70:
+                logger.info("Strong terrain correlation confirmed (NCC=%.4f >= 0.70); early stopping.", best_overall_score)
                 break
 
         fit_results = best_overall_fit if best_overall_fit is not None else {
@@ -393,9 +404,20 @@ class Stage3Terrain:
 
             # Likelihood ratio weight
             weight = math.exp(min(4.5, max(-3.5, score * 4.5)))
+            weights_map = {cand_name: weight}
+
+            # Corroborate any nearby landmark point candidates on the board (within 25 km)
+            for c_key, c_val in board.data.get("candidates", {}).items():
+                if c_val.get("level") == "point" and c_val.get("lat") is not None and c_val.get("lon") is not None and c_key != cand_name:
+                    d_km = haversine_distance_km(v_lat, v_lon, c_val["lat"], c_val["lon"])
+                    if d_km <= 25.0:
+                        weights_map[c_key] = weight
+                        logger.info("[stage3_terrain] DEM skyline correlation (NCC=%.3f) corroborated nearby landmark '%s' (dist=%.1f km)",
+                                    score, c_key, d_km)
+
             board.add_evidence(
                 clue_id=cid_skyline,
-                candidate_weights={cand_name: weight},
+                candidate_weights=weights_map,
                 rationale=f"Photographic skyline matched against AWS Terrarium DEM (NCC={score:.3f})",
                 artifact_path=str(job_dir / "terrain_results.json"),
             )

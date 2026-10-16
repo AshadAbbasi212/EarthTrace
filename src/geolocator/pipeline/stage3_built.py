@@ -248,12 +248,22 @@ class Stage3Built:
         if image_path and Path(image_path).exists():
             try:
                 bldg_out_dir = job_dir / "buildings"
-                detected_manifest = self.building_detector.detect_building_regions(
-                    image_path=image_path,
-                    output_dir=bldg_out_dir,
-                    max_buildings=5,
-                )
-                logger.info("[stage3_built] Detected %d building facades", detected_manifest.get("count", 0))
+                bldg_manifest_file = bldg_out_dir / "detected_buildings.json"
+                if bldg_manifest_file.exists():
+                    try:
+                        detected_manifest = json.loads(bldg_manifest_file.read_text(encoding="utf-8"))
+                    except Exception:
+                        detected_manifest = {"count": 0, "buildings": [], "overlay_path": None}
+
+                # Only run detection if not already determined to be not applicable
+                if detected_manifest.get("status") != "not_applicable" and not detected_manifest.get("buildings"):
+                    detected_manifest = self.building_detector.detect_building_regions(
+                        image_path=image_path,
+                        output_dir=bldg_out_dir,
+                        max_buildings=5,
+                    )
+                logger.info("[stage3_built] Building detection disposition: count=%d, status=%s",
+                            detected_manifest.get("count", 0), detected_manifest.get("status", "used" if detected_manifest.get("count", 0) > 0 else "not_applicable"))
 
                 # Copy tactical HUD overlay to job_dir root for convenience
                 if detected_manifest.get("overlay_path") and Path(detected_manifest["overlay_path"]).exists():
