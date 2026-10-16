@@ -1022,7 +1022,7 @@ class Stage1Clues:
                 region_guesses.append(RegionGuessItem(place=top_c1_country, confidence=round(top_c1_prob, 3), reason="Vision-language country prior"))
 
             # Automatic Landmark Perception:
-            # LandmarkMatcher uses 8 negative prompt rejectors and country consistency checks.
+            # LandmarkMatcher uses negative prompt rejectors, category compatibility gating, and country consistency checks.
             # Run whenever scene is not flat empty terrain, or if user explicitly hinted landmarks.
             user_requested_landmark = bool(board and board.data.get("user_hints", {}).get("landmarks"))
             all_known_countries = list(dict.fromkeys((candidate_countries or []) + visual_country_candidates))
@@ -1032,9 +1032,8 @@ class Stage1Clues:
             )
             if should_run_landmark:
                 lm_matcher = LandmarkMatcher()
-                lm_res = lm_matcher.match(im, clip_model, clip_proc, device=device, candidate_countries=all_known_countries)
 
-                # Also run LandmarkMatcher on detected building facade crops for high-precision architectural recognition
+                # Determine if prominent building facades are present in the scene
                 job_path = image_path.parent
                 bldg_crops_dir = job_path / "buildings"
                 bldg_crops = []
@@ -1074,10 +1073,32 @@ class Stage1Clues:
                     except Exception as e_bd:
                         logger.debug("[stage1] Early building extraction bypass: %s", e_bd)
 
+                has_prominent_bldgs = bool(bldg_crops)
+
+                # Run LandmarkMatcher on full image with scene_type and building presence gating
+                lm_res = lm_matcher.match(
+                    im,
+                    clip_model,
+                    clip_proc,
+                    device=device,
+                    candidate_countries=all_known_countries,
+                    scene_type=scene_type,
+                    has_buildings=has_prominent_bldgs,
+                )
+
+                # Also run LandmarkMatcher on detected building facade crops for high-precision architectural recognition
                 for c_path in bldg_crops:
                     try:
                         with Image.open(c_path) as c_img:
-                            c_res = lm_matcher.match(c_img.convert("RGB"), clip_model, clip_proc, device=device, candidate_countries=all_known_countries)
+                            c_res = lm_matcher.match(
+                                c_img.convert("RGB"),
+                                clip_model,
+                                clip_proc,
+                                device=device,
+                                candidate_countries=all_known_countries,
+                                scene_type="urban",
+                                has_buildings=True,
+                            )
                             if c_res and (lm_res is None or c_res.get("confidence", 0) > lm_res.get("confidence", 0)):
                                 lm_res = c_res
                                 logger.info("[stage1] Landmark match boosted by building facade crop %s: %s (conf=%.3f)",

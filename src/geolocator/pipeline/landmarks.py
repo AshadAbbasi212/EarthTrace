@@ -65,7 +65,7 @@ LANDMARK_DATABASE: List[Tuple[str, str, float, float, str]] = [
     ("University of the Punjab New Campus Canal Road Lahore", "University of the Punjab (New Campus), Lahore", 31.503400, 74.300500, "university_campus"),
     ("University of Engineering and Technology UET GT Road Lahore", "UET Lahore Main Campus, Lahore", 31.579400, 74.356200, "university_campus"),
     ("LUMS Lahore University of Management Sciences DHA Lahore", "LUMS Campus, DHA Phase 5, Lahore", 31.470556, 74.410833, "university_campus"),
-    ("Quaid-e-Azam University Islamabad QAU Margalla foothills", "Quaid-e-Azam University, Islamabad", 33.748889, 73.136944, "university_campus"),
+    ("Quaid-e-Azam University campus academic buildings faculty blocks Islamabad", "Quaid-e-Azam University, Islamabad", 33.748889, 73.136944, "university_campus"),
     ("NUST National University of Sciences and Technology Islamabad", "NUST H-12 Campus, Islamabad", 33.642500, 72.990400, "university_campus"),
     ("Noor Mahal Italian chateau palace Bahawalpur", "Noor Mahal, Bahawalpur, Punjab", 29.397222, 71.666944, "historical_palace"),
     ("Darbar Mahal royal palace Bahawalpur", "Darbar Mahal, Bahawalpur, Punjab", 29.400556, 71.684167, "historical_palace"),
@@ -80,6 +80,20 @@ LANDMARK_DATABASE: List[Tuple[str, str, float, float, str]] = [
     ("Supreme Court of Pakistan Constitution Avenue Islamabad", "Supreme Court of Pakistan, Islamabad", 33.729700, 73.093400, "government_building"),
     ("Parliament House National Assembly Islamabad", "Parliament House of Pakistan, Islamabad", 33.731400, 73.095500, "government_building"),
     ("Prime Minister Secretariat Constitution Avenue Islamabad", "Prime Minister Secretariat, Islamabad", 33.738000, 73.097000, "government_building"),
+
+    # --- Pakistan: Mountain Peaks, Hill Stations & Natural Landscapes ---
+    ("Mushkpuri Top green mountain peak hills Nathia Gali Galyat Pakistan", "Mushkpuri Peak, Nathia Gali, KPK, Pakistan", 34.062500, 73.435800, "mountain_peak"),
+    ("Mushkpuri Peak pine hills scenic mountain view Nathia Gali Pakistan", "Mushkpuri Peak, Nathia Gali, KPK, Pakistan", 34.062500, 73.435800, "mountain_peak"),
+    ("Mukshpuri peak Nathia Gali Abbottabad Pakistan", "Mushkpuri Peak, Nathia Gali, KPK, Pakistan", 34.062500, 73.435800, "mountain_peak"),
+    ("Miranjani Peak highest summit mountain Nathia Gali Pakistan", "Miranjani Peak, Nathia Gali, KPK, Pakistan", 34.116700, 73.433300, "mountain_peak"),
+    ("Galyat mountain range pine forest hills Nathia Gali Pakistan", "Galyat Range, Nathia Gali, KPK, Pakistan", 34.070000, 73.430000, "mountain_peak"),
+    ("Margalla Hills ridge trail viewpoint Monal Pir Sohawa Islamabad Pakistan", "Margalla Hills Ridge Viewpoint, Islamabad, Pakistan", 33.748300, 73.058300, "mountain_viewpoint"),
+    ("Daman-e-Koh viewpoint park Margalla Hills Islamabad", "Daman-e-Koh, Margalla Hills, Islamabad, Pakistan", 33.738900, 73.058300, "scenic_viewpoint"),
+    ("Malam Jabba mountain peak ski resort Swat Valley Pakistan", "Malam Jabba, Swat Valley, KPK, Pakistan", 34.798900, 72.571400, "mountain_peak"),
+    ("Babusar Pass Kaghan Valley mountain road Chilas Pakistan", "Babusar Pass, Kaghan Valley, Pakistan", 35.146900, 74.048300, "mountain_pass"),
+    ("Fairy Meadows alpine pasture Nanga Parbat mountain view Gilgit Pakistan", "Fairy Meadows, Gilgit-Baltistan, Pakistan", 35.385300, 74.577200, "alpine_meadow"),
+    ("Passu Cones cathedral serrated mountain peaks Karakoram Hunza Pakistan", "Passu Cones, Hunza Valley, Gilgit-Baltistan, Pakistan", 36.468000, 74.887000, "mountain_peak"),
+    ("K2 Godwin-Austen peak Concordia Karakoram Pakistan", "K2, Karakoram, Gilgit-Baltistan, Pakistan", 35.881400, 76.513300, "mountain_peak"),
 
     # --- World Iconic Landmarks & UNESCO World Heritage ---
     ("Taj Mahal white marble mausoleum Agra India", "Taj Mahal, Agra, India", 27.175145, 78.042142, "unesco_world_heritage"),
@@ -220,6 +234,16 @@ NEGATIVE_PROMPTS = [
 ]
 
 
+BUILDING_CATEGORIES = {
+    "university_campus", "educational_campus", "hospital_complex", "civic_building",
+    "civic_market", "luxury_hotel", "hotel", "government_building", "shopping_mall",
+    "palace", "cathedral", "historical_mosque", "national_mosque", "grand_mosque",
+    "historical_shrine", "historical_building", "historical_palace", "sports_club"
+}
+
+NATURAL_SCENES = {"mountain", "forest", "desert", "snow_ice", "coastal", "water"}
+
+
 class LandmarkMatcher:
     """High-accuracy zero-shot landmark recognition and exact mark geocoding."""
 
@@ -253,10 +277,12 @@ class LandmarkMatcher:
         device: Optional[str] = None,
         min_confidence: float = 0.35,
         candidate_countries: Optional[List[str]] = None,
+        scene_type: Optional[str] = None,
+        has_buildings: Optional[bool] = None,
     ) -> Optional[Dict[str, Any]]:
         """Run batched zero-shot classification against landmark database.
         
-        Returns exact candidate metadata ONLY if confident and clearly exceeding negative background prompts.
+        Returns exact candidate metadata ONLY if confident, category-compatible, and clearly exceeding negative background prompts.
         """
         model_device = getattr(clip_model, "device", None) or (device or ("cuda" if torch.cuda.is_available() else "cpu"))
         if hasattr(clip_model, "get_text_features") and hasattr(clip_model, "get_image_features"):
@@ -275,66 +301,103 @@ class LandmarkMatcher:
                 out = clip_model(**inputs)
                 probs = out.logits_per_image.softmax(dim=-1).cpu().numpy()[0]
 
-        top_idx = int(np.argmax(probs))
-        top_prob = float(probs[top_idx])
-
-        # 1. If highest match is any negative/generic prompt, reject immediately
-        if top_idx >= len(LANDMARK_DATABASE):
-            logger.info(
-                "[landmark_matcher] Matched negative/generic scene: '%s' (conf=%.4f) -> No landmark",
-                NEGATIVE_PROMPTS[top_idx - len(LANDMARK_DATABASE)], top_prob
-            )
-            return None
-
-        top_lm = LANDMARK_DATABASE[top_idx]
+        # Extract negative background probabilities
         neg_probs = probs[len(LANDMARK_DATABASE):]
         max_neg_prob = float(np.max(neg_probs)) if len(neg_probs) > 0 else 0.0
 
-        # Margin over the best negative prompt
-        neg_margin = top_prob - max_neg_prob
+        # Aggregate probabilities across prompt variants by canonical landmark
+        canonical_map: Dict[str, Dict[str, Any]] = {}
+        for i, lm in enumerate(LANDMARK_DATABASE):
+            c_name = lm[1]
+            if c_name not in canonical_map:
+                canonical_map[c_name] = {
+                    "name": c_name,
+                    "category": lm[4],
+                    "latitude": lm[2],
+                    "longitude": lm[3],
+                    "total_prob": 0.0,
+                    "max_prob": 0.0,
+                    "best_prompt": lm[0],
+                }
+            p = float(probs[i])
+            canonical_map[c_name]["total_prob"] += p
+            if p > canonical_map[c_name]["max_prob"]:
+                canonical_map[c_name]["max_prob"] = p
+                canonical_map[c_name]["best_prompt"] = lm[0]
 
-        # Margin over second place landmark
-        lm_probs = probs[:len(LANDMARK_DATABASE)]
-        sorted_lm_probs = np.sort(lm_probs)
-        lm_margin = top_prob - float(sorted_lm_probs[-2]) if len(sorted_lm_probs) > 1 else top_prob
+        # Semantic Category Compatibility Filtering:
+        # If scene is natural wilderness (e.g. mountain, forest) and no buildings detected,
+        # strictly reject architectural/campus categories (like university campus, hotel, civic buildings).
+        valid_candidates = []
+        for c_name, data in canonical_map.items():
+            if scene_type in NATURAL_SCENES and has_buildings is False:
+                if data["category"] in BUILDING_CATEGORIES:
+                    logger.debug(
+                        "[landmark_matcher] Excluding '%s' (%s) due to natural scene_type=%s and has_buildings=False",
+                        c_name, data["category"], scene_type
+                    )
+                    continue
+            valid_candidates.append(data)
+
+        if not valid_candidates:
+            return None
+
+        valid_candidates.sort(key=lambda x: x["total_prob"], reverse=True)
+        top_cand = valid_candidates[0]
+        top_prob = top_cand["total_prob"]
+
+        # If best valid landmark total probability is lower than highest negative prompt, reject
+        if top_prob < max_neg_prob:
+            logger.info(
+                "[landmark_matcher] Negative prompt exceeded top landmark candidate '%s' (top_prob=%.4f < max_neg=%.4f)",
+                top_cand["name"], top_prob, max_neg_prob
+            )
+            return None
+
+        neg_margin = top_prob - max_neg_prob
+        second_prob = valid_candidates[1]["total_prob"] if len(valid_candidates) > 1 else 0.0
+        lm_margin = top_prob - second_prob
 
         logger.info(
             "[landmark_matcher] Candidate match: '%s' (conf=%.4f, lm_margin=%.4f, neg_margin=%.4f, max_neg=%.4f)",
-            top_lm[1], top_prob, lm_margin, neg_margin, max_neg_prob
+            top_cand["name"], top_prob, lm_margin, neg_margin, max_neg_prob
         )
 
-        # A real landmark must:
-        # 1. Substantially beat the highest negative class (neg_margin >= 0.20)
-        # 2. Have clear lead over other landmarks and substantial absolute probability
-        is_significant = (top_prob >= 0.55 and neg_margin >= 0.20) or (top_prob >= 0.40 and lm_margin >= 0.15 and neg_margin >= 0.25)
+        # Significance thresholds:
+        is_significant = (top_prob >= 0.50 and neg_margin >= 0.20) or (top_prob >= 0.35 and lm_margin >= 0.12 and neg_margin >= 0.20)
 
         if not is_significant:
-            logger.info("[landmark_matcher] Match '%s' rejected (failed significance thresholds)", top_lm[1])
+            logger.info("[landmark_matcher] Match '%s' rejected (failed significance thresholds: prob=%.4f, lm_margin=%.4f, neg_margin=%.4f)",
+                        top_cand["name"], top_prob, lm_margin, neg_margin)
             return None
 
         # Country consistency verification:
         from geolocator.pipeline.geo_utils import get_country_candidate
-        lm_country = get_country_candidate(top_lm[2], top_lm[3]) or ""
+        lm_country = get_country_candidate(top_cand["latitude"], top_cand["longitude"]) or ""
 
         if candidate_countries:
-            lm_text = f"{top_lm[0]} {top_lm[1]} {lm_country}".lower()
+            lm_text = f"{top_cand['best_prompt']} {top_cand['name']} {lm_country}".lower()
             norm_cand_countries = [c.strip().lower() for c in candidate_countries if c.strip()]
             country_matched = any(c in lm_text for c in norm_cand_countries)
             if not country_matched and top_prob < 0.90:
                 logger.info(
                     "[landmark_matcher] Match '%s' rejected due to country mismatch with candidate countries %s (conf=%.4f < 0.90)",
-                    top_lm[1], candidate_countries, top_prob
+                    top_cand["name"], candidate_countries, top_prob
                 )
                 return None
 
-        prompt_text, canonical_name, lat, lon, category = top_lm
+        category = top_cand["category"]
+        canonical_name = top_cand["name"]
+        lat = top_cand["latitude"]
+        lon = top_cand["longitude"]
+
         if category in ("monument", "national_monument", "fortress", "unesco_world_heritage", "world_landmark", "landmark_building", "cathedral", "grand_mosque", "national_mosque", "historical_mosque", "palace", "museum", "university_campus", "hospital_complex", "civic_building", "civic_market", "luxury_hotel", "hotel", "sports_club", "hospitality", "natural_landmark", "urban_landmark", "aircraft_monument", "military_monument"):
             calibrated_radius_km = 0.05 if top_prob >= 0.25 else 0.10
             tier = "T1"
         elif category in ("urban_metropolis", "scenic_corridor", "coastal_cliffs", "coastal_stacks", "coastal_cape", "bridge"):
             calibrated_radius_km = 5.0
             tier = "T2"
-        elif category in ("mountain_peak", "alpine_valley", "himalayan_valley", "rift_valley", "desert_dunes", "desert_basin", "arid_desert", "desert_valley", "alpine_lake", "lake", "waterfall", "glacier", "volcanic_island", "atoll_island", "island", "polar_research_station"):
+        elif category in ("mountain_peak", "mountain_viewpoint", "mountain_pass", "alpine_meadow", "alpine_valley", "himalayan_valley", "rift_valley", "desert_dunes", "desert_basin", "arid_desert", "desert_valley", "alpine_lake", "lake", "waterfall", "glacier", "volcanic_island", "atoll_island", "island", "polar_research_station"):
             calibrated_radius_km = 10.0
             tier = "T2"
         else:

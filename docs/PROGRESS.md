@@ -788,3 +788,32 @@
   - Added `scrollIntoView` smooth sliding on tab switch and `tabSlideIn` keyframe animation.
   - Added unit test `test_five_pillars_tab_sliding_and_building_panel` in `tests/test_frontend.py` (all 5 frontend tests passing).
 
+### Quaid-e-Azam False-Positive Elimination, Pakistani Mountain Landmarks & Mushkpuri Peak Localization
+- [x] **Root Cause Investigation for "Quaid-e-Azam University" Predictions**:
+  - Found that `LANDMARK_DATABASE` prompt for QAU contained `"Margalla foothills"` alongside generic landscape terms without negative mountain anchors.
+  - Because Pakistani mountain landmarks were absent from the database, CLIP ViT-L/14 mapped any green hills, ridges, or pine slopes in Pakistan to `"Margalla foothills"`.
+  - Furthermore, `LandmarkMatcher.match` lacked semantic category consistency checks, permitting `university_campus` to trigger on wild `mountain` scenes with no buildings.
+- [x] **Targeted QAU Prompt Refinement (`landmarks.py`)**:
+  - Replaced `"Quaid-e-Azam University Islamabad QAU Margalla foothills"` with `"Quaid-e-Azam University campus academic buildings faculty blocks Islamabad"`.
+  - Tested on user mountain photo (`IMG_3545.JPG`): QAU raw match probability plummeted from **70.17%** down to **0.01%** (0.0001).
+- [x] **Pakistani Mountain & Hill Station Landmarks (`landmarks.py`)**:
+  - Added iconic Pakistani peaks, passes, viewpoints, and hill stations to `LANDMARK_DATABASE`:
+    - **Mushkpuri Peak** (`34.0625, 73.4358`, ~2,800m elevation, Nathia Gali / Galyat / Abbottabad, KPK)
+    - **Miranjani Peak** (`34.1167, 73.4333`, ~2,992m elevation, Nathia Gali)
+    - **Galyat Range** (`34.0700, 73.4300`, Nathia Gali)
+    - **Margalla Hills Ridge Viewpoint / Monal Pir Sohawa** (`33.7483, 73.0583`)
+    - **Daman-e-Koh** (`33.7389, 73.0583`)
+    - **Malam Jabba** (`34.7989, 72.5714`, Swat)
+    - **Babusar Pass** (`35.1469, 74.0483`, Kaghan Valley)
+    - **Fairy Meadows / Nanga Parbat** (`35.3853, 74.5772`)
+    - **Passu Cones** (`36.4680, 74.8870`, Hunza)
+    - **K2 & Concordia** (`35.8814, 76.5133`, Karakoram)
+- [x] **Semantic Category Compatibility Gating (`landmarks.py`, `stage1_clues.py`)**:
+  - Defined `BUILDING_CATEGORIES` (campuses, hotels, civic buildings, palaces, mosques, markets) and `NATURAL_SCENES` (mountains, forests, deserts, snow/ice, water).
+  - When `scene_type in NATURAL_SCENES` and no prominent buildings are detected (`has_buildings=False`), all architectural/campus categories are strictly excluded from landmark selection.
+  - Added canonical probability aggregation across prompt aliases, combining visual evidence for true landmarks without alias cannibalization.
+- [x] **End-to-End Verification on User Mountain Photo (`IMG_3545.JPG`)**:
+  - Fresh Stage 1 execution correctly classifies scene as `mountain` and visual landmark as **Mushkpuri Peak, Nathia Gali, KPK, Pakistan** (conf=0.715, prior=3.5, lat=34.0625, lon=73.4358).
+  - All **76 tests in the test suite pass with 100% success**.
+
+
