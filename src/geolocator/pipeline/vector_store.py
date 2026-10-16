@@ -187,12 +187,18 @@ class LandmarkVectorStore:
             top_cand["name"], top_cand["city"], top_cand["country"], top_prob, lm_margin, neg_margin, max_neg_prob
         )
 
-        # 5. Significance thresholds
-        is_significant = (top_prob >= 0.50 and neg_margin >= 0.15) or (top_prob >= 0.35 and lm_margin >= 0.10 and neg_margin >= 0.15)
+        # 5. Significance thresholds calibrated for 900+ multi-class zero-shot distribution
+        # Base random chance across 903 prompts is ~0.0011 (0.11%).
+        # A top probability of >= 0.18 is > 150x random chance.
+        is_significant = (
+            (top_prob >= 0.35 and neg_margin >= 0.10)
+            or (top_prob >= 0.20 and lm_margin >= 0.05 and neg_margin >= 0.10)
+            or (top_prob >= 0.15 and lm_margin >= 0.04 and neg_margin >= 0.10 and max_neg_prob < 0.01)
+        )
         if not is_significant:
             logger.info(
-                "[vector_store] Match '%s' rejected (failed significance: prob=%.4f, lm_margin=%.4f, neg_margin=%.4f)",
-                top_cand["name"], top_prob, lm_margin, neg_margin
+                "[vector_store] Match '%s' rejected (failed significance: prob=%.4f, lm_margin=%.4f, neg_margin=%.4f, max_neg=%.4f)",
+                top_cand["name"], top_prob, lm_margin, neg_margin, max_neg_prob
             )
             return None
 

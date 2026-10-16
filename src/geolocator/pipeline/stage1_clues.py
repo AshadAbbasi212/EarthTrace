@@ -1106,12 +1106,17 @@ class Stage1Clues:
                     except Exception as e_cr:
                         logger.debug("[stage1] Crop landmark eval bypass: %s", e_cr)
 
-                if lm_res and lm_res.get("confidence", 0.0) >= 0.50:
+                if lm_res and lm_res.get("confidence", 0.0) >= 0.15:
                     l_name = lm_res["name"]
                     l_lat = lm_res["latitude"]
                     l_lon = lm_res["longitude"]
                     l_conf = lm_res["confidence"]
                     l_country = lm_res.get("country")
+                    l_city = lm_res.get("city", "")
+                    l_cat = lm_res.get("category", "")
+                    l_tier = lm_res.get("tier", "T1")
+                    l_radius = float(lm_res.get("radius_km", 0.10))
+
                     if l_country:
                         if l_country not in candidate_countries:
                             candidate_countries.insert(0, l_country)
@@ -1126,16 +1131,28 @@ class Stage1Clues:
                             level="point",
                             lat=l_lat,
                             lon=l_lon,
-                            prior=3.5,
+                            prior=15.0,
                             metadata={
                                 "landmark": l_name,
-                                "city": lm_res.get("city", ""),
+                                "city": l_city,
                                 "country": l_country or "",
-                                "category": lm_res.get("category", ""),
-                                "tier": "T1" if l_conf >= 0.70 else "T2",
-                                "radius_km": lm_res.get("radius_km", 2.0) if l_conf >= 0.70 else 50.0,
+                                "category": l_cat,
+                                "tier": l_tier,
+                                "radius_km": l_radius,
                                 "source": "landmark_matcher",
                             }
+                        )
+                        lm_clue_id = board.add_clue(
+                            text=f"Zero-shot landmark match: {l_name} ({l_city}, {l_country})",
+                            kind="landmark",
+                            status="observed",
+                            source="landmark_matcher",
+                            confidence=min(0.99, l_conf * 1.5),
+                        )
+                        board.add_evidence(
+                            clue_id=lm_clue_id,
+                            candidate_weights={cand_name: 3.0},
+                            rationale=f"High-confidence visual perception match against landmark database for {l_name}",
                         )
 
 

@@ -435,8 +435,18 @@ class LandmarkMatcher:
             calibrated_radius_km = 15.0
             tier = "T3"
 
+        city = top_cand.get("city", "")
+        if not city:
+            from geolocator.pipeline.geo_utils import get_subnational_division
+            subdiv_info = get_subnational_division(lat, lon)
+            if isinstance(subdiv_info, dict):
+                city = subdiv_info.get("district") or subdiv_info.get("division") or ""
+            elif isinstance(subdiv_info, str):
+                city = subdiv_info
+
         return {
             "name": canonical_name,
+            "city": city,
             "category": category,
             "latitude": lat,
             "longitude": lon,

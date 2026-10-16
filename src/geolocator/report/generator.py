@@ -53,12 +53,23 @@ class ReportGenerator:
         best_candidate: Optional[Dict[str, Any]] = None
         alternatives: List[Dict[str, Any]] = []
 
-        for cand in ranked:
-            if cand.get("lat") is not None and cand.get("lon") is not None:
-                if best_candidate is None:
-                    best_candidate = cand
-                else:
+        # Prioritize point-level candidates (exact verified landmarks or viewpoints) over diffuse cells
+        point_cands = [
+            c for c in ranked
+            if c.get("level") == "point" and c.get("lat") is not None and c.get("lon") is not None and not c.get("excluded", False)
+        ]
+        if point_cands:
+            best_candidate = point_cands[0]
+            for cand in ranked:
+                if cand["name"] != best_candidate["name"] and cand.get("lat") is not None and cand.get("lon") is not None and not cand.get("excluded", False):
                     alternatives.append(cand)
+        else:
+            for cand in ranked:
+                if cand.get("lat") is not None and cand.get("lon") is not None and not cand.get("excluded", False):
+                    if best_candidate is None:
+                        best_candidate = cand
+                    else:
+                        alternatives.append(cand)
 
         # Inspect verification results if present
         verif_file = job_dir / "verification_results.json"
@@ -404,6 +415,8 @@ class ReportGenerator:
             "spot_name": spot_name,
             "spot_category": spot_category,
             "is_spot_verified": is_spot_verified,
+            "confidence_tier": tier,
+            "calibrated_radius_km": calibrated_radius_km,
             "top_hypothesis": {
                 "name": top_name,
                 "city": spot_city,

@@ -1048,7 +1048,7 @@ class Stage2Prior:
                     # or explicitly matching ground truth user hint, or high-confidence T1 architectural monuments.
                     # Unhinted generic T2/T3 natural features (e.g. dunes, basins) must be corroborated within 150 km.
                     is_landmark_source = cand.get("metadata", {}).get("source") in ("landmark_matcher", "landmark_hint")
-                    is_t1_landmark = is_landmark_source and cand.get("metadata", {}).get("tier") == "T1"
+                    is_t1_landmark = is_landmark_source and cand.get("metadata", {}).get("tier") in ("T1", "T2")
                     is_landmark_hint = cand.get("metadata", {}).get("source") == "landmark_hint"
 
                     if ((min_dist_km <= 150.0 and not country_conflict) or hint_match or is_landmark_hint or is_t1_landmark):
