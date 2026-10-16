@@ -155,3 +155,47 @@ def test_five_pillars_tab_sliding_and_building_panel(client):
     assert "detailFindingsBldg" in js
 
 
+def test_html_tag_balance_and_dom_hierarchy(client):
+    """Verify strict HTML tag balance and that exact-mark-hud does not swallow results-card or evidence-section."""
+    from html.parser import HTMLParser
+
+    class TagChecker(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.stack = []
+            self.void_tags = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'}
+
+        def handle_starttag(self, tag, attrs):
+            if tag.lower() not in self.void_tags:
+                self.stack.append((tag.lower(), dict(attrs).get('id', '')))
+
+        def handle_endtag(self, tag):
+            t = tag.lower()
+            if t in self.void_tags:
+                return
+            assert self.stack, f"Unexpected closing tag </{t}>"
+            last, elem_id = self.stack.pop()
+            assert last == t, f"Mismatched tag: expected </{last}> (id={elem_id}), got </{t}>"
+
+    response = client.get("/")
+    assert response.status_code == 200
+    html = response.text
+
+    checker = TagChecker()
+    checker.feed(html)
+    assert len(checker.stack) == 0, f"Unclosed HTML tags: {checker.stack}"
+
+    # Confirm spot-telemetry-hud and exact-mark-hud exist and are properly closed
+    assert 'id="exact-mark-hud"' in html
+    assert 'id="spot-telemetry-hud"' in html
+    assert 'id="spot-telemetry-city"' in html
+    assert 'id="spot-telemetry-name"' in html
+    assert 'id="spot-telemetry-category"' in html
+    assert 'id="spot-telemetry-badge"' in html
+
+    # Confirm results-card and evidence-section are both present and siblings
+    assert 'id="results-card"' in html
+    assert 'id="evidence-section"' in html
+
+
+
