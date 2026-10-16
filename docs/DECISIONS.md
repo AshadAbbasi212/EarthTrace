@@ -509,3 +509,24 @@ esp.read() calls can block indefinitely if packets cease flowing after the socke
   4. **Frontend Spot Telemetry & Viewport Alignment:**
      - Added #spot-telemetry-hud with cyan/purple holographic badge pills displaying verified city name, spot title, category, and ✓ CITY SPOT VERIFIED.
      - Explicit offset mathematics on horizontal tab navigation so clicking Pillar 5 smoothly centers the tab bar without clipping.
+
+
+---
+
+## 36. Resolution of Multi-Class Dilution in Landmark Matching & Cell Priority Inversion
+- **Problem Statement:**
+  - Following expansion of the landmark database to 903 precomputed prompts across all cities, subsequent photos from different locations in the same country were all being predicted at the exact same location (Cell cell_1: Haripur / Hazara Margalla Foothills 33.99, 72.93).
+- **Root Cause Analysis:**
+  1. **Multi-Class Softmax Dilution in VectorStore:**
+     - In a 903-class softmax distribution, base random probability is ~0.0011 (0.11%). A top candidate achieving 0.21 to 0.41 probability represents an overwhelming match (150x to 400x random chance, with margin > 0.13 over runner-up and negative prob < 0.0001).
+     - However, `vector_store.py` had an uncalibrated threshold requiring `top_prob >= 0.35` or `0.50`.
+  2. **Secondary Gating Rejection in Stage 1:**
+     - `stage1_clues.py` contained a secondary filter `if lm_res and lm_res.get('confidence') >= 0.50`, which discarded matches like 0.4118 (Shakarparian Parade Ground).
+  3. **Candidate Board Point vs Cell Priority Inversion:**
+     - When landmark candidates were discarded by these over-strict filters, only the country candidate remained on the board.
+     - GeoCLIP's in-country continuous location encoder evaluated grid points across Pakistan. Because GeoCLIP's location encoder has a stationary peak in Northern Pakistan / Margalla (33.99, 72.93), it consistently generated `Cell cell_1 (Haripur / Hazara Margalla Foothills)` as the only candidate with coordinates.
+- **Architectural Solution & Decisions:**
+  1. Calibrated `LandmarkVectorStore` significance thresholds for multi-hundred prompt spaces: `(top_prob >= 0.35 and neg_margin >= 0.10) or (top_prob >= 0.20 and lm_margin >= 0.05 and neg_margin >= 0.10) or (top_prob >= 0.15 and lm_margin >= 0.04 and neg_margin >= 0.10 and max_neg_prob < 0.01)`.
+  2. Updated `stage1_clues.py` to accept verified vector store matches with `confidence >= 0.15`, assign `prior=15.0`, and link clue evidence on board.
+  3. Updated `ReportGenerator` to strictly prioritize verified point-level candidates over diffuse cells.
+  4. Re-tested end-to-end on both user photos: `job_41d838b5b9f5` correctly predicted `1965 War Memorial & Shakarparian Parade Ground, Islamabad` (Tier T1) and `job_5cce272cd6e1` correctly predicted `PAF Aircraft Monument, Rawalpindi, Pakistan` (Tier T1).

@@ -874,6 +874,20 @@
   - All 3 tests in `tests/test_api_backend.py` passing.
   - Entire test suite verified and operational.
 
+### Multi-Class Calibration & Distinct City Landmark Disambiguation
+- [x] **Diagnosed Stationary Prediction Root Cause**:
+  - Found that across 903 landmark prompts, multi-class softmax probabilities for top landmarks naturally distribute in the 0.20–0.45 range (which is 150x to 400x above random chance 0.0011).
+  - Uncalibrated filters (`min_confidence >= 0.50` in `stage1_clues.py` and `0.35` in `vector_store.py`) were silently discarding genuine landmark matches, leaving only country priors on the candidate board.
+  - GeoCLIP's in-country location encoder had a stationary local maximum at `(33.99, 72.93)` (Haripur / Margalla Foothills), causing all photos falling back to cell priors to converge on that exact same cell.
+- [x] **Calibrated Significance Thresholds & Point Prioritization**:
+  - Updated `vector_store.py` significance logic: accepted candidates exceeding negative background prompts with top prob >= 0.20 and margin >= 0.05, or top prob >= 0.15 with margin >= 0.04 and max_neg < 0.01.
+  - Updated `stage1_clues.py` to accept verified vector store matches with confidence >= 0.15, assign prior=15.0, and link clue evidence on board.
+  - Updated `ReportGenerator` to strictly prioritize verified point-level candidates over diffuse cells.
+- [x] **End-to-End Retest on User Jobs**:
+  - `job_41d838b5b9f5`: Correctly localized to **1965 War Memorial & Shakarparian Parade Ground, Islamabad** (Tier T1).
+  - `job_5cce272cd6e1`: Correctly localized to **PAF Aircraft Monument, Rawalpindi, Pakistan** (Tier T1).
+  - Each photograph is now localized to its distinct, ground-truth landmark coordinates.
+
 
 
 
