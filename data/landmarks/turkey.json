@@ -1,0 +1,587 @@
+[
+  {
+    "name": "Hagia Sophia (Ayasofya-i Kebir Cami-i Serifi), Istanbul",
+    "city": "Istanbul",
+    "country": "Turkey",
+    "category": "historical_mosque",
+    "lat": 41.0086,
+    "lon": 28.9802,
+    "radius_km": 0.05,
+    "prompts": [
+      "Hagia Sophia grand Byzantine dome and Ottoman minarets Sultanahmet Istanbul",
+      "Ayasofya Hagia Sophia mosque exterior courtyard Istanbul"
+    ]
+  },
+  {
+    "name": "Blue Mosque (Sultanahmet Camii), Istanbul",
+    "city": "Istanbul",
+    "country": "Turkey",
+    "category": "historical_mosque",
+    "lat": 41.0054,
+    "lon": 28.9768,
+    "radius_km": 0.05,
+    "prompts": [
+      "Blue Mosque Sultanahmet six slender minarets cascading domes Istanbul",
+      "Sultan Ahmed Mosque Blue Mosque courtyard Istanbul"
+    ]
+  },
+  {
+    "name": "Galata Tower (Galata Kulesi), Beyoglu, Istanbul",
+    "city": "Istanbul",
+    "country": "Turkey",
+    "category": "historical_monument",
+    "lat": 41.0256,
+    "lon": 28.9742,
+    "radius_km": 0.05,
+    "prompts": [
+      "Galata Tower medieval cylindrical stone tower cone roof Beyoglu Istanbul",
+      "Galata Kulesi observation balcony overlooking Golden Horn Istanbul"
+    ]
+  },
+  {
+    "name": "Topkapi Palace (Topkapi Sarayi), Istanbul",
+    "city": "Istanbul",
+    "country": "Turkey",
+    "category": "historical_palace",
+    "lat": 41.0115,
+    "lon": 28.9833,
+    "radius_km": 0.08,
+    "prompts": [
+      "Topkapi Palace Ottoman imperial gate courtyards and Imperial Council Istanbul",
+      "Topkapi Sarayi harem and Bosphorus view pavilion Istanbul"
+    ]
+  },
+  {
+    "name": "Bosphorus Bridge (15 July Martyrs Bridge), Istanbul",
+    "city": "Istanbul",
+    "country": "Turkey",
+    "category": "bridge",
+    "lat": 41.0456,
+    "lon": 29.0344,
+    "radius_km": 0.2,
+    "prompts": [
+      "Bosphorus Bridge 15 July Martyrs suspension bridge spanning Europe and Asia Istanbul",
+      "Bosphorus strait suspension bridge Ortakoy view Istanbul"
+    ]
+  },
+  {
+    "name": "Grand Bazaar (Kapalicarsi), Fatih, Istanbul",
+    "city": "Istanbul",
+    "country": "Turkey",
+    "category": "commercial_market",
+    "lat": 41.0106,
+    "lon": 28.9681,
+    "radius_km": 0.08,
+    "prompts": [
+      "Grand Bazaar Kapalicarsi vaulted painted ceiling corridors and lantern shops Istanbul",
+      "Grand Bazaar historic covered market arched entrance Istanbul"
+    ]
+  },
+  {
+    "name": "Taksim Square & Republic Monument, Beyoglu, Istanbul",
+    "city": "Istanbul",
+    "country": "Turkey",
+    "category": "civic_monument",
+    "lat": 41.0369,
+    "lon": 28.985,
+    "radius_km": 0.05,
+    "prompts": [
+      "Taksim Square Republic Monument and red vintage nostalgic tramway Istanbul",
+      "Taksim Square pedestrian plaza and Ataturk Cultural Centre Istanbul"
+    ]
+  },
+  {
+    "name": "Dolmabahce Palace (Dolmabahce Sarayi), Besiktas, Istanbul",
+    "city": "Istanbul",
+    "country": "Turkey",
+    "category": "historical_palace",
+    "lat": 41.0392,
+    "lon": 29.0003,
+    "radius_km": 0.08,
+    "prompts": [
+      "Dolmabahce Palace grand Baroque neoclassical waterfront facade clock tower Bosphorus Istanbul",
+      "Dolmabahce Sarayi imperial gate along Bosphorus"
+    ]
+  },
+  {
+    "name": "Maiden's Tower (Kiz Kulesi), Uskudar, Istanbul",
+    "city": "Istanbul",
+    "country": "Turkey",
+    "category": "historical_monument",
+    "lat": 41.0211,
+    "lon": 29.0042,
+    "radius_km": 0.05,
+    "prompts": [
+      "Maiden's Tower Kiz Kulesi historic lighthouse islet Bosphorus strait Uskudar Istanbul",
+      "Kiz Kulesi sunset silhouette on Bosphorus water"
+    ]
+  },
+  {
+    "name": "Grand Camlica Mosque, Uskudar, Istanbul",
+    "city": "Istanbul",
+    "country": "Turkey",
+    "category": "national_mosque",
+    "lat": 41.0344,
+    "lon": 29.0708,
+    "radius_km": 0.08,
+    "prompts": [
+      "Camlica Mosque massive modern neo-Ottoman dome and six minarets Camlica Hill Istanbul",
+      "Buyuk Camlica Camii courtyard and panoramic Istanbul overlook"
+    ]
+  },
+  {
+    "name": "Anitkabir (Ataturk Mausoleum), Cankaya, Ankara",
+    "city": "Ankara",
+    "country": "Turkey",
+    "category": "national_monument",
+    "lat": 39.925,
+    "lon": 32.8369,
+    "radius_km": 0.08,
+    "prompts": [
+      "Anitkabir Ataturk mausoleum ceremonial Lion Road and colonnaded Hall of Honor Ankara",
+      "Anitkabir grand plaza and limestone colonnade Ankara"
+    ]
+  },
+  {
+    "name": "Ankara Castle (Ankara Kalesi), Altindag, Ankara",
+    "city": "Ankara",
+    "country": "Turkey",
+    "category": "fortress",
+    "lat": 39.9406,
+    "lon": 32.8647,
+    "radius_km": 0.05,
+    "prompts": [
+      "Ankara Castle medieval hilltop stone citadel walls overlooking red tile roofs Ankara",
+      "Ankara Kalesi historic citadel bastions"
+    ]
+  },
+  {
+    "name": "Atakule Tower, Cankaya, Ankara",
+    "city": "Ankara",
+    "country": "Turkey",
+    "category": "commercial_towers",
+    "lat": 39.8864,
+    "lon": 32.8556,
+    "radius_km": 0.05,
+    "prompts": [
+      "Atakule communications and observation tower with revolving dome restaurant Cankaya Ankara",
+      "Atakule tower shopping mall plaza Ankara"
+    ]
+  },
+  {
+    "name": "Izmir Clock Tower (Saat Kulesi), Konak Square, Izmir",
+    "city": "Izmir",
+    "country": "Turkey",
+    "category": "civic_monument",
+    "lat": 38.4189,
+    "lon": 27.1286,
+    "radius_km": 0.05,
+    "prompts": [
+      "Izmir Clock Tower ornate Ottoman marble clock tower Konak Square Aegean Sea Izmir",
+      "Saat Kulesi Konak Meydani pigeons and palm trees Izmir"
+    ]
+  },
+  {
+    "name": "Tarihi Asansor (Historical Elevator), Karatas, Izmir",
+    "city": "Izmir",
+    "country": "Turkey",
+    "category": "historical_monument",
+    "lat": 38.4086,
+    "lon": 27.1172,
+    "radius_km": 0.05,
+    "prompts": [
+      "Tarihi Asansor brick elevator tower cliffside viewpoint Gulf of Izmir",
+      "Historical Elevator terrace and Dario Moreno street Izmir"
+    ]
+  },
+  {
+    "name": "Hadrian's Gate (Uckapilar), Kaleici, Antalya",
+    "city": "Antalya",
+    "country": "Turkey",
+    "category": "historical_monument",
+    "lat": 36.8853,
+    "lon": 30.7086,
+    "radius_km": 0.05,
+    "prompts": [
+      "Hadrian's Gate triple-arched Roman white marble triumphal gate Kaleici Antalya",
+      "Uckapilar Hadrian Gate Antalya old town"
+    ]
+  },
+  {
+    "name": "Duden Waterfalls (Lower Duden Falls), Lara, Antalya",
+    "city": "Antalya",
+    "country": "Turkey",
+    "category": "natural_landmark",
+    "lat": 36.8517,
+    "lon": 30.7833,
+    "radius_km": 0.08,
+    "prompts": [
+      "Lower Duden Waterfall cascading off sheer coastal cliffs directly into Mediterranean Sea Antalya",
+      "Duden Selalesi waterfall cliffside park Antalya"
+    ]
+  },
+  {
+    "name": "Grand Mosque of Bursa (Bursa Ulu Cami), Bursa",
+    "city": "Bursa",
+    "country": "Turkey",
+    "category": "historical_mosque",
+    "lat": 40.1833,
+    "lon": 29.0617,
+    "radius_km": 0.05,
+    "prompts": [
+      "Grand Mosque of Bursa Ulu Cami twenty domes interior ablution fountain and calligraphic murals",
+      "Bursa Ulu Camii monumental early Ottoman mosque"
+    ]
+  },
+  {
+    "name": "Green Tomb (Yesil Turbe), Bursa",
+    "city": "Bursa",
+    "country": "Turkey",
+    "category": "historical_shrine",
+    "lat": 40.1817,
+    "lon": 29.075,
+    "radius_km": 0.05,
+    "prompts": [
+      "Green Tomb Yesil Turbe turquoise glazed hexagonal tiled mausoleum Sultan Mehmed I Bursa",
+      "Yesil Turbe Green Mosque complex Bursa"
+    ]
+  },
+  {
+    "name": "Sabanci Central Mosque & Stone Bridge (Taskopru), Adana",
+    "city": "Adana",
+    "country": "Turkey",
+    "category": "national_mosque",
+    "lat": 36.9911,
+    "lon": 35.3342,
+    "radius_km": 0.08,
+    "prompts": [
+      "Sabanci Central Mosque six soaring minarets Seyhan River and Roman Taskopru Stone Bridge Adana",
+      "Sabanci Merkez Camii illuminated over river Adana"
+    ]
+  },
+  {
+    "name": "Mevlana Museum & Rumi Shrine, Konya",
+    "city": "Konya",
+    "country": "Turkey",
+    "category": "historical_shrine",
+    "lat": 37.8708,
+    "lon": 32.5056,
+    "radius_km": 0.05,
+    "prompts": [
+      "Mevlana Museum turquoise fluted dome shrine of Jalal ad-Din Muhammad Rumi Konya",
+      "Mevlana Celaleddin Rumi tomb and dervish museum Konya"
+    ]
+  },
+  {
+    "name": "Zeugma Mosaic Museum, Gaziantep",
+    "city": "Gaziantep",
+    "country": "Turkey",
+    "category": "museum",
+    "lat": 37.075,
+    "lon": 37.3861,
+    "radius_km": 0.05,
+    "prompts": [
+      "Zeugma Mosaic Museum Gypsy Girl mosaic and Roman antiquities Gaziantep",
+      "Zeugma Mosaic Museum modern building Gaziantep"
+    ]
+  },
+  {
+    "name": "Balikligol (Pool of Sacred Fish) & Halil-ur-Rahman Mosque, Sanliurfa",
+    "city": "Sanliurfa",
+    "country": "Turkey",
+    "category": "historical_shrine",
+    "lat": 37.1472,
+    "lon": 38.7847,
+    "radius_km": 0.05,
+    "prompts": [
+      "Balikligol sacred carp pool stone arcades Halil-ur-Rahman Mosque Sanliurfa",
+      "Pool of Abraham sacred fish Urfa Turkey"
+    ]
+  },
+  {
+    "name": "Maiden's Castle (Kizkalesi), Erdemli, Mersin",
+    "city": "Mersin",
+    "country": "Turkey",
+    "category": "fortress",
+    "lat": 36.4633,
+    "lon": 34.1478,
+    "radius_km": 0.08,
+    "prompts": [
+      "Kizkalesi Maiden's Castle medieval island sea castle turquoise Mediterranean Mersin",
+      "Kizkalesi coastal fortress offshore island Mersin"
+    ]
+  },
+  {
+    "name": "Diyarbakir Fortress & Ten-Eyed Bridge (Ongozlu Kopru), Diyarbakir",
+    "city": "Diyarbakir",
+    "country": "Turkey",
+    "category": "unesco_world_heritage",
+    "lat": 37.9139,
+    "lon": 40.2361,
+    "radius_km": 0.1,
+    "prompts": [
+      "Diyarbakir City Walls black basalt medieval fortress battlements and Tigris River Ongozlu bridge",
+      "Diyarbakir black basalt citadel UNESCO"
+    ]
+  },
+  {
+    "name": "Mount Erciyes Volcano & Ski Resort, Kayseri",
+    "city": "Kayseri",
+    "country": "Turkey",
+    "category": "mountain_peak",
+    "lat": 38.5317,
+    "lon": 35.4492,
+    "radius_km": 5.0,
+    "prompts": [
+      "Mount Erciyes snow-capped stratovolcano and ski chairlifts Kayseri Central Anatolia",
+      "Erciyes Dagi volcano summit peak Kayseri"
+    ]
+  },
+  {
+    "name": "Odunpazari Modern Museum (OMM) & Timber Houses, Eskisehir",
+    "city": "Eskisehir",
+    "country": "Turkey",
+    "category": "museum",
+    "lat": 39.7611,
+    "lon": 30.5264,
+    "radius_km": 0.05,
+    "prompts": [
+      "Odunpazari Modern Museum stacked timber beam architecture Kengo Kuma Eskisehir",
+      "Odunpazari colorful historic Ottoman wooden houses Eskisehir"
+    ]
+  },
+  {
+    "name": "Bandirma Vapuru Museum Ship & Ataturk Monument, Samsun",
+    "city": "Samsun",
+    "country": "Turkey",
+    "category": "museum",
+    "lat": 41.2789,
+    "lon": 36.36,
+    "radius_km": 0.05,
+    "prompts": [
+      "Bandirma Vapuru steamship museum Black Sea coast Samsun",
+      "Ataturk statue and Bandirma ferry museum Samsun"
+    ]
+  },
+  {
+    "name": "Pamukkale White Travertine Terraces & Hierapolis, Denizli",
+    "city": "Denizli",
+    "country": "Turkey",
+    "category": "unesco_world_heritage",
+    "lat": 37.925,
+    "lon": 29.1217,
+    "radius_km": 0.2,
+    "prompts": [
+      "Pamukkale gleaming white thermal limestone travertine terraces mineral pools Hierapolis Denizli",
+      "Pamukkale cotton castle thermal spring terraces"
+    ]
+  },
+  {
+    "name": "Sumela Monastery, Altindere Valley, Trabzon",
+    "city": "Trabzon",
+    "country": "Turkey",
+    "category": "unesco_world_heritage",
+    "lat": 40.69,
+    "lon": 39.6583,
+    "radius_km": 0.08,
+    "prompts": [
+      "Sumela Monastery ancient Greek Orthodox rock-hewn monastery clinging to vertical cliff Pontic Mountains Trabzon",
+      "Sumela Monastery cliffside frescoes Trabzon"
+    ]
+  },
+  {
+    "name": "Uzungol Alpine Lake & Mosque, Trabzon",
+    "city": "Trabzon",
+    "country": "Turkey",
+    "category": "natural_landmark",
+    "lat": 40.6186,
+    "lon": 40.2922,
+    "radius_km": 0.1,
+    "prompts": [
+      "Uzungol alpine mountain lake white minaret mosque lush green pine mountain valley Trabzon",
+      "Uzungol lake reflection and forest mountains Trabzon"
+    ]
+  },
+  {
+    "name": "Double Minaret Madrasa (Cifte Minareli Medrese), Erzurum",
+    "city": "Erzurum",
+    "country": "Turkey",
+    "category": "historical_building",
+    "lat": 39.9056,
+    "lon": 41.2783,
+    "radius_km": 0.05,
+    "prompts": [
+      "Cifte Minareli Medrese fluted twin brick minarets Seljuk monumental portal Erzurum",
+      "Double Minaret Madrasa Seljuk architecture Erzurum"
+    ]
+  },
+  {
+    "name": "Arslantepe Mound (Melid Archaeological Site), Malatya",
+    "city": "Malatya",
+    "country": "Turkey",
+    "category": "unesco_world_heritage",
+    "lat": 38.3828,
+    "lon": 38.3606,
+    "radius_km": 0.08,
+    "prompts": [
+      "Arslantepe Mound ancient palace adobe mudbrick walls UNESCO World Heritage Malatya",
+      "Arslantepe archaeological excavation site Malatya"
+    ]
+  },
+  {
+    "name": "Akdamar Island Church of the Holy Cross & Lake Van",
+    "city": "Van",
+    "country": "Turkey",
+    "category": "historical_church",
+    "lat": 38.3411,
+    "lon": 43.0369,
+    "radius_km": 0.1,
+    "prompts": [
+      "Akdamar Island Armenian Cathedral of the Holy Cross red volcanic stone Lake Van snowy mountains",
+      "Church of Akdamar exterior relief carvings Lake Van"
+    ]
+  },
+  {
+    "name": "Divrigi Great Mosque and Hospital, Sivas",
+    "city": "Sivas",
+    "country": "Turkey",
+    "category": "unesco_world_heritage",
+    "lat": 39.3739,
+    "lon": 38.1239,
+    "radius_km": 0.05,
+    "prompts": [
+      "Divrigi Great Mosque intricate high-relief Seljuk stone carved portal UNESCO Sivas",
+      "Divrigi Ulu Camii masterwork stone relief gateway"
+    ]
+  },
+  {
+    "name": "Canakkale 1915 Bridge & Gallipoli Martyrs Memorial, Canakkale",
+    "city": "Canakkale",
+    "country": "Turkey",
+    "category": "bridge",
+    "lat": 40.3361,
+    "lon": 26.6347,
+    "radius_km": 0.3,
+    "prompts": [
+      "1915 Canakkale Bridge world's longest suspension bridge red towers Dardanelles strait",
+      "Gallipoli Martyrs Memorial Canakkale Dardanelles"
+    ]
+  },
+  {
+    "name": "Selimiye Mosque, Mimar Sinan, Edirne",
+    "city": "Edirne",
+    "country": "Turkey",
+    "category": "unesco_world_heritage",
+    "lat": 41.6781,
+    "lon": 26.5556,
+    "radius_km": 0.08,
+    "prompts": [
+      "Selimiye Mosque Mimar Sinan grand Ottoman central dome and four towering minarets Edirne",
+      "Selimiye Camii UNESCO imperial mosque Edirne"
+    ]
+  },
+  {
+    "name": "Bodrum Castle (Castle of St Peter) & Marina, Bodrum, Mugla",
+    "city": "Bodrum",
+    "country": "Turkey",
+    "category": "fortress",
+    "lat": 37.0319,
+    "lon": 27.4294,
+    "radius_km": 0.08,
+    "prompts": [
+      "Bodrum Castle Crusader stone fortress overlooking Aegean marina yachts Bodrum",
+      "Castle of St Peter French tower and Bodrum harbor"
+    ]
+  },
+  {
+    "name": "Goreme Fairy Chimneys & Cave Dwellings, Cappadocia",
+    "city": "Cappadocia",
+    "country": "Turkey",
+    "category": "unesco_world_heritage",
+    "lat": 38.6431,
+    "lon": 34.8289,
+    "radius_km": 0.5,
+    "prompts": [
+      "Goreme Fairy Chimneys volcanic tuff rock spires hot air balloons sunrise Cappadocia",
+      "Cappadocia Goreme cave hotels and sandstone rock formations"
+    ]
+  },
+  {
+    "name": "Uchisar Castle Rock Citadel, Cappadocia",
+    "city": "Cappadocia",
+    "country": "Turkey",
+    "category": "fortress",
+    "lat": 38.63,
+    "lon": 34.8056,
+    "radius_km": 0.08,
+    "prompts": [
+      "Uchisar Castle massive perforated volcanic rock fortress hill overlooking Cappadocia valleys",
+      "Uchisar Castle rock pinnacle viewpoint Cappadocia"
+    ]
+  },
+  {
+    "name": "Zinciriye Madrasa & Old Stone Mansions, Mardin",
+    "city": "Mardin",
+    "country": "Turkey",
+    "category": "heritage_village",
+    "lat": 37.3167,
+    "lon": 40.7333,
+    "radius_km": 0.08,
+    "prompts": [
+      "Zinciriye Medrese fluted stone domes terraced stone houses overlooking Mesopotamian plains Mardin",
+      "Old Mardin stone architecture terrace viewpoint"
+    ]
+  },
+  {
+    "name": "Ayder Plateau & Firtina Valley Cloud Waterfall, Rize",
+    "city": "Rize",
+    "country": "Turkey",
+    "category": "mountain_resort",
+    "lat": 40.95,
+    "lon": 41.1,
+    "radius_km": 0.2,
+    "prompts": [
+      "Ayder Plateau green mountain pastures wooden chalets waterfalls misty Kackar mountains Rize",
+      "Firtina Valley Ottoman stone arch bridge tea plantations Rize"
+    ]
+  },
+  {
+    "name": "Saint Peter's Cave Church (Senpiyer Kilisesi), Antakya, Hatay",
+    "city": "Hatay",
+    "country": "Turkey",
+    "category": "historical_church",
+    "lat": 36.2089,
+    "lon": 36.1778,
+    "radius_km": 0.05,
+    "prompts": [
+      "Church of Saint Peter ancient rock-hewn Christian cave church carved into Mount Staurin Antakya Hatay",
+      "Saint Peter cave church facade Antakya"
+    ]
+  },
+  {
+    "name": "Ani Ancient Armenian City Ruins & Cathedral, Kars",
+    "city": "Kars",
+    "country": "Turkey",
+    "category": "unesco_world_heritage",
+    "lat": 40.5075,
+    "lon": 43.5728,
+    "radius_km": 0.2,
+    "prompts": [
+      "Ani Ruins ancient City of 1001 Churches red volcanic tuff Cathedral of Ani border gorge Kars",
+      "Ani medieval Armenian cathedral ruins Kars"
+    ]
+  },
+  {
+    "name": "Cunda Island (Alibey) Stone Houses & Church, Ayvalik, Balikesir",
+    "city": "Balikesir",
+    "country": "Turkey",
+    "category": "heritage_village",
+    "lat": 39.3333,
+    "lon": 26.65,
+    "radius_km": 0.08,
+    "prompts": [
+      "Cunda Island historic Greek stone mansions cobblestone streets windmill Ayvalik Balikesir",
+      "Cunda Island waterfront and Taxiarchis Church"
+    ]
+  }
+]

@@ -1,0 +1,106 @@
+[
+  {
+    "name": "Bab Al Bahrain & Manama Souq, Manama",
+    "city": "Manama",
+    "country": "Bahrain",
+    "category": "civic_monument",
+    "lat": 26.2344,
+    "lon": 50.5756,
+    "radius_km": 0.05,
+    "prompts": [
+      "Bab Al Bahrain historic arched gateway building entrance to Manama Souq Bahrain",
+      "Bab Al Bahrain twin arches and Customs square Manama"
+    ]
+  },
+  {
+    "name": "Bahrain World Trade Center, Manama",
+    "city": "Manama",
+    "country": "Bahrain",
+    "category": "commercial_towers",
+    "lat": 26.2394,
+    "lon": 50.5819,
+    "radius_km": 0.05,
+    "prompts": [
+      "Bahrain World Trade Center twin sail-shaped skyscraper towers three wind turbines Manama",
+      "Bahrain WTC towers wind turbines Manama skyline"
+    ]
+  },
+  {
+    "name": "Al Fateh Grand Mosque, Manama",
+    "city": "Manama",
+    "country": "Bahrain",
+    "category": "national_mosque",
+    "lat": 26.2192,
+    "lon": 50.5981,
+    "radius_km": 0.05,
+    "prompts": [
+      "Al Fateh Grand Mosque world's largest fiberglass dome twin minarets Manama Bahrain",
+      "Al Fateh Mosque white marble courtyard and domes"
+    ]
+  },
+  {
+    "name": "Qal'at al-Bahrain (Bahrain Fort), Karbabad",
+    "city": "Manama",
+    "country": "Bahrain",
+    "category": "unesco_world_heritage",
+    "lat": 26.2339,
+    "lon": 50.5208,
+    "radius_km": 0.08,
+    "prompts": [
+      "Qal'at al-Bahrain ancient Portuguese stone fort on sea coastline UNESCO Bahrain",
+      "Bahrain Fort stone bastions overlooking modern skyline"
+    ]
+  },
+  {
+    "name": "Pearling Path & Shaikh Isa bin Ali House, Muharraq",
+    "city": "Muharraq",
+    "country": "Bahrain",
+    "category": "unesco_world_heritage",
+    "lat": 26.2481,
+    "lon": 50.6125,
+    "radius_km": 0.05,
+    "prompts": [
+      "Shaikh Isa bin Ali House traditional coral stone windtower courtyard house Muharraq Pearling Path",
+      "Muharraq heritage wind tower and wooden carved doors"
+    ]
+  },
+  {
+    "name": "Arad Fort & Sea Lagoon, Muharraq",
+    "city": "Muharraq",
+    "country": "Bahrain",
+    "category": "fortress",
+    "lat": 26.2517,
+    "lon": 50.6278,
+    "radius_km": 0.05,
+    "prompts": [
+      "Arad Fort 15th-century square stone fortress cylindrical corner watchtowers Muharraq",
+      "Arad Fort illuminated over sea lagoon Bahrain"
+    ]
+  },
+  {
+    "name": "Riffa Fort (Sheikh Salman bin Ahmed Fort), Riffa",
+    "city": "Riffa",
+    "country": "Bahrain",
+    "category": "fortress",
+    "lat": 26.1183,
+    "lon": 50.5636,
+    "radius_km": 0.05,
+    "prompts": [
+      "Riffa Fort hilltop stone fortress overlooking Hunanaiya Valley Riffa Bahrain",
+      "Sheikh Salman bin Ahmed Fort ramparts Riffa"
+    ]
+  },
+  {
+    "name": "Bahrain International Circuit (F1 Circuit), Sakhir",
+    "city": "Sakhir",
+    "country": "Bahrain",
+    "category": "stadium",
+    "lat": 26.0325,
+    "lon": 50.5106,
+    "radius_km": 0.2,
+    "prompts": [
+      "Bahrain International Circuit Formula 1 race track Sakhir Tower desert floodlights",
+      "Sakhir F1 race track grandstand and desert background"
+    ]
+  }
+]

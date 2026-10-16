@@ -1,0 +1,106 @@
+[
+  {
+    "name": "Umayyad Mosque (Great Mosque of Damascus), Syria",
+    "city": "Damascus",
+    "country": "Syria",
+    "category": "unesco_world_heritage",
+    "lat": 33.5119,
+    "lon": 36.3067,
+    "radius_km": 0.05,
+    "prompts": [
+      "Umayyad Mosque marble courtyard golden mosaic pavilions and three minarets Old Damascus",
+      "Great Mosque of Damascus Umayyad courtyard and Barada mosaics"
+    ]
+  },
+  {
+    "name": "Al-Hamidiyah Souq & Temple of Jupiter, Damascus",
+    "city": "Damascus",
+    "country": "Syria",
+    "category": "commercial_market",
+    "lat": 33.5108,
+    "lon": 36.3033,
+    "radius_km": 0.05,
+    "prompts": [
+      "Al-Hamidiyah Souq vaulted iron roof market street Roman Temple of Jupiter columns Damascus",
+      "Hamidiyah Souq historic covered market Damascus"
+    ]
+  },
+  {
+    "name": "Citadel of Aleppo, Aleppo",
+    "city": "Aleppo",
+    "country": "Syria",
+    "category": "unesco_world_heritage",
+    "lat": 36.1992,
+    "lon": 37.1628,
+    "radius_km": 0.08,
+    "prompts": [
+      "Citadel of Aleppo massive medieval limestone fortress stone bridge and moat hill Aleppo",
+      "Aleppo Citadel grand fortified entrance gateway"
+    ]
+  },
+  {
+    "name": "Krak des Chevaliers (Qal'at al-Hosn), Homs",
+    "city": "Homs",
+    "country": "Syria",
+    "category": "unesco_world_heritage",
+    "lat": 34.7569,
+    "lon": 36.2947,
+    "radius_km": 0.08,
+    "prompts": [
+      "Krak des Chevaliers iconic Crusader stone fortress concentric walls and battlements mountain ridge Homs",
+      "Qalat al Hosn medieval fortress Syria"
+    ]
+  },
+  {
+    "name": "Norias of Hama (Giant Waterwheels), Orontes River",
+    "city": "Hama",
+    "country": "Syria",
+    "category": "historical_monument",
+    "lat": 35.1319,
+    "lon": 36.7511,
+    "radius_km": 0.05,
+    "prompts": [
+      "Norias of Hama colossal medieval wooden waterwheels spinning on Orontes River Hama",
+      "Hama wooden water wheels and river aqueducts"
+    ]
+  },
+  {
+    "name": "Citadel of Salah Ed-Din (Saladin Castle), Latakia",
+    "city": "Latakia",
+    "country": "Syria",
+    "category": "unesco_world_heritage",
+    "lat": 35.5967,
+    "lon": 36.0583,
+    "radius_km": 0.08,
+    "prompts": [
+      "Saladin Castle massive stone needle pillar rock-cut ditch forested mountain gorge Latakia",
+      "Citadel of Salah Ed-Din Crusader ruins"
+    ]
+  },
+  {
+    "name": "Ancient City of Palmyra Roman Colonnade & Temple of Bel",
+    "city": "Palmyra",
+    "country": "Syria",
+    "category": "unesco_world_heritage",
+    "lat": 34.5514,
+    "lon": 38.2689,
+    "radius_km": 0.15,
+    "prompts": [
+      "Palmyra Monumental Colonnade Roman stone arches and Temple of Bel desert ruins Syria",
+      "Ancient Roman ruins of Palmyra Tadmor oasis"
+    ]
+  },
+  {
+    "name": "Roman Theatre at Bosra (Black Basalt Amphitheatre)",
+    "city": "Bosra",
+    "country": "Syria",
+    "category": "unesco_world_heritage",
+    "lat": 32.5186,
+    "lon": 36.4817,
+    "radius_km": 0.05,
+    "prompts": [
+      "Roman Theatre of Bosra impeccably preserved black basalt amphitheatre fort fortress Syria",
+      "Bosra Roman amphitheatre black basalt stones"
+    ]
+  }
+]

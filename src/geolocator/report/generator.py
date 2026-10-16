@@ -374,6 +374,12 @@ class ReportGenerator:
 
         best_subdiv = (meta.get("subnational_division") if best_candidate else None) or (get_subnational_division(coordinates[0], coordinates[1]) if coordinates else None)
 
+        spot_city = (meta.get("city") if best_candidate else None) or ""
+        spot_country = (meta.get("country") if best_candidate else None) or ""
+        spot_name = (meta.get("landmark") if best_candidate else None) or ""
+        spot_category = (meta.get("category") if best_candidate else None) or ""
+        is_spot_verified = bool(spot_name or (meta.get("source") == "landmark_matcher") or ("Landmark:" in top_name))
+
         # GeoSpy-style forensic clues and interpretation
         clues_path = job_dir / "clues.json"
         forensic_analysis: Dict[str, Any] = {}
@@ -393,8 +399,18 @@ class ReportGenerator:
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "photo_sha256": board.data.get("photo_sha256", "unknown"),
             "location_name": top_name,
+            "city": spot_city,
+            "country": spot_country,
+            "spot_name": spot_name,
+            "spot_category": spot_category,
+            "is_spot_verified": is_spot_verified,
             "top_hypothesis": {
                 "name": top_name,
+                "city": spot_city,
+                "country": spot_country,
+                "spot_name": spot_name,
+                "spot_category": spot_category,
+                "is_spot_verified": is_spot_verified,
                 "coordinates": {
                     "latitude": coordinates[0] if coordinates else None,
                     "longitude": coordinates[1] if coordinates else None,
@@ -407,6 +423,11 @@ class ReportGenerator:
             },
             "best_location": {
                 "name": top_name,
+                "city": spot_city,
+                "country": spot_country,
+                "spot_name": spot_name,
+                "spot_category": spot_category,
+                "is_spot_verified": is_spot_verified,
                 "coordinates": coordinates,
                 "subnational_division": best_subdiv,
                 "calibrated_radius_km": calibrated_radius_km,

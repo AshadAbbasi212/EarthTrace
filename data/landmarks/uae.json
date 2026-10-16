@@ -1,0 +1,301 @@
+[
+  {
+    "name": "Burj Khalifa & Observation Deck, Downtown Dubai",
+    "city": "Dubai",
+    "country": "United Arab Emirates",
+    "category": "world_landmark",
+    "lat": 25.1972,
+    "lon": 55.2744,
+    "radius_km": 0.05,
+    "prompts": [
+      "Burj Khalifa tallest skyscraper tiered spire glass facade Downtown Dubai",
+      "Burj Khalifa tower rising above Dubai Mall fountain lake"
+    ]
+  },
+  {
+    "name": "Burj Al Arab Luxury Sail Hotel, Jumeirah, Dubai",
+    "city": "Dubai",
+    "country": "United Arab Emirates",
+    "category": "luxury_hotel",
+    "lat": 25.1412,
+    "lon": 55.1853,
+    "radius_km": 0.05,
+    "prompts": [
+      "Burj Al Arab iconic sail-shaped luxury hotel island helipad Jumeirah beach Dubai",
+      "Burj Al Arab hotel white sail architecture Arabian Gulf"
+    ]
+  },
+  {
+    "name": "Museum of the Future, Sheikh Zayed Road, Dubai",
+    "city": "Dubai",
+    "country": "United Arab Emirates",
+    "category": "museum",
+    "lat": 25.2192,
+    "lon": 55.2819,
+    "radius_km": 0.05,
+    "prompts": [
+      "Museum of the Future stainless steel torus ring building Arabic calligraphy Sheikh Zayed Road Dubai",
+      "Museum of the Future unique oval architectural landmark Dubai"
+    ]
+  },
+  {
+    "name": "Dubai Frame, Zabeel Park, Dubai",
+    "city": "Dubai",
+    "country": "United Arab Emirates",
+    "category": "civic_monument",
+    "lat": 25.2347,
+    "lon": 55.3003,
+    "radius_km": 0.05,
+    "prompts": [
+      "Dubai Frame giant golden picture frame architectural monument Zabeel Park Dubai",
+      "The Dubai Frame observation bridge and glass bridge walkway"
+    ]
+  },
+  {
+    "name": "The Dubai Mall & Dubai Fountain Lake, Downtown Dubai",
+    "city": "Dubai",
+    "country": "United Arab Emirates",
+    "category": "shopping_mall",
+    "lat": 25.1986,
+    "lon": 55.2797,
+    "radius_km": 0.08,
+    "prompts": [
+      "The Dubai Mall grand shopping promenade and dancing fountain lake Downtown Dubai",
+      "Dubai Mall fountain boardwalk and waterfront restaurants"
+    ]
+  },
+  {
+    "name": "Palm Jumeirah & Atlantis The Palm, Dubai",
+    "city": "Dubai",
+    "country": "United Arab Emirates",
+    "category": "resort",
+    "lat": 25.1303,
+    "lon": 55.1172,
+    "radius_km": 0.1,
+    "prompts": [
+      "Atlantis The Palm Arabian arch pink palace resort tip of Palm Jumeirah crescent Dubai",
+      "Palm Jumeirah fronds luxury villas and Atlantis resort"
+    ]
+  },
+  {
+    "name": "Dubai Marina Walk & Yacht Promenade, Dubai",
+    "city": "Dubai",
+    "country": "United Arab Emirates",
+    "category": "marina",
+    "lat": 25.0789,
+    "lon": 55.1389,
+    "radius_km": 0.1,
+    "prompts": [
+      "Dubai Marina skyscrapers reflection luxury yachts waterway promenade Dubai",
+      "Dubai Marina Walk high-rise residential towers waterfront"
+    ]
+  },
+  {
+    "name": "Sheikh Zayed Grand Mosque, Abu Dhabi",
+    "city": "Abu Dhabi",
+    "country": "United Arab Emirates",
+    "category": "national_mosque",
+    "lat": 24.4128,
+    "lon": 54.475,
+    "radius_km": 0.08,
+    "prompts": [
+      "Sheikh Zayed Grand Mosque eighty-two white marble domes reflective pools Abu Dhabi",
+      "Sheikh Zayed Grand Mosque grand floral courtyard and minarets Abu Dhabi"
+    ]
+  },
+  {
+    "name": "Louvre Abu Dhabi Museum Dome, Saadiyat Island, Abu Dhabi",
+    "city": "Abu Dhabi",
+    "country": "United Arab Emirates",
+    "category": "museum",
+    "lat": 24.5336,
+    "lon": 54.3986,
+    "radius_km": 0.08,
+    "prompts": [
+      "Louvre Abu Dhabi Jean Nouvel silver floating dome rain of light Arabian sea Saadiyat",
+      "Louvre Abu Dhabi museum water promenade and geometric dome"
+    ]
+  },
+  {
+    "name": "Qasr Al Watan Presidential Palace, Abu Dhabi",
+    "city": "Abu Dhabi",
+    "country": "United Arab Emirates",
+    "category": "historical_palace",
+    "lat": 24.4633,
+    "lon": 54.3056,
+    "radius_km": 0.08,
+    "prompts": [
+      "Qasr Al Watan grand presidential palace white granite marble dome The Great Hall Abu Dhabi",
+      "Qasr Al Watan presidential palace courtyard and fountain promenade"
+    ]
+  },
+  {
+    "name": "Emirates Palace Mandarin Oriental, Corniche, Abu Dhabi",
+    "city": "Abu Dhabi",
+    "country": "United Arab Emirates",
+    "category": "luxury_hotel",
+    "lat": 24.4617,
+    "lon": 54.3175,
+    "radius_km": 0.08,
+    "prompts": [
+      "Emirates Palace luxury Arabian palace hotel golden domes landscaped gardens Abu Dhabi",
+      "Emirates Palace grand facade and triumphal archway Abu Dhabi"
+    ]
+  },
+  {
+    "name": "Ferrari World Abu Dhabi Red Roof, Yas Island",
+    "city": "Abu Dhabi",
+    "country": "United Arab Emirates",
+    "category": "theme_park",
+    "lat": 24.4836,
+    "lon": 54.6075,
+    "radius_km": 0.1,
+    "prompts": [
+      "Ferrari World iconic red aerodynamic curved roof yellow prancing horse logo Yas Island Abu Dhabi",
+      "Ferrari World Abu Dhabi theme park exterior Yas Island"
+    ]
+  },
+  {
+    "name": "Al Noor Mosque, Buhaira Corniche, Sharjah",
+    "city": "Sharjah",
+    "country": "United Arab Emirates",
+    "category": "mosque",
+    "lat": 25.3475,
+    "lon": 55.385,
+    "radius_km": 0.05,
+    "prompts": [
+      "Al Noor Mosque Ottoman Turkish style cascading domes and two minarets Khaled Lagoon Sharjah",
+      "Al Noor Mosque waterfront Buhaira Corniche Sharjah"
+    ]
+  },
+  {
+    "name": "Sharjah Central Souq (Blue Souk), Sharjah",
+    "city": "Sharjah",
+    "country": "United Arab Emirates",
+    "category": "commercial_market",
+    "lat": 25.3486,
+    "lon": 55.3889,
+    "radius_km": 0.08,
+    "prompts": [
+      "Sharjah Central Souq Blue Souk twin traditional Islamic barrel vaulted buildings ceramic blue tiles",
+      "Blue Souk Sharjah historic market buildings"
+    ]
+  },
+  {
+    "name": "Jebel Hafeet Mountain Summit & Highway, Al Ain",
+    "city": "Al Ain",
+    "country": "United Arab Emirates",
+    "category": "mountain_peak",
+    "lat": 24.0583,
+    "lon": 55.7778,
+    "radius_km": 1.0,
+    "prompts": [
+      "Jebel Hafeet winding mountain highway rocky desert limestone ridge Al Ain Abu Dhabi",
+      "Jebel Hafeet summit viewpoint overlooking desert plains Al Ain"
+    ]
+  },
+  {
+    "name": "Al Jahili Fort, Al Ain",
+    "city": "Al Ain",
+    "country": "United Arab Emirates",
+    "category": "fortress",
+    "lat": 24.2167,
+    "lon": 55.7528,
+    "radius_km": 0.05,
+    "prompts": [
+      "Al Jahili Fort mud-brick battlements multi-tiered circular watchtower palm oasis Al Ain",
+      "Al Jahili Fort courtyard and historic earthen towers Al Ain"
+    ]
+  },
+  {
+    "name": "Ajman Fort (Ajman Museum) & Corniche",
+    "city": "Ajman",
+    "country": "United Arab Emirates",
+    "category": "fortress",
+    "lat": 25.4128,
+    "lon": 55.4456,
+    "radius_km": 0.05,
+    "prompts": [
+      "Ajman Fort 18th-century stone and coral fortress museum watchtowers Ajman",
+      "Ajman Corniche sandy beach promenade"
+    ]
+  },
+  {
+    "name": "Jebel Jais Mountain & Viewing Deck Park, Ras Al Khaimah",
+    "city": "Ras Al Khaimah",
+    "country": "United Arab Emirates",
+    "category": "mountain_peak",
+    "lat": 25.9525,
+    "lon": 56.1417,
+    "radius_km": 1.0,
+    "prompts": [
+      "Jebel Jais highest mountain summit in UAE steep rocky switchback highway Ras Al Khaimah",
+      "Jebel Jais Viewing Deck Park cliffs and canyons RAK"
+    ]
+  },
+  {
+    "name": "Dhayah Fort (Mud-Brick Hilltop Fortress), Ras Al Khaimah",
+    "city": "Ras Al Khaimah",
+    "country": "United Arab Emirates",
+    "category": "fortress",
+    "lat": 25.8833,
+    "lon": 56.0583,
+    "radius_km": 0.05,
+    "prompts": [
+      "Dhayah Fort conical hilltop mud-brick fortress overlooking date palm oasis and Arabian Gulf RAK",
+      "Dhayah Fort staircase and mountain backdrop"
+    ]
+  },
+  {
+    "name": "Al Bidyah Mosque (Oldest UAE Mosque), Fujairah",
+    "city": "Fujairah",
+    "country": "United Arab Emirates",
+    "category": "historical_mosque",
+    "lat": 25.4392,
+    "lon": 56.3539,
+    "radius_km": 0.05,
+    "prompts": [
+      "Al Bidyah Mosque ancient mud and stone four-domed mosque watchtowers Fujairah",
+      "Al Bidyah oldest mosque in United Arab Emirates"
+    ]
+  },
+  {
+    "name": "Fujairah Fort & Heritage Village, Fujairah",
+    "city": "Fujairah",
+    "country": "United Arab Emirates",
+    "category": "fortress",
+    "lat": 25.1389,
+    "lon": 56.325,
+    "radius_km": 0.05,
+    "prompts": [
+      "Fujairah Fort historic mud-brick castle and round watchtower rocky mound Fujairah",
+      "Fujairah Fort and palm tree plantations"
+    ]
+  },
+  {
+    "name": "Umm Al Quwain Fort & Dreamland Aqua Park",
+    "city": "Umm Al Quwain",
+    "country": "United Arab Emirates",
+    "category": "fortress",
+    "lat": 25.5667,
+    "lon": 55.55,
+    "radius_km": 0.08,
+    "prompts": [
+      "Umm Al Quwain historic coral stone fort museum and Al Ali guard towers",
+      "UAQ Fort entrance gates and old cannons"
+    ]
+  },
+  {
+    "name": "Khor Fakkan Amphitheatre & Waterfall, Sharjah Enclave",
+    "city": "Khor Fakkan",
+    "country": "United Arab Emirates",
+    "category": "civic_building",
+    "lat": 25.3667,
+    "lon": 56.35,
+    "radius_km": 0.08,
+    "prompts": [
+      "Khor Fakkan Amphitheatre Roman classical stone colosseum and mountain rock waterfall Gulf of Oman",
+      "Khor Fakkan seaside amphitheatre and beach promenade"
+    ]
+  }
+]

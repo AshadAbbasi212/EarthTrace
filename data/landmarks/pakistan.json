@@ -1,0 +1,2537 @@
+[
+  {
+    "name": "Faisal Mosque, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "national_mosque",
+    "lat": 33.7296,
+    "lon": 73.0372,
+    "radius_km": 0.05,
+    "prompts": [
+      "Faisal Mosque white tent architectural minarets Margalla foothills Islamabad",
+      "Faisal Mosque courtyard and white marble minarets Islamabad"
+    ]
+  },
+  {
+    "name": "Pakistan Monument, Shakarparian, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "national_monument",
+    "lat": 33.6934,
+    "lon": 73.0684,
+    "radius_km": 0.05,
+    "prompts": [
+      "Pakistan Monument blooming petal granite architecture Shakarparian Islamabad",
+      "Pakistan Monument petal dome Shakarparian hills Islamabad"
+    ]
+  },
+  {
+    "name": "Daman-e-Koh Margalla Viewpoint, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "viewpoint",
+    "lat": 33.7389,
+    "lon": 73.0583,
+    "radius_km": 0.1,
+    "prompts": [
+      "Daman-e-Koh Margalla hills viewpoint terrace overlooking Islamabad city",
+      "Daman-e-Koh garden terrace Margalla ridge view Islamabad"
+    ]
+  },
+  {
+    "name": "Pir Sohawa & Monal Ridge, Margalla Hills, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "viewpoint",
+    "lat": 33.7483,
+    "lon": 73.0583,
+    "radius_km": 0.15,
+    "prompts": [
+      "Monal restaurant terrace dining Pir Sohawa Margalla mountain ridge Islamabad",
+      "Pir Sohawa Margalla crest viewpoint restaurant overlooking Islamabad"
+    ]
+  },
+  {
+    "name": "Centaurus Mall & Towers, Blue Area, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_towers",
+    "lat": 33.7077,
+    "lon": 73.0503,
+    "radius_km": 0.05,
+    "prompts": [
+      "Centaurus Mall three curved glass skyscraper towers Jinnah Avenue Islamabad",
+      "Centaurus towers modern high-rise architecture Blue Area Islamabad"
+    ]
+  },
+  {
+    "name": "Rawal Lake & Lake View Park, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "park",
+    "lat": 33.7022,
+    "lon": 73.125,
+    "radius_km": 0.2,
+    "prompts": [
+      "Rawal Lake water reservoir promenade and Lake View Park Islamabad",
+      "Lake View Park gardens and boat jetty Rawal Dam Islamabad"
+    ]
+  },
+  {
+    "name": "Lok Virsa Heritage Museum, Shakarparian, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "museum",
+    "lat": 33.6917,
+    "lon": 73.0708,
+    "radius_km": 0.05,
+    "prompts": [
+      "Lok Virsa heritage museum traditional ethnic architecture Shakarparian Islamabad",
+      "Lok Virsa National Heritage Museum courtyard Islamabad"
+    ]
+  },
+  {
+    "name": "Saidpur Heritage Village, Margalla Foothills, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "heritage_village",
+    "lat": 33.7417,
+    "lon": 73.0686,
+    "radius_km": 0.08,
+    "prompts": [
+      "Saidpur historic stone village restaurants and Hindu temple Margalla foothills Islamabad",
+      "Saidpur village courtyard and traditional brick alleyways Islamabad"
+    ]
+  },
+  {
+    "name": "Fatima Jinnah Park (F-9 Park), Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "park",
+    "lat": 33.7,
+    "lon": 73.0167,
+    "radius_km": 0.3,
+    "prompts": [
+      "Fatima Jinnah Park F-9 solar canopy grand promenade pathways Islamabad",
+      "F-9 Park expansive lawns walking trails and recreational pavilions Islamabad"
+    ]
+  },
+  {
+    "name": "Parliament House & Constitution Avenue, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "government",
+    "lat": 33.7314,
+    "lon": 73.0967,
+    "radius_km": 0.05,
+    "prompts": [
+      "Parliament House white facade Constitution Avenue Islamabad",
+      "Majlis-e-Shoora Parliament building and Constitution Avenue Islamabad"
+    ]
+  },
+  {
+    "name": "Supreme Court of Pakistan, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "government",
+    "lat": 33.7303,
+    "lon": 73.0983,
+    "radius_km": 0.05,
+    "prompts": [
+      "Supreme Court of Pakistan white marble neoclassical building Constitution Avenue Islamabad",
+      "Supreme Court courthouse portico Islamabad"
+    ]
+  },
+  {
+    "name": "President House (Aiwan-e-Sadr), Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "government",
+    "lat": 33.7342,
+    "lon": 73.1,
+    "radius_km": 0.08,
+    "prompts": [
+      "Aiwan-e-Sadr President House grand white palace Constitution Avenue Islamabad",
+      "President House ceremonial gates and lawns Islamabad"
+    ]
+  },
+  {
+    "name": "Prime Minister Secretariat, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "government",
+    "lat": 33.7375,
+    "lon": 73.1017,
+    "radius_km": 0.08,
+    "prompts": [
+      "Prime Minister Secretariat executive building Red Zone Constitution Avenue Islamabad",
+      "PM Secretariat complex Islamabad"
+    ]
+  },
+  {
+    "name": "Islamabad High Court IHC Building, G-5, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "government",
+    "lat": 33.722,
+    "lon": 73.088,
+    "radius_km": 0.05,
+    "prompts": [
+      "Islamabad High Court red-and-white courthouse building Sector G-5 Islamabad",
+      "IHC High Court of Islamabad main building"
+    ]
+  },
+  {
+    "name": "National Art Gallery NAG, F-5, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "museum",
+    "lat": 33.7289,
+    "lon": 73.0867,
+    "radius_km": 0.05,
+    "prompts": [
+      "National Art Gallery modern brick-and-terracotta cultural building Sector F-5 Islamabad",
+      "NAG National Art Gallery exhibition halls Islamabad"
+    ]
+  },
+  {
+    "name": "Pakistan Museum of Natural History PMNH, Shakarparian, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "museum",
+    "lat": 33.6939,
+    "lon": 73.0722,
+    "radius_km": 0.05,
+    "prompts": [
+      "Pakistan Museum of Natural History blue whale skeleton Shakarparian Islamabad",
+      "PMNH Natural History Museum building Islamabad"
+    ]
+  },
+  {
+    "name": "Convention Centre Islamabad, Club Road",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "civic_building",
+    "lat": 33.7139,
+    "lon": 73.1028,
+    "radius_km": 0.08,
+    "prompts": [
+      "Jinnah Convention Centre grand dome architecture Club Road Islamabad",
+      "Convention Centre Islamabad entrance and flagpoles"
+    ]
+  },
+  {
+    "name": "Diplomatic Enclave Gate 1 & Chancery Row, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "embassy_zone",
+    "lat": 33.7214,
+    "lon": 73.1111,
+    "radius_km": 0.2,
+    "prompts": [
+      "Diplomatic Enclave security gate chanceries Sector G-5 Islamabad",
+      "Diplomatic Enclave embassy boulevard Islamabad"
+    ]
+  },
+  {
+    "name": "US Embassy Compound, Diplomatic Enclave, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "embassy",
+    "lat": 33.7225,
+    "lon": 73.1186,
+    "radius_km": 0.1,
+    "prompts": [
+      "United States Embassy compound modern chancery Diplomatic Enclave Islamabad",
+      "US Embassy diplomatic chancery buildings Islamabad"
+    ]
+  },
+  {
+    "name": "British High Commission, Diplomatic Enclave, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "embassy",
+    "lat": 33.7258,
+    "lon": 73.1147,
+    "radius_km": 0.08,
+    "prompts": [
+      "British High Commission chancery gates Diplomatic Enclave Islamabad",
+      "British High Commission diplomatic building Islamabad"
+    ]
+  },
+  {
+    "name": "Quaid-e-Azam University campus academic buildings, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "university_campus",
+    "lat": 33.7489,
+    "lon": 73.1369,
+    "radius_km": 0.2,
+    "prompts": [
+      "Quaid-e-Azam University campus academic buildings faculty blocks Islamabad",
+      "QAU Islamabad campus faculty buildings Margalla foothills"
+    ]
+  },
+  {
+    "name": "NUST H-12 Campus Main Library & Gate, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "university_campus",
+    "lat": 33.6425,
+    "lon": 72.9904,
+    "radius_km": 0.2,
+    "prompts": [
+      "National University of Sciences and Technology NUST H-12 campus central library Islamabad",
+      "NUST H-12 main university gate and academic squares Islamabad"
+    ]
+  },
+  {
+    "name": "FAST-NUCES Islamabad Campus, H-9",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "university_campus",
+    "lat": 33.6567,
+    "lon": 73.0167,
+    "radius_km": 0.1,
+    "prompts": [
+      "FAST National University of Computer and Emerging Sciences H-9 campus Islamabad",
+      "FAST-NUCES Islamabad academic building and lawns"
+    ]
+  },
+  {
+    "name": "COMSATS University Islamabad Campus, Park Road, Chak Shahzad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "university_campus",
+    "lat": 33.6517,
+    "lon": 73.1561,
+    "radius_km": 0.15,
+    "prompts": [
+      "COMSATS University Islamabad campus faculty blocks Park Road Chak Shahzad",
+      "COMSATS Institute of Information Technology main campus Islamabad"
+    ]
+  },
+  {
+    "name": "International Islamic University IIUI New Campus, H-10, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "university_campus",
+    "lat": 33.6583,
+    "lon": 73.025,
+    "radius_km": 0.2,
+    "prompts": [
+      "International Islamic University IIUI grand mosque and academic blocks Sector H-10 Islamabad",
+      "IIUI H-10 university campus buildings Islamabad"
+    ]
+  },
+  {
+    "name": "National Defence University NDU, E-9, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "university_campus",
+    "lat": 33.725,
+    "lon": 73.025,
+    "radius_km": 0.1,
+    "prompts": [
+      "National Defence University NDU main military academic block Sector E-9 Islamabad",
+      "NDU Islamabad campus entrance Margalla foothills"
+    ]
+  },
+  {
+    "name": "Air University Islamabad Campus, PAF Complex E-9",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "university_campus",
+    "lat": 33.7167,
+    "lon": 73.0278,
+    "radius_km": 0.08,
+    "prompts": [
+      "Air University main academic building Sector E-9 PAF Complex Islamabad",
+      "Air University campus square Islamabad"
+    ]
+  },
+  {
+    "name": "Bahria University Islamabad Campus, E-8",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "university_campus",
+    "lat": 33.7222,
+    "lon": 73.0361,
+    "radius_km": 0.08,
+    "prompts": [
+      "Bahria University campus modern building Naval Complex Sector E-8 Islamabad",
+      "Bahria University Islamabad gate and blocks"
+    ]
+  },
+  {
+    "name": "Allama Iqbal Open University AIOU Central Campus, H-8, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "university_campus",
+    "lat": 33.6806,
+    "lon": 73.0611,
+    "radius_km": 0.1,
+    "prompts": [
+      "Allama Iqbal Open University AIOU central academic block Sector H-8 Islamabad",
+      "AIOU main campus administration building Islamabad"
+    ]
+  },
+  {
+    "name": "Higher Education Commission HEC Headquarters, H-9, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "civic_building",
+    "lat": 33.6694,
+    "lon": 73.0472,
+    "radius_km": 0.05,
+    "prompts": [
+      "Higher Education Commission HEC headquarters glass building Sector H-9 Islamabad",
+      "HEC head office building Islamabad"
+    ]
+  },
+  {
+    "name": "Blue Area Jinnah Avenue Commercial Strip, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_district",
+    "lat": 33.7125,
+    "lon": 73.065,
+    "radius_km": 0.2,
+    "prompts": [
+      "Blue Area Jinnah Avenue commercial boulevard skyscrapers Islamabad",
+      "Blue Area financial and retail high-rises Islamabad"
+    ]
+  },
+  {
+    "name": "Saudi Pak Tower, Blue Area, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_towers",
+    "lat": 33.7128,
+    "lon": 73.0628,
+    "radius_km": 0.05,
+    "prompts": [
+      "Saudi Pak Tower brutalist Islamic modern high-rise Blue Area Jinnah Avenue Islamabad",
+      "Saudi Pak Tower office building Islamabad"
+    ]
+  },
+  {
+    "name": "Islamabad Stock Exchange ISE Towers, Blue Area",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_towers",
+    "lat": 33.7139,
+    "lon": 73.0656,
+    "radius_km": 0.05,
+    "prompts": [
+      "Islamabad Stock Exchange ISE Towers twin glass skyscrapers Blue Area Islamabad",
+      "ISE Towers financial center Jinnah Avenue Islamabad"
+    ]
+  },
+  {
+    "name": "Telecom Tower, Blue Area, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_towers",
+    "lat": 33.7153,
+    "lon": 73.0694,
+    "radius_km": 0.05,
+    "prompts": [
+      "PTCL Telecom Tower tall curved office building Blue Area Islamabad",
+      "Telecom Tower modern glass facade Jinnah Avenue Islamabad"
+    ]
+  },
+  {
+    "name": "Safa Gold Mall, F-7 Markaz (Jinnah Super), Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "shopping_mall",
+    "lat": 33.7225,
+    "lon": 73.0567,
+    "radius_km": 0.05,
+    "prompts": [
+      "Safa Gold Mall multistory shopping center F-7 Markaz Jinnah Super Islamabad",
+      "Safa Gold Mall retail entrance Sector F-7 Islamabad"
+    ]
+  },
+  {
+    "name": "Giga Mall & World Trade Center, DHA Phase 2, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "shopping_mall",
+    "lat": 33.5283,
+    "lon": 73.1617,
+    "radius_km": 0.1,
+    "prompts": [
+      "Giga Mall World Trade Center grand shopping atrium GT Road DHA Phase 2 Islamabad",
+      "Giga Mall hypermarket and retail towers Islamabad"
+    ]
+  },
+  {
+    "name": "F-6 Super Market Commercial Square, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 33.7294,
+    "lon": 73.0767,
+    "radius_km": 0.08,
+    "prompts": [
+      "F-6 Super Market open commercial square bookshops and cafes Sector F-6 Islamabad",
+      "Super Market F-6 Islamabad retail plaza"
+    ]
+  },
+  {
+    "name": "Kohsar Market, Sector F-6/3, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 33.7336,
+    "lon": 73.0728,
+    "radius_km": 0.05,
+    "prompts": [
+      "Kohsar Market outdoor upscale dining cafes and gourmet stores Sector F-6 Islamabad",
+      "Kohsar Market restaurant patio Sector F-6/3 Islamabad"
+    ]
+  },
+  {
+    "name": "F-7 Jinnah Super Market Roundabout & Plaza, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 33.7208,
+    "lon": 73.0556,
+    "radius_km": 0.08,
+    "prompts": [
+      "Jinnah Super Market circular commercial plaza Sector F-7 Islamabad",
+      "F-7 Markaz Jinnah Super shops and restaurants Islamabad"
+    ]
+  },
+  {
+    "name": "Beverly Centre, Blue Area / F-6, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 33.7189,
+    "lon": 73.0689,
+    "radius_km": 0.05,
+    "prompts": [
+      "Beverly Centre trendy restaurants and retail shops Nazim-ud-din Road Islamabad",
+      "Beverly Centre commercial arcade Sector F-6 Islamabad"
+    ]
+  },
+  {
+    "name": "F-8 Markaz (Ayub Market), Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 33.7111,
+    "lon": 73.0389,
+    "radius_km": 0.08,
+    "prompts": [
+      "F-8 Markaz commercial square shops restaurants Sector F-8 Islamabad",
+      "Ayub Market F-8 Markaz retail plaza Islamabad"
+    ]
+  },
+  {
+    "name": "F-10 Markaz (Sumbal Market), Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 33.6972,
+    "lon": 73.0125,
+    "radius_km": 0.08,
+    "prompts": [
+      "F-10 Markaz buzzing commercial square retail towers Sector F-10 Islamabad",
+      "F-10 Markaz round shopping plaza Islamabad"
+    ]
+  },
+  {
+    "name": "F-11 Markaz (Fehmida Market), Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 33.6847,
+    "lon": 72.9889,
+    "radius_km": 0.08,
+    "prompts": [
+      "F-11 Markaz modern high-rise apartments and shopping arcade Sector F-11 Islamabad",
+      "F-11 Markaz commercial center Islamabad"
+    ]
+  },
+  {
+    "name": "G-9 Markaz (Karachi Company), Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 33.6903,
+    "lon": 73.0306,
+    "radius_km": 0.1,
+    "prompts": [
+      "G-9 Karachi Company bustling commercial marketplace and bus terminal Sector G-9 Islamabad",
+      "Karachi Company G-9 Markaz bazaar Islamabad"
+    ]
+  },
+  {
+    "name": "G-11 Markaz, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 33.6736,
+    "lon": 72.9986,
+    "radius_km": 0.08,
+    "prompts": [
+      "G-11 Markaz commercial plaza residential towers Sector G-11 Islamabad",
+      "G-11 Markaz shopping arcade Islamabad"
+    ]
+  },
+  {
+    "name": "I-8 Markaz (Tipu Market), Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 33.6681,
+    "lon": 73.0764,
+    "radius_km": 0.08,
+    "prompts": [
+      "I-8 Markaz pedestrian food street and shopping center Sector I-8 Islamabad",
+      "I-8 Markaz commercial avenue Islamabad"
+    ]
+  },
+  {
+    "name": "I-9 Markaz & Industrial Area, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "industrial_district",
+    "lat": 33.6556,
+    "lon": 73.0611,
+    "radius_km": 0.15,
+    "prompts": [
+      "Sector I-9 Industrial Area commercial warehouses and factories Islamabad",
+      "I-9 Markaz commercial zone Islamabad"
+    ]
+  },
+  {
+    "name": "I-10 Markaz, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 33.6444,
+    "lon": 73.0389,
+    "radius_km": 0.08,
+    "prompts": [
+      "I-10 Markaz commercial marketplace retail stores Sector I-10 Islamabad",
+      "I-10 Markaz shopping square Islamabad"
+    ]
+  },
+  {
+    "name": "G-8 Markaz (Babri Market), Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 33.7,
+    "lon": 73.0417,
+    "radius_km": 0.08,
+    "prompts": [
+      "G-8 Markaz commercial plaza shops near PIMS Hospital Sector G-8 Islamabad",
+      "G-8 Markaz market Islamabad"
+    ]
+  },
+  {
+    "name": "G-7 Markaz (Sitara Market), Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 33.7069,
+    "lon": 73.0611,
+    "radius_km": 0.08,
+    "prompts": [
+      "Sitara Market Sector G-7 commercial shops and municipal offices Islamabad",
+      "G-7 Markaz Sitara Market plaza Islamabad"
+    ]
+  },
+  {
+    "name": "Serena Hotel Islamabad, Club Road",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "luxury_hotel",
+    "lat": 33.7194,
+    "lon": 73.1028,
+    "radius_km": 0.05,
+    "prompts": [
+      "Islamabad Serena Hotel traditional Islamic palace architecture and water gardens",
+      "Serena Hotel luxury courtyard and banquet lawns Islamabad"
+    ]
+  },
+  {
+    "name": "Islamabad Marriott Hotel, Sector F-5/1",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "luxury_hotel",
+    "lat": 33.7292,
+    "lon": 73.0903,
+    "radius_km": 0.05,
+    "prompts": [
+      "Marriott Hotel Islamabad white facade near Constitution Avenue Sector F-5",
+      "Islamabad Marriott Hotel entrance driveway and security gates"
+    ]
+  },
+  {
+    "name": "Islamabad Club & Polo Ground, Shakarparian",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "sports_club",
+    "lat": 33.7083,
+    "lon": 73.1056,
+    "radius_km": 0.15,
+    "prompts": [
+      "Islamabad Club polo ground clubhouse and manicured green lawns Murree Road Islamabad",
+      "Islamabad Club equestrian pavilion and sports facilities"
+    ]
+  },
+  {
+    "name": "Islamabad Golf Club, Shakarparian / Rawal Lake",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "sports_club",
+    "lat": 33.6972,
+    "lon": 73.0917,
+    "radius_km": 0.2,
+    "prompts": [
+      "Islamabad Golf Club 18-hole fairway rolling hills and lake view Shakarparian Islamabad",
+      "Islamabad Golf Club fairways and clubhouse"
+    ]
+  },
+  {
+    "name": "Gun & Country Club Islamabad, Shakarparian",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "sports_club",
+    "lat": 33.7,
+    "lon": 73.0778,
+    "radius_km": 0.1,
+    "prompts": [
+      "Gun and Country Club shooting range and recreational club Shakarparian Islamabad",
+      "Gun and Country Club sporting grounds Islamabad"
+    ]
+  },
+  {
+    "name": "Best Western Premier Hotel Islamabad, Club Road",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hotel",
+    "lat": 33.715,
+    "lon": 73.1067,
+    "radius_km": 0.05,
+    "prompts": [
+      "Best Western Premier Hotel building Club Road near Rawal Lake Islamabad",
+      "Best Western Hotel Islamabad entrance"
+    ]
+  },
+  {
+    "name": "Ramada by Wyndham Islamabad, Club Road",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hotel",
+    "lat": 33.7111,
+    "lon": 73.1111,
+    "radius_km": 0.05,
+    "prompts": [
+      "Ramada Hotel Rawal Lake view Club Road Sector Islamabad",
+      "Ramada Hotel building overlooking Rawal Dam reservoir Islamabad"
+    ]
+  },
+  {
+    "name": "Pearl Continental PC Bhurban / Murree Gateway, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "luxury_hotel",
+    "lat": 33.9556,
+    "lon": 73.4514,
+    "radius_km": 0.1,
+    "prompts": [
+      "Pearl Continental PC Hotel Bhurban pine tree valley and golf course Murree Hills",
+      "PC Bhurban luxury mountain resort terrace"
+    ]
+  },
+  {
+    "name": "Hotel Crown Plaza Islamabad, Blue Area",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hotel",
+    "lat": 33.7119,
+    "lon": 73.0583,
+    "radius_km": 0.05,
+    "prompts": [
+      "Hotel Crown Plaza high-rise building Jinnah Avenue Blue Area Islamabad",
+      "Crown Plaza Hotel Islamabad facade"
+    ]
+  },
+  {
+    "name": "Shelton Hotel & Guest House, F-8/3, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hotel",
+    "lat": 33.715,
+    "lon": 73.045,
+    "radius_km": 0.05,
+    "prompts": [
+      "Shelton boutique hotel and guest suites Sector F-8/3 Islamabad",
+      "Shelton Hotel Islamabad entrance"
+    ]
+  },
+  {
+    "name": "Shifa International Hospital, H-8/4, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hospital_complex",
+    "lat": 33.6861,
+    "lon": 73.0806,
+    "radius_km": 0.08,
+    "prompts": [
+      "Shifa International Hospital grand medical complex red brick buildings Sector H-8/4 Islamabad",
+      "Shifa Hospital main entrance and trauma tower Islamabad"
+    ]
+  },
+  {
+    "name": "Pakistan Institute of Medical Sciences PIMS, G-8/3, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hospital_complex",
+    "lat": 33.7042,
+    "lon": 73.0472,
+    "radius_km": 0.1,
+    "prompts": [
+      "Pakistan Institute of Medical Sciences PIMS hospital campus and trauma center Sector G-8 Islamabad",
+      "PIMS Hospital main emergency facade Islamabad"
+    ]
+  },
+  {
+    "name": "Federal Government Polyclinic Hospital, G-6/2, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hospital_complex",
+    "lat": 33.7222,
+    "lon": 73.0778,
+    "radius_km": 0.05,
+    "prompts": [
+      "Polyclinic Hospital medical wards and outdoor patient department Sector G-6 Islamabad",
+      "Federal Government Polyclinic building Islamabad"
+    ]
+  },
+  {
+    "name": "Maroof International Hospital, F-10 Markaz, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hospital_complex",
+    "lat": 33.6944,
+    "lon": 73.0111,
+    "radius_km": 0.05,
+    "prompts": [
+      "Maroof International Hospital private medical facility Sector F-10 Markaz Islamabad",
+      "Maroof Hospital glass building Islamabad"
+    ]
+  },
+  {
+    "name": "Kulsum International Hospital, Blue Area, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hospital_complex",
+    "lat": 33.7094,
+    "lon": 73.0528,
+    "radius_km": 0.05,
+    "prompts": [
+      "Kulsum International Hospital tower Jinnah Avenue Blue Area Islamabad",
+      "Kulsum Hospital facade Islamabad"
+    ]
+  },
+  {
+    "name": "National Institute of Health NIH, Chak Shahzad, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "medical_research",
+    "lat": 33.6722,
+    "lon": 73.1389,
+    "radius_km": 0.1,
+    "prompts": [
+      "National Institute of Health NIH research laboratories and campus Chak Shahzad Islamabad",
+      "NIH Pakistan biomedical center Islamabad"
+    ]
+  },
+  {
+    "name": "PAEC Nuclear Medicine Oncology NORI Hospital, G-8/3",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hospital_complex",
+    "lat": 33.7014,
+    "lon": 73.05,
+    "radius_km": 0.05,
+    "prompts": [
+      "NORI Cancer Hospital PAEC medical facility Sector G-8/3 Islamabad",
+      "NORI Hospital oncology tower Islamabad"
+    ]
+  },
+  {
+    "name": "Quaid-e-Azam International Hospital QIH, Golra Mor, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hospital_complex",
+    "lat": 33.6278,
+    "lon": 72.9667,
+    "radius_km": 0.08,
+    "prompts": [
+      "Quaid-e-Azam International Hospital modern multi-story medical center Peshawar Road Golra Mor Islamabad",
+      "QIH Hospital building Islamabad"
+    ]
+  },
+  {
+    "name": "Ali Medical Centre, F-8 Markaz, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hospital_complex",
+    "lat": 33.7083,
+    "lon": 73.0361,
+    "radius_km": 0.05,
+    "prompts": [
+      "Ali Medical Centre private hospital building Sector F-8 Markaz Islamabad",
+      "Ali Medical Centre entrance Islamabad"
+    ]
+  },
+  {
+    "name": "Medicsi Hospital, F-10/4, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hospital_complex",
+    "lat": 33.6917,
+    "lon": 73.0083,
+    "radius_km": 0.05,
+    "prompts": [
+      "Medicsi private specialized hospital building Sector F-10/4 Islamabad",
+      "Medicsi Hospital clinic Islamabad"
+    ]
+  },
+  {
+    "name": "Margalla Hills Trail 3 Viewpoint, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hiking_trail",
+    "lat": 33.7444,
+    "lon": 73.0611,
+    "radius_km": 0.1,
+    "prompts": [
+      "Trail 3 Margalla Hills hiking track rocky ridge trail pine trees Islamabad",
+      "Trail 3 viewpoint wooden benches overlooking Islamabad city"
+    ]
+  },
+  {
+    "name": "Margalla Hills Trail 5 (Ghanghar Stream), Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hiking_trail",
+    "lat": 33.7472,
+    "lon": 73.0722,
+    "radius_km": 0.1,
+    "prompts": [
+      "Trail 5 Margalla Hills natural freshwater stream rocky hiking track Islamabad",
+      "Trail 5 trailhead picnic area and forest trail Islamabad"
+    ]
+  },
+  {
+    "name": "Trail 2 (Daman-e-Koh to Zoo), Margalla Hills, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "hiking_trail",
+    "lat": 33.7361,
+    "lon": 73.0556,
+    "radius_km": 0.1,
+    "prompts": [
+      "Trail 2 Margalla Hills dirt trail path winding from Marghazar to Daman-e-Koh Islamabad",
+      "Trail 2 ridge hiking path Islamabad"
+    ]
+  },
+  {
+    "name": "Rose & Jasmine Garden, Shakarparian, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "park",
+    "lat": 33.6972,
+    "lon": 73.0806,
+    "radius_km": 0.08,
+    "prompts": [
+      "Rose and Jasmine Garden landscaped rose flowerbeds and walking path Shakarparian Islamabad",
+      "Rose and Jasmine Garden seasonal flower exhibition lawns Islamabad"
+    ]
+  },
+  {
+    "name": "Japanese Children Park, Margalla Road, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "park",
+    "lat": 33.7333,
+    "lon": 73.0611,
+    "radius_km": 0.05,
+    "prompts": [
+      "Japanese Children Park wooden playground obstacle courses Sector F-6 Margalla Road Islamabad",
+      "Japanese Park swings and green hillocks Islamabad"
+    ]
+  },
+  {
+    "name": "Shah Allah Ditta Buddhist Caves, Margalla Foothills, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "heritage_site",
+    "lat": 33.7194,
+    "lon": 72.9194,
+    "radius_km": 0.08,
+    "prompts": [
+      "Shah Allah Ditta historic Buddhist rock caves banyan trees Sadhu platform Margalla Islamabad",
+      "Shah Allah Ditta ancient caves and freshwater spring Islamabad"
+    ]
+  },
+  {
+    "name": "Korang River Valley & Promenade, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "river_valley",
+    "lat": 33.6667,
+    "lon": 73.1333,
+    "radius_km": 0.15,
+    "prompts": [
+      "Korang River valley rocky stream banks and natural green basin Islamabad",
+      "Korang riverbed crossing Chak Shahzad Islamabad"
+    ]
+  },
+  {
+    "name": "Ankora / Simly Dam Reservoir, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "reservoir",
+    "lat": 33.7917,
+    "lon": 73.2833,
+    "radius_km": 0.3,
+    "prompts": [
+      "Simly Dam reservoir blue water and concrete spillway hills Islamabad",
+      "Simly Dam scenic lake and water filtration plant Islamabad"
+    ]
+  },
+  {
+    "name": "Dino Valley Park, Monal Pir Sohawa Road, Margalla",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "theme_park",
+    "lat": 33.7667,
+    "lon": 73.0667,
+    "radius_km": 0.08,
+    "prompts": [
+      "Dino Valley theme park dinosaur statues in pine forest Margalla Hills Islamabad",
+      "Dino Valley family adventure park Pir Sohawa road Margalla"
+    ]
+  },
+  {
+    "name": "Shahdara Picnic Spot & Freshwater Stream, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "natural_landmark",
+    "lat": 33.7611,
+    "lon": 73.1667,
+    "radius_km": 0.15,
+    "prompts": [
+      "Shahdara Valley freshwater mountain stream charpoys in shallow water Margalla foothills Islamabad",
+      "Shahdara picnic spot green hills and rocky stream Islamabad"
+    ]
+  },
+  {
+    "name": "Islamabad International Airport IIAP Passenger Terminal",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "airport",
+    "lat": 33.5489,
+    "lon": 72.825,
+    "radius_km": 0.3,
+    "prompts": [
+      "Islamabad International Airport IIAP curved passenger terminal glass apron control tower",
+      "New Islamabad Airport main departures concourse and runway"
+    ]
+  },
+  {
+    "name": "Zero Point Interchange, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "interchange",
+    "lat": 33.6889,
+    "lon": 73.0611,
+    "radius_km": 0.1,
+    "prompts": [
+      "Zero Point Interchange multi-level cloverleaf flyovers Kashmir Highway Faisal Avenue Islamabad",
+      "Zero Point flyover network and landscaped green loops Islamabad"
+    ]
+  },
+  {
+    "name": "Faizabad Interchange & Metro Station, Islamabad/Rawalpindi",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "interchange",
+    "lat": 33.6639,
+    "lon": 73.0778,
+    "radius_km": 0.1,
+    "prompts": [
+      "Faizabad Interchange massive elevated flyovers and Metro Bus station boundary Islamabad Rawalpindi",
+      "Faizabad junction connecting Murree Road and Expressway"
+    ]
+  },
+  {
+    "name": "Golra Sharif Railway Station & Heritage Museum, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "railway_station",
+    "lat": 33.6708,
+    "lon": 72.9486,
+    "radius_km": 0.05,
+    "prompts": [
+      "Golra Sharif historic colonial railway junction stone station and steam locomotive museum Islamabad",
+      "Golra Railway Heritage Museum antique carriages and banyan tree platform"
+    ]
+  },
+  {
+    "name": "Srinagar (Kashmir) Highway Corridor, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "highway",
+    "lat": 33.6778,
+    "lon": 73.0333,
+    "radius_km": 0.2,
+    "prompts": [
+      "Srinagar Highway expansive multi-lane landscaped expressway pine trees Islamabad",
+      "Kashmir Highway central artery connecting airport to Islamabad"
+    ]
+  },
+  {
+    "name": "Islamabad Expressway Toll Plaza & Gulberg Interchange",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "highway",
+    "lat": 33.5972,
+    "lon": 73.125,
+    "radius_km": 0.15,
+    "prompts": [
+      "Islamabad Expressway multi-lane highway flyover Gulberg Greens entrance Islamabad",
+      "Islamabad Expressway signal-free corridor and flyover bridges"
+    ]
+  },
+  {
+    "name": "Metro Bus Saddar-Pak Secretariat Elevated Corridor, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "transit_corridor",
+    "lat": 33.7111,
+    "lon": 73.0583,
+    "radius_km": 0.1,
+    "prompts": [
+      "Rawalpindi Islamabad Metro Bus red articulated bus on elevated dedicated flyover Blue Area",
+      "Metro Bus station glass elevated platform Jinnah Avenue Islamabad"
+    ]
+  },
+  {
+    "name": "Chaman / Rawal Road Interchange, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "interchange",
+    "lat": 33.6806,
+    "lon": 73.0972,
+    "radius_km": 0.08,
+    "prompts": [
+      "Rawal Dam Chowk flyover and landscaped underpass Club Road Islamabad",
+      "Rawal Dam junction interchange Islamabad"
+    ]
+  },
+  {
+    "name": "Murree Expressway (N-75) Toll Plaza, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "highway",
+    "lat": 33.7444,
+    "lon": 73.1833,
+    "radius_km": 0.1,
+    "prompts": [
+      "Murree Expressway N-75 toll booths and mountain foothills gateway Islamabad",
+      "N-75 Expressway entry towards Murree Hills Islamabad"
+    ]
+  },
+  {
+    "name": "G.T. Road Tarnol Interchange, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "highway",
+    "lat": 33.6333,
+    "lon": 72.9056,
+    "radius_km": 0.1,
+    "prompts": [
+      "Tarnol GT Road flyover and railway overhead bridge western entrance Islamabad",
+      "Tarnol junction commercial trucks and GT Road highway"
+    ]
+  },
+  {
+    "name": "Shrine of Bari Imam (Hazrat Shah Abdul Latif Kazmi), Nurpur Shahan, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "shrine",
+    "lat": 33.7472,
+    "lon": 73.1194,
+    "radius_km": 0.05,
+    "prompts": [
+      "Shrine of Bari Imam green dome complex marble courtyard Nurpur Shahan Islamabad",
+      "Bari Imam shrine entrance and devotees plaza Margalla foothills"
+    ]
+  },
+  {
+    "name": "Bahria Enclave Grand Jamia Mosque & Dancing Fountains, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "mosque",
+    "lat": 33.6917,
+    "lon": 73.2083,
+    "radius_km": 0.08,
+    "prompts": [
+      "Bahria Enclave Grand Jamia Mosque Turkish ottoman architecture and commercial boulevard Islamabad",
+      "Bahria Enclave fountain circle and modern residential sector Islamabad"
+    ]
+  },
+  {
+    "name": "Gulberg Greens D-Markaz & Canal City, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "commercial_district",
+    "lat": 33.5833,
+    "lon": 73.15,
+    "radius_km": 0.15,
+    "prompts": [
+      "Gulberg Greens D-Markaz grand commercial square glass buildings and boulevard Islamabad",
+      "Gulberg Greens palm tree avenues and waterfront boulevard Islamabad"
+    ]
+  },
+  {
+    "name": "DHA Phase 2 Central Boulevard & Clock Tower, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "residential_district",
+    "lat": 33.5167,
+    "lon": 73.15,
+    "radius_km": 0.1,
+    "prompts": [
+      "DHA Phase 2 Islamabad main boulevard clock tower commercial square",
+      "DHA Phase 2 entrance gates and landscaped roundabouts Islamabad"
+    ]
+  },
+  {
+    "name": "Park View City Grand Mosque & Lake, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "residential_district",
+    "lat": 33.6806,
+    "lon": 73.1861,
+    "radius_km": 0.1,
+    "prompts": [
+      "Park View City downtown lake and grand mosque Malot Margalla views Islamabad",
+      "Park View City commercial downtown and residential hills Islamabad"
+    ]
+  },
+  {
+    "name": "1965 War Memorial & Shakarparian Parade Ground, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "national_monument",
+    "lat": 33.6861,
+    "lon": 73.0833,
+    "radius_km": 0.1,
+    "prompts": [
+      "Shakarparian National Parade Ground grandstands and military monument Islamabad",
+      "Pakistan Day parade grandstand Shakarparian Islamabad"
+    ]
+  },
+  {
+    "name": "Talhar & Gokina Village Pine Ridge, Margalla Hills, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "mountain_ridge",
+    "lat": 33.7833,
+    "lon": 73.05,
+    "radius_km": 0.2,
+    "prompts": [
+      "Gokina and Talhar village pine ridge viewpoints Margalla Hills behind Islamabad",
+      "Margalla highland rural terraced fields and pine forests Islamabad"
+    ]
+  },
+  {
+    "name": "Kenthla Dam & Reservoir, Margalla Basin, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "reservoir",
+    "lat": 33.7833,
+    "lon": 72.8667,
+    "radius_km": 0.15,
+    "prompts": [
+      "Kenthla Dam scenic blue water reservoir nestled in Margalla hills Islamabad",
+      "Kenthla Dam spillway and picnic ridge Islamabad"
+    ]
+  },
+  {
+    "name": "Rawal Dam Spillway & Old Bridge, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "dam",
+    "lat": 33.6944,
+    "lon": 73.1194,
+    "radius_km": 0.08,
+    "prompts": [
+      "Rawal Dam concrete masonry spillway gates and downstream canyon Islamabad",
+      "Rawal Dam reservoir wall and observation tower Islamabad"
+    ]
+  },
+  {
+    "name": "Saidpur Old Hindu Temple & Gurdwara Complex, Islamabad",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "category": "historical_temple",
+    "lat": 33.7422,
+    "lon": 73.0692,
+    "radius_km": 0.05,
+    "prompts": [
+      "Saidpur village ancient Hindu temple stone facade and step pond Margalla Islamabad",
+      "Historic Rama Temple and Sikh gurdwara building Saidpur village Islamabad"
+    ]
+  },
+  {
+    "name": "Badshahi Mosque, Lahore",
+    "city": "Lahore",
+    "country": "Pakistan",
+    "category": "historical_mosque",
+    "lat": 31.5881,
+    "lon": 74.3108,
+    "radius_km": 0.05,
+    "prompts": [
+      "Badshahi Mosque grand red sandstone Mughal courtyard and white marble domes Lahore",
+      "Badshahi Mosque vast courtyard minarets Lahore"
+    ]
+  },
+  {
+    "name": "Minar-e-Pakistan, Greater Iqbal Park, Lahore",
+    "city": "Lahore",
+    "country": "Pakistan",
+    "category": "national_monument",
+    "lat": 31.5925,
+    "lon": 74.3094,
+    "radius_km": 0.05,
+    "prompts": [
+      "Minar-e-Pakistan tall white memorial tower Greater Iqbal Park Lahore",
+      "Minar-e-Pakistan tower and surrounding fountains Lahore"
+    ]
+  },
+  {
+    "name": "Lahore Fort (Shahi Qila), Lahore",
+    "city": "Lahore",
+    "country": "Pakistan",
+    "category": "unesco_world_heritage",
+    "lat": 31.5881,
+    "lon": 74.3153,
+    "radius_km": 0.08,
+    "prompts": [
+      "Lahore Fort Shahi Qila Alamgiri Gate red sandstone Mughal fortress Lahore",
+      "Lahore Fort Sheesh Mahal mirror palace and Diwan-e-Aam"
+    ]
+  },
+  {
+    "name": "Wazir Khan Mosque, Walled City, Lahore",
+    "city": "Lahore",
+    "country": "Pakistan",
+    "category": "historical_mosque",
+    "lat": 31.5833,
+    "lon": 74.3217,
+    "radius_km": 0.05,
+    "prompts": [
+      "Wazir Khan Mosque intricate glazed tilework kashi-kari and minarets Old Lahore",
+      "Wazir Khan Mosque courtyard vibrant fresco wall murals Lahore"
+    ]
+  },
+  {
+    "name": "Shalimar Gardens (Shalamar Bagh), Lahore",
+    "city": "Lahore",
+    "country": "Pakistan",
+    "category": "unesco_world_heritage",
+    "lat": 31.5861,
+    "lon": 74.3819,
+    "radius_km": 0.08,
+    "prompts": [
+      "Shalimar Gardens Mughal terraced water cascades fountains and pavilions Lahore",
+      "Shalimar Gardens historic Mughal water gardens Lahore"
+    ]
+  },
+  {
+    "name": "Packages Mall, Walton Road, Lahore",
+    "city": "Lahore",
+    "country": "Pakistan",
+    "category": "shopping_mall",
+    "lat": 31.4722,
+    "lon": 74.3542,
+    "radius_km": 0.08,
+    "prompts": [
+      "Packages Mall grand modern shopping mall atrium Walton Road Lahore",
+      "Packages Mall exterior facade and parking plaza Lahore"
+    ]
+  },
+  {
+    "name": "Emporium Mall by Nishat, Johar Town, Lahore",
+    "city": "Lahore",
+    "country": "Pakistan",
+    "category": "shopping_mall",
+    "lat": 31.4678,
+    "lon": 74.2667,
+    "radius_km": 0.08,
+    "prompts": [
+      "Emporium Mall massive contemporary glass retail shopping complex Johar Town Lahore",
+      "Emporium Mall interior atrium and Nishat Hotel Lahore"
+    ]
+  },
+  {
+    "name": "Gaddafi Stadium (Lahore Cricket Stadium), Gulberg, Lahore",
+    "city": "Lahore",
+    "country": "Pakistan",
+    "category": "stadium",
+    "lat": 31.5133,
+    "lon": 74.3333,
+    "radius_km": 0.1,
+    "prompts": [
+      "Gaddafi Stadium red brick Mughal architectural arches cricket ground Lahore",
+      "Gaddafi Stadium cricket arena and floodlights Lahore"
+    ]
+  },
+  {
+    "name": "Liberty Market Roundabout, Gulberg 3, Lahore",
+    "city": "Lahore",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 31.5097,
+    "lon": 74.3425,
+    "radius_km": 0.08,
+    "prompts": [
+      "Liberty Market bustling roundabout illuminated shops Gulberg Lahore",
+      "Liberty Market circular shopping plaza and fountain Lahore"
+    ]
+  },
+  {
+    "name": "MM Alam Road Commercial Food Street, Gulberg, Lahore",
+    "city": "Lahore",
+    "country": "Pakistan",
+    "category": "commercial_district",
+    "lat": 31.5167,
+    "lon": 74.35,
+    "radius_km": 0.1,
+    "prompts": [
+      "MM Alam Road upscale restaurants cafes and fashion boutiques Gulberg Lahore",
+      "MM Alam Road evening street dining Lahore"
+    ]
+  },
+  {
+    "name": "Wagah Border Flag Ceremony Arena, Lahore",
+    "city": "Lahore",
+    "country": "Pakistan",
+    "category": "national_monument",
+    "lat": 31.605,
+    "lon": 74.5728,
+    "radius_km": 0.05,
+    "prompts": [
+      "Wagah Border stadium amphitheatre flag lowering ceremony Lahore Pakistan",
+      "Wagah Border gate and national parade arena"
+    ]
+  },
+  {
+    "name": "Tomb of Jahangir, Shahdara, Lahore",
+    "city": "Lahore",
+    "country": "Pakistan",
+    "category": "unesco_world_heritage",
+    "lat": 31.6225,
+    "lon": 74.3033,
+    "radius_km": 0.08,
+    "prompts": [
+      "Tomb of Jahangir sandstone and marble mausoleum minarets Shahdara Lahore",
+      "Jahangir Tomb Persian gardens and marble mosaics Lahore"
+    ]
+  },
+  {
+    "name": "Government College University GCU Gothic Tower, Lahore",
+    "city": "Lahore",
+    "country": "Pakistan",
+    "category": "university_campus",
+    "lat": 31.5732,
+    "lon": 74.3084,
+    "radius_km": 0.05,
+    "prompts": [
+      "Government College University GCU Gothic clock tower red brick campus Lahore",
+      "GCU Lahore historic colonial academic hall"
+    ]
+  },
+  {
+    "name": "Chauburji Monument & Orange Line Metro, Lahore",
+    "city": "Lahore",
+    "country": "Pakistan",
+    "category": "historical_monument",
+    "lat": 31.5542,
+    "lon": 74.3042,
+    "radius_km": 0.05,
+    "prompts": [
+      "Chauburji historic four-towered Mughal gateway monument and Orange Line metro Lahore",
+      "Chauburji monument tile mosaic towers Lahore"
+    ]
+  },
+  {
+    "name": "Eiffel Tower Replica, Bahria Town, Lahore",
+    "city": "Lahore",
+    "country": "Pakistan",
+    "category": "monument",
+    "lat": 31.3653,
+    "lon": 74.1889,
+    "radius_km": 0.05,
+    "prompts": [
+      "Eiffel Tower replica steel monument illuminated Bahria Town Lahore",
+      "Bahria Town Lahore Eiffel Tower park and boulevard"
+    ]
+  },
+  {
+    "name": "Mazar-e-Quaid (Jinnah Mausoleum), Karachi",
+    "city": "Karachi",
+    "country": "Pakistan",
+    "category": "national_monument",
+    "lat": 24.8753,
+    "lon": 67.0408,
+    "radius_km": 0.05,
+    "prompts": [
+      "Mazar-e-Quaid white marble modernist cube dome mausoleum Karachi",
+      "Mazar-e-Quaid Quaid-e-Azam tomb illuminated gardens Karachi"
+    ]
+  },
+  {
+    "name": "Clifton Beach & Sea View Promenade, Karachi",
+    "city": "Karachi",
+    "country": "Pakistan",
+    "category": "coast",
+    "lat": 24.7892,
+    "lon": 67.0583,
+    "radius_km": 0.2,
+    "prompts": [
+      "Clifton Sea View sandy beach Arabian Sea camels and promenade Karachi",
+      "Sea View Clifton beach coastline sunset Karachi"
+    ]
+  },
+  {
+    "name": "Mohatta Palace Museum, Clifton, Karachi",
+    "city": "Karachi",
+    "country": "Pakistan",
+    "category": "historical_palace",
+    "lat": 24.8142,
+    "lon": 67.0322,
+    "radius_km": 0.05,
+    "prompts": [
+      "Mohatta Palace Rajasthani pink Jodhpur sandstone palace museum Clifton Karachi",
+      "Mohatta Palace gardens and stone domes Karachi"
+    ]
+  },
+  {
+    "name": "Frere Hall & Gardens, Saddar, Karachi",
+    "city": "Karachi",
+    "country": "Pakistan",
+    "category": "colonial_architecture",
+    "lat": 24.8472,
+    "lon": 67.0333,
+    "radius_km": 0.05,
+    "prompts": [
+      "Frere Hall Venetian Gothic yellow limestone building Sadequain ceiling murals Karachi",
+      "Frere Hall historic colonial library and lawns Karachi"
+    ]
+  },
+  {
+    "name": "Port Grand Waterfront Food Street, Karachi",
+    "city": "Karachi",
+    "country": "Pakistan",
+    "category": "commercial_district",
+    "lat": 24.8444,
+    "lon": 66.9889,
+    "radius_km": 0.08,
+    "prompts": [
+      "Port Grand waterfront boardwalk restaurants old bridge harbor Native Jetty Karachi",
+      "Port Grand Karachi evening food street along harbor"
+    ]
+  },
+  {
+    "name": "PAF Museum, Shahrah-e-Faisal, Karachi",
+    "city": "Karachi",
+    "country": "Pakistan",
+    "category": "aircraft_monument",
+    "lat": 24.8876,
+    "lon": 67.0984,
+    "radius_km": 0.1,
+    "prompts": [
+      "PAF Museum outdoor aircraft display park fighter jets Pakistan Air Force Karachi",
+      "Pakistan Air Force Museum Shahrah-e-Faisal Karachi military aircraft"
+    ]
+  },
+  {
+    "name": "Dolmen Mall Clifton, Karachi",
+    "city": "Karachi",
+    "country": "Pakistan",
+    "category": "shopping_mall",
+    "lat": 24.8097,
+    "lon": 67.0333,
+    "radius_km": 0.05,
+    "prompts": [
+      "Dolmen Mall Clifton sea-facing luxury retail mall complex Karachi",
+      "Dolmen Mall interior multi-level atrium Karachi"
+    ]
+  },
+  {
+    "name": "Bahria Town Grand Jamia Mosque Karachi, Super Highway",
+    "city": "Karachi",
+    "country": "Pakistan",
+    "category": "national_mosque",
+    "lat": 25.0167,
+    "lon": 67.3333,
+    "radius_km": 0.1,
+    "prompts": [
+      "Grand Jamia Mosque Bahria Town Karachi massive white marble domes and minaret",
+      "Bahria Town Karachi Grand Mosque architecture"
+    ]
+  },
+  {
+    "name": "Empress Market, Saddar, Karachi",
+    "city": "Karachi",
+    "country": "Pakistan",
+    "category": "colonial_architecture",
+    "lat": 24.8614,
+    "lon": 67.0306,
+    "radius_km": 0.05,
+    "prompts": [
+      "Empress Market Victorian Gothic stone clock tower bazaar Saddar Karachi",
+      "Empress Market heritage building and pedestrian plaza Karachi"
+    ]
+  },
+  {
+    "name": "Do Darya Waterfront Dining, Phase 8 DHA, Karachi",
+    "city": "Karachi",
+    "country": "Pakistan",
+    "category": "commercial_district",
+    "lat": 24.7556,
+    "lon": 67.0722,
+    "radius_km": 0.1,
+    "prompts": [
+      "Do Darya coastal wooden deck restaurants overlooking Arabian Sea Phase 8 DHA Karachi",
+      "Do Darya open-air seaside dining Karachi"
+    ]
+  },
+  {
+    "name": "Habib Bank Plaza (HBL Plaza), I.I. Chundrigar Road, Karachi",
+    "city": "Karachi",
+    "country": "Pakistan",
+    "category": "commercial_towers",
+    "lat": 24.8522,
+    "lon": 67.0056,
+    "radius_km": 0.05,
+    "prompts": [
+      "Habib Bank Plaza historic tall skyscraper financial district I.I. Chundrigar Road Karachi",
+      "HBL Plaza tower Karachi financial center"
+    ]
+  },
+  {
+    "name": "National Stadium Karachi (NSK), Stadium Road",
+    "city": "Karachi",
+    "country": "Pakistan",
+    "category": "stadium",
+    "lat": 24.8936,
+    "lon": 67.0808,
+    "radius_km": 0.1,
+    "prompts": [
+      "National Stadium Karachi international cricket ground floodlights and stands",
+      "NSK cricket stadium turf and grandstand Karachi"
+    ]
+  },
+  {
+    "name": "Ayub National Park, Rawalpindi",
+    "city": "Rawalpindi",
+    "country": "Pakistan",
+    "category": "park",
+    "lat": 33.5667,
+    "lon": 73.0833,
+    "radius_km": 0.15,
+    "prompts": [
+      "Ayub National Park lakes boating canals and military museum Rawalpindi",
+      "Ayub Park green gardens and recreation grounds Rawalpindi"
+    ]
+  },
+  {
+    "name": "Raja Bazaar & Dingi Khoyi, Rawalpindi",
+    "city": "Rawalpindi",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 33.6083,
+    "lon": 73.0556,
+    "radius_km": 0.08,
+    "prompts": [
+      "Raja Bazaar historic bustling marketplace old wooden carved balconies Rawalpindi",
+      "Raja Bazaar narrow commercial alleys Rawalpindi"
+    ]
+  },
+  {
+    "name": "Rawalpindi Cricket Stadium, Double Road",
+    "city": "Rawalpindi",
+    "country": "Pakistan",
+    "category": "stadium",
+    "lat": 33.6472,
+    "lon": 73.0778,
+    "radius_km": 0.08,
+    "prompts": [
+      "Rawalpindi Cricket Stadium international cricket pavilion and floodlights",
+      "Rawalpindi Stadium turf and grandstands"
+    ]
+  },
+  {
+    "name": "PAF Aircraft Monument, Rawalpindi, Chandni Chowk / Old Airport",
+    "city": "Rawalpindi",
+    "country": "Pakistan",
+    "category": "aircraft_monument",
+    "lat": 33.595,
+    "lon": 73.08,
+    "radius_km": 0.05,
+    "prompts": [
+      "Pakistan Air Force F-86 Sabre fighter jet monument Rawalpindi Chandni Chowk Old Airport Road",
+      "PAF fighter jet on display pedestal Rawalpindi"
+    ]
+  },
+  {
+    "name": "Saddar Bazaar Rawalpindi & Mall Road",
+    "city": "Rawalpindi",
+    "country": "Pakistan",
+    "category": "commercial_district",
+    "lat": 33.5967,
+    "lon": 73.0542,
+    "radius_km": 0.1,
+    "prompts": [
+      "Saddar Rawalpindi cantonment colonial shop fronts Bank Road Mall Road",
+      "Saddar commercial market Rawalpindi"
+    ]
+  },
+  {
+    "name": "Islamia College University, Peshawar",
+    "city": "Peshawar",
+    "country": "Pakistan",
+    "category": "university_campus",
+    "lat": 33.9986,
+    "lon": 71.4756,
+    "radius_km": 0.08,
+    "prompts": [
+      "Islamia College Peshawar iconic Oriental Gothic red brick architecture and clock tower",
+      "Islamia College main building and manicured gardens Peshawar"
+    ]
+  },
+  {
+    "name": "Bala Hissar Fort, Peshawar",
+    "city": "Peshawar",
+    "country": "Pakistan",
+    "category": "fortress",
+    "lat": 34.0117,
+    "lon": 71.5714,
+    "radius_km": 0.08,
+    "prompts": [
+      "Bala Hissar Fort massive historic brick bastion fortress overlooking Peshawar city",
+      "Bala Hissar Fort frontier corps battlements Peshawar"
+    ]
+  },
+  {
+    "name": "Qissa Khwani Bazaar, Peshawar",
+    "city": "Peshawar",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 34.01,
+    "lon": 71.5667,
+    "radius_km": 0.05,
+    "prompts": [
+      "Qissa Khwani Bazaar Storytellers Market brass teapots and historic street Peshawar",
+      "Qissa Khwani traditional street market Peshawar"
+    ]
+  },
+  {
+    "name": "Mahabat Khan Mosque, Peshawar",
+    "city": "Peshawar",
+    "country": "Pakistan",
+    "category": "historical_mosque",
+    "lat": 34.0114,
+    "lon": 71.5706,
+    "radius_km": 0.05,
+    "prompts": [
+      "Mahabat Khan Mosque white marble Mughal courtyard and tall minarets Old Peshawar",
+      "Mahabat Khan Mosque interior tilework and prayer hall Peshawar"
+    ]
+  },
+  {
+    "name": "Bab-e-Khyber (Khyber Pass Gateway), Jamrud / Peshawar",
+    "city": "Peshawar",
+    "country": "Pakistan",
+    "category": "national_monument",
+    "lat": 33.9972,
+    "lon": 71.3917,
+    "radius_km": 0.05,
+    "prompts": [
+      "Bab-e-Khyber stone arch gateway monument to Khyber Pass Jamrud Peshawar",
+      "Bab-e-Khyber arch across the highway"
+    ]
+  },
+  {
+    "name": "Clock Tower (Ghanta Ghar), Faisalabad",
+    "city": "Faisalabad",
+    "country": "Pakistan",
+    "category": "civic_monument",
+    "lat": 31.4186,
+    "lon": 73.0789,
+    "radius_km": 0.05,
+    "prompts": [
+      "Clock Tower Ghanta Ghar Victorian stone tower center of eight bazaars Faisalabad",
+      "Ghanta Ghar Faisalabad clock tower roundabout"
+    ]
+  },
+  {
+    "name": "University of Agriculture Faisalabad (UAF) Campus",
+    "city": "Faisalabad",
+    "country": "Pakistan",
+    "category": "university_campus",
+    "lat": 31.43,
+    "lon": 73.07,
+    "radius_km": 0.1,
+    "prompts": [
+      "University of Agriculture Faisalabad UAF colonial clock tower academic block",
+      "UAF campus grounds and historic buildings Faisalabad"
+    ]
+  },
+  {
+    "name": "D Ground Commercial Market & Food Park, Faisalabad",
+    "city": "Faisalabad",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 31.4056,
+    "lon": 73.1111,
+    "radius_km": 0.08,
+    "prompts": [
+      "D Ground People Colony commercial market restaurants Faisalabad",
+      "D Ground park and shopping center Faisalabad"
+    ]
+  },
+  {
+    "name": "Tomb of Shah Rukn-e-Alam, Multan",
+    "city": "Multan",
+    "country": "Pakistan",
+    "category": "historical_shrine",
+    "lat": 30.1983,
+    "lon": 71.4722,
+    "radius_km": 0.05,
+    "prompts": [
+      "Tomb of Shah Rukn-e-Alam octagonal red brick and blue glazed ceramic dome Multan",
+      "Shah Rukn-e-Alam shrine high mound fortress Multan"
+    ]
+  },
+  {
+    "name": "Shrine of Bahauddin Zakariya, Multan",
+    "city": "Multan",
+    "country": "Pakistan",
+    "category": "historical_shrine",
+    "lat": 30.1994,
+    "lon": 71.4736,
+    "radius_km": 0.05,
+    "prompts": [
+      "Shrine of Bahauddin Zakariya white and blue tiled dome Multan Fort",
+      "Bahauddin Zakariya tomb courtyard Multan"
+    ]
+  },
+  {
+    "name": "Multan Cricket Stadium, Multan",
+    "city": "Multan",
+    "country": "Pakistan",
+    "category": "stadium",
+    "lat": 30.1583,
+    "lon": 71.4361,
+    "radius_km": 0.1,
+    "prompts": [
+      "Multan Cricket Stadium international sports ground floodlights and turf",
+      "Multan cricket stadium arena"
+    ]
+  },
+  {
+    "name": "Nishan-e-Manzil & Cantonment Gate, Gujranwala",
+    "city": "Gujranwala",
+    "country": "Pakistan",
+    "category": "monument",
+    "lat": 32.16,
+    "lon": 74.19,
+    "radius_km": 0.05,
+    "prompts": [
+      "Nishan-e-Manzil military memorial monument park Gujranwala Cantt",
+      "Gujranwala Cantonment main boulevard monument"
+    ]
+  },
+  {
+    "name": "Sheranwala Bagh & Old Gate, Gujranwala",
+    "city": "Gujranwala",
+    "country": "Pakistan",
+    "category": "park",
+    "lat": 32.1556,
+    "lon": 74.1833,
+    "radius_km": 0.08,
+    "prompts": [
+      "Sheranwala Bagh public park and historic city entrance Gujranwala",
+      "Sheranwala garden Gujranwala"
+    ]
+  },
+  {
+    "name": "Iqbal Manzil (Birthplace of Allama Iqbal), Sialkot",
+    "city": "Sialkot",
+    "country": "Pakistan",
+    "category": "historical_building",
+    "lat": 32.4939,
+    "lon": 74.5361,
+    "radius_km": 0.05,
+    "prompts": [
+      "Iqbal Manzil birthplace museum of national poet Allama Iqbal Sialkot",
+      "Iqbal Manzil historic residence balconies Sialkot"
+    ]
+  },
+  {
+    "name": "Sialkot Clock Tower & Saddar Cantt",
+    "city": "Sialkot",
+    "country": "Pakistan",
+    "category": "civic_monument",
+    "lat": 32.5028,
+    "lon": 74.5417,
+    "radius_km": 0.05,
+    "prompts": [
+      "Sialkot Clock Tower Victorian colonial stone tower Saddar Cantt Sialkot",
+      "Clock Tower roundabout Sialkot"
+    ]
+  },
+  {
+    "name": "Pacca Qila (Pakka Qal'a), Hyderabad, Sindh",
+    "city": "Hyderabad",
+    "country": "Pakistan",
+    "category": "fortress",
+    "lat": 25.3958,
+    "lon": 68.3708,
+    "radius_km": 0.08,
+    "prompts": [
+      "Pacca Qila historic Talpur red-brick fortified citadel Hyderabad Sindh",
+      "Pakka Qila fortress walls Hyderabad"
+    ]
+  },
+  {
+    "name": "Tombs of the Talpur Mirs, Hyderabad, Sindh",
+    "city": "Hyderabad",
+    "country": "Pakistan",
+    "category": "historical_shrine",
+    "lat": 25.4222,
+    "lon": 68.3667,
+    "radius_km": 0.05,
+    "prompts": [
+      "Tombs of Talpur Mirs blue and green glazed tilework domes Hyderabad Sindh",
+      "Talpur dynasty royal mausoleums Hyderabad"
+    ]
+  },
+  {
+    "name": "Hanna Lake & Urrak Valley, Quetta",
+    "city": "Quetta",
+    "country": "Pakistan",
+    "category": "reservoir",
+    "lat": 30.25,
+    "lon": 67.1,
+    "radius_km": 0.15,
+    "prompts": [
+      "Hanna Lake turquoise water reservoir surrounded by arid brown mountains Quetta",
+      "Hanna Lake bridge and picnic pavilion Quetta"
+    ]
+  },
+  {
+    "name": "Command and Staff College, Quetta",
+    "city": "Quetta",
+    "country": "Pakistan",
+    "category": "military_campus",
+    "lat": 30.2222,
+    "lon": 67.05,
+    "radius_km": 0.1,
+    "prompts": [
+      "Command and Staff College stone colonial military academy buildings Quetta",
+      "Staff College Quetta entrance gate and grounds"
+    ]
+  },
+  {
+    "name": "Liaquat Park & Prince Road Bazaar, Quetta",
+    "city": "Quetta",
+    "country": "Pakistan",
+    "category": "commercial_market",
+    "lat": 30.1833,
+    "lon": 67.0167,
+    "radius_km": 0.08,
+    "prompts": [
+      "Quetta dry fruit and Afghan rug bazaar Prince Road Liaquat Park",
+      "Quetta central city bazaar arid mountain backdrop"
+    ]
+  },
+  {
+    "name": "Mushkpuri Peak, Nathia Gali, KPK, Pakistan",
+    "city": "Abbottabad",
+    "country": "Pakistan",
+    "category": "mountain_peak",
+    "lat": 34.0625,
+    "lon": 73.4358,
+    "radius_km": 10.0,
+    "prompts": [
+      "Mushkpuri Peak green mountain meadow ridge Nathia Gali Galyat Abbottabad",
+      "Mushkpuri summit pine trees and alpine meadow trail"
+    ]
+  },
+  {
+    "name": "Miranjani Peak, Nathia Gali, KPK, Pakistan",
+    "city": "Abbottabad",
+    "country": "Pakistan",
+    "category": "mountain_peak",
+    "lat": 34.1167,
+    "lon": 73.4333,
+    "radius_km": 10.0,
+    "prompts": [
+      "Miranjani Peak highest summit in Galyat pine forest ridge Nathia Gali",
+      "Miranjani mountain trail overlooking Hazara and Kashmir"
+    ]
+  },
+  {
+    "name": "Ilyasi Mosque & Natural Spring, Abbottabad",
+    "city": "Abbottabad",
+    "country": "Pakistan",
+    "category": "mosque",
+    "lat": 34.1667,
+    "lon": 73.2333,
+    "radius_km": 0.05,
+    "prompts": [
+      "Ilyasi Mosque grand white facade over freshwater natural spring Abbottabad",
+      "Ilyasi Mosque famous pakora bazaar and mountain spring Abbottabad"
+    ]
+  },
+  {
+    "name": "Thandiani Hill Station, Abbottabad",
+    "city": "Abbottabad",
+    "country": "Pakistan",
+    "category": "mountain_ridge",
+    "lat": 34.2333,
+    "lon": 73.35,
+    "radius_km": 0.2,
+    "prompts": [
+      "Thandiani pine forest hill station ridge clouds Abbottabad",
+      "Thandiani mountain summit viewpoint overlooking Pir Panjal"
+    ]
+  },
+  {
+    "name": "Mall Road Murree, Murree Hills",
+    "city": "Murree",
+    "country": "Pakistan",
+    "category": "commercial_street",
+    "lat": 33.907,
+    "lon": 73.3943,
+    "radius_km": 0.08,
+    "prompts": [
+      "Mall Road Murree pedestrian mountain hill station shopping street shops hotels",
+      "Murree Mall Road bustling evening street"
+    ]
+  },
+  {
+    "name": "Patriata New Murree Chairlift & Cable Car",
+    "city": "Murree",
+    "country": "Pakistan",
+    "category": "viewpoint",
+    "lat": 33.8821,
+    "lon": 73.4562,
+    "radius_km": 0.1,
+    "prompts": [
+      "Patriata New Murree cable car gondola and chairlift riding over pine tree canopy",
+      "Patriata hill station ridge chairlift Murree"
+    ]
+  },
+  {
+    "name": "PAF Aircraft Monument, Lower Topa, Murree, Pakistan",
+    "city": "Murree",
+    "country": "Pakistan",
+    "category": "aircraft_monument",
+    "lat": 33.9115,
+    "lon": 73.415,
+    "radius_km": 0.05,
+    "prompts": [
+      "Pakistan Air Force Sabre F-86 fighter aircraft monument Lower Topa Murree",
+      "PAF aircraft monument installed roundabout Lower Topa Murree"
+    ]
+  },
+  {
+    "name": "Malam Jabba Ski Resort & Chairlift, Swat",
+    "city": "Swat",
+    "country": "Pakistan",
+    "category": "mountain_resort",
+    "lat": 34.7997,
+    "lon": 72.5714,
+    "radius_km": 0.1,
+    "prompts": [
+      "Malam Jabba ski resort hotel slopes and chairlift snow mountains Swat Valley",
+      "Malam Jabba alpine mountain chairlift Swat"
+    ]
+  },
+  {
+    "name": "White Palace Marghazar, Swat",
+    "city": "Swat",
+    "country": "Pakistan",
+    "category": "historical_palace",
+    "lat": 34.7167,
+    "lon": 72.3333,
+    "radius_km": 0.05,
+    "prompts": [
+      "White Palace Marghazar white marble heritage residence foothills Swat",
+      "Sufed Mahal White Palace hotel and gardens Swat"
+    ]
+  },
+  {
+    "name": "Baltit Fort, Karimabad, Hunza Valley",
+    "city": "Gilgit",
+    "country": "Pakistan",
+    "category": "fortress",
+    "lat": 36.3267,
+    "lon": 74.6711,
+    "radius_km": 0.05,
+    "prompts": [
+      "Baltit Fort ancient Tibetan-style fortress wooden balconies overlooking Hunza Valley",
+      "Baltit Fort Karimabad snow mountain background"
+    ]
+  },
+  {
+    "name": "Passu Cones & Cathedral Peaks, Hunza",
+    "city": "Gilgit",
+    "country": "Pakistan",
+    "category": "mountain_peak",
+    "lat": 36.468,
+    "lon": 74.887,
+    "radius_km": 5.0,
+    "prompts": [
+      "Passu Cones Cathedral needle rock peaks Karakoram Highway Hunza",
+      "Passu Cones pointed mountain spires Hunza Valley"
+    ]
+  },
+  {
+    "name": "Attabad Lake Turquoise Waters, Hunza",
+    "city": "Gilgit",
+    "country": "Pakistan",
+    "category": "reservoir",
+    "lat": 36.3333,
+    "lon": 74.8667,
+    "radius_km": 0.3,
+    "prompts": [
+      "Attabad Lake vivid turquoise blue water and sheer rocky canyon walls Karakoram",
+      "Attabad Lake boats cruising Karakoram Highway tunnel"
+    ]
+  },
+  {
+    "name": "Shangrila Resort & Lower Kachura Lake, Skardu",
+    "city": "Skardu",
+    "country": "Pakistan",
+    "category": "mountain_resort",
+    "lat": 35.4222,
+    "lon": 75.4472,
+    "radius_km": 0.08,
+    "prompts": [
+      "Shangrila Resort Chinese-style red pagoda chalets around heart-shaped Kachura Lake Skardu",
+      "Shangrila Resort Lower Kachura Lake Skardu Baltistan"
+    ]
+  },
+  {
+    "name": "Deosai National Park Plains (Land of Giants), Skardu",
+    "city": "Skardu",
+    "country": "Pakistan",
+    "category": "national_park",
+    "lat": 35.05,
+    "lon": 75.45,
+    "radius_km": 15.0,
+    "prompts": [
+      "Deosai Plains high altitude alpine plateau wildflowers green rolling tundra Skardu",
+      "Deosai National Park wide open plains and snow peaks"
+    ]
+  },
+  {
+    "name": "Katpana Cold Desert Dunes, Skardu",
+    "city": "Skardu",
+    "country": "Pakistan",
+    "category": "desert",
+    "lat": 35.3333,
+    "lon": 75.5833,
+    "radius_km": 0.5,
+    "prompts": [
+      "Katpana cold desert white sand dunes surrounded by snow-capped mountains Skardu",
+      "Katpana cold sand desert Indus river Skardu"
+    ]
+  },
+  {
+    "name": "PAF F-86 Sabre Monument, Sargodha, Pakistan",
+    "city": "Sargodha",
+    "country": "Pakistan",
+    "category": "aircraft_monument",
+    "lat": 32.062,
+    "lon": 72.671,
+    "radius_km": 0.05,
+    "prompts": [
+      "PAF Base Sargodha Club Chowk F-86 Sabre fighter aircraft monument Pakistan",
+      "PAF Sabre jet monument roundabout Sargodha"
+    ]
+  },
+  {
+    "name": "Noor Mahal Palace, Bahawalpur, Punjab",
+    "city": "Bahawalpur",
+    "country": "Pakistan",
+    "category": "historical_palace",
+    "lat": 29.3972,
+    "lon": 71.6669,
+    "radius_km": 0.05,
+    "prompts": [
+      "Noor Mahal Italian chateau style palace Corinthian columns Bahawalpur",
+      "Noor Mahal illuminated palace facade Bahawalpur"
+    ]
+  },
+  {
+    "name": "Derawar Fort, Cholistan Desert, Bahawalpur",
+    "city": "Bahawalpur",
+    "country": "Pakistan",
+    "category": "fortress",
+    "lat": 28.7675,
+    "lon": 71.3342,
+    "radius_km": 0.1,
+    "prompts": [
+      "Derawar Fort massive circular red brick bastions rising out of Cholistan desert sands",
+      "Derawar Fort Cholistan desert fortress walls"
+    ]
+  },
+  {
+    "name": "Lansdowne Bridge & Sukkur Barrage, Sukkur, Sindh",
+    "city": "Sukkur",
+    "country": "Pakistan",
+    "category": "bridge",
+    "lat": 27.7,
+    "lon": 68.8833,
+    "radius_km": 0.1,
+    "prompts": [
+      "Lansdowne Bridge historic steel cantilever railway bridge over Indus River Sukkur",
+      "Sukkur Barrage arches and Lansdowne Bridge"
+    ]
+  },
+  {
+    "name": "Mohenjo-daro Buddhist Stupa & Great Bath, Larkana",
+    "city": "Larkana",
+    "country": "Pakistan",
+    "category": "unesco_world_heritage",
+    "lat": 27.3283,
+    "lon": 68.1386,
+    "radius_km": 0.15,
+    "prompts": [
+      "Mohenjo-daro ancient baked brick ruins Buddhist stupa mound Indus Valley Civilization Larkana",
+      "Mohenjo Daro archaeological ruins Great Bath Larkana"
+    ]
+  },
+  {
+    "name": "Quaid-e-Awam University Campus, Nawabshah",
+    "city": "Nawabshah",
+    "country": "Pakistan",
+    "category": "university_campus",
+    "lat": 26.2444,
+    "lon": 68.4111,
+    "radius_km": 0.1,
+    "prompts": [
+      "Quaid-e-Awam University of Engineering QUEST campus Nawabshah Shaheed Benazirabad",
+      "QUEST university academic blocks Nawabshah"
+    ]
+  },
+  {
+    "name": "Mangla Dam & Viewpoint, Mirpur, Azad Kashmir",
+    "city": "Mirpur",
+    "country": "Pakistan",
+    "category": "dam",
+    "lat": 33.1417,
+    "lon": 73.6472,
+    "radius_km": 0.2,
+    "prompts": [
+      "Mangla Dam massive water reservoir and powerhouse lake viewpoint Mirpur Azad Kashmir",
+      "Mangla Dam spillway and lake Mirpur AJK"
+    ]
+  },
+  {
+    "name": "Muzaffarabad Red Fort & Neelum River Confluence, AJK",
+    "city": "Muzaffarabad",
+    "country": "Pakistan",
+    "category": "fortress",
+    "lat": 34.3708,
+    "lon": 73.4708,
+    "radius_km": 0.08,
+    "prompts": [
+      "Red Fort Rutta Qila historic stone fortress Neelum River bend Muzaffarabad Kashmir",
+      "Muzaffarabad confluence of Jhelum and Neelum rivers Red Fort"
+    ]
+  },
+  {
+    "name": "Gwadar Port & Hammerhead Rock (Koh-e-Batil), Gwadar",
+    "city": "Gwadar",
+    "country": "Pakistan",
+    "category": "port",
+    "lat": 25.12,
+    "lon": 62.325,
+    "radius_km": 0.2,
+    "prompts": [
+      "Gwadar Port deep sea harbor cranes and Koh-e-Batil hammerhead rock Arabian Sea",
+      "Gwadar peninsula hammerhead headland and East Bay expressway"
+    ]
+  },
+  {
+    "name": "Takht-i-Bahi Buddhist Monastery Ruins, Mardan",
+    "city": "Mardan",
+    "country": "Pakistan",
+    "category": "unesco_world_heritage",
+    "lat": 34.3197,
+    "lon": 71.9794,
+    "radius_km": 0.08,
+    "prompts": [
+      "Takht-i-Bahi ancient Gandharan Buddhist stone monastery ruins perched on hill Mardan",
+      "Takht-i-Bahi stupa court and monk cells Mardan"
+    ]
+  },
+  {
+    "name": "Kohat Tunnel (Friendship Tunnel) & Pass, Kohat",
+    "city": "Kohat",
+    "country": "Pakistan",
+    "category": "tunnel",
+    "lat": 33.645,
+    "lon": 71.49,
+    "radius_km": 0.1,
+    "prompts": [
+      "Kohat Friendship Tunnel highway mountain portal Indus highway KPK",
+      "Kohat Pass mountain road and tunnel entrance"
+    ]
+  },
+  {
+    "name": "Gomal University New Campus, Dera Ismail Khan",
+    "city": "Dera Ismail Khan",
+    "country": "Pakistan",
+    "category": "university_campus",
+    "lat": 31.8333,
+    "lon": 70.9,
+    "radius_km": 0.1,
+    "prompts": [
+      "Gomal University campus administration building and lawns Dera Ismail Khan",
+      "Gomal University DI Khan"
+    ]
+  },
+  {
+    "name": "Ghazi Ghat Bridge & Indus River Promenade, Dera Ghazi Khan",
+    "city": "Dera Ghazi Khan",
+    "country": "Pakistan",
+    "category": "bridge",
+    "lat": 30.05,
+    "lon": 70.6333,
+    "radius_km": 0.1,
+    "prompts": [
+      "Ghazi Ghat bridge spanning Indus River connecting Multan and Dera Ghazi Khan",
+      "Indus river bridge DG Khan"
+    ]
+  },
+  {
+    "name": "Sheikh Zayed Palace & Desert Oasis, Rahim Yar Khan",
+    "city": "Rahim Yar Khan",
+    "country": "Pakistan",
+    "category": "historical_palace",
+    "lat": 28.4211,
+    "lon": 70.2989,
+    "radius_km": 0.08,
+    "prompts": [
+      "Sheikh Zayed Palace Abu Dhabi royal residence Cholistan desert gateway Rahim Yar Khan",
+      "Rahim Yar Khan royal palace gardens"
+    ]
+  },
+  {
+    "name": "Harappa Archaeological Ruins & Museum, Sahiwal",
+    "city": "Sahiwal",
+    "country": "Pakistan",
+    "category": "archaeological_ruins",
+    "lat": 30.63,
+    "lon": 72.8642,
+    "radius_km": 0.1,
+    "prompts": [
+      "Harappa ancient Indus civilization baked brick cemetery and granary ruins Sahiwal",
+      "Harappa archaeological site mound Sahiwal"
+    ]
+  },
+  {
+    "name": "Rohtas Fort (Qila Rohtas), Jhelum, Punjab",
+    "city": "Jhelum",
+    "country": "Pakistan",
+    "category": "unesco_world_heritage",
+    "lat": 32.9664,
+    "lon": 73.5769,
+    "radius_km": 0.1,
+    "prompts": [
+      "Rohtas Fort Sohail Gate colossal Sher Shah Suri stone fortress walls Jhelum",
+      "Rohtas Fort massive stone battlements and gates Jhelum"
+    ]
+  },
+  {
+    "name": "University of Gujrat (UOG) Hafiz Hayat Campus, Gujrat",
+    "city": "Gujrat",
+    "country": "Pakistan",
+    "category": "university_campus",
+    "lat": 32.6417,
+    "lon": 74.0667,
+    "radius_km": 0.1,
+    "prompts": [
+      "University of Gujrat Hafiz Hayat campus central library modern brick architecture",
+      "UOG Gujrat university campus lawns"
+    ]
+  },
+  {
+    "name": "Attock Fort & Indus River Confluence, Attock",
+    "city": "Attock",
+    "country": "Pakistan",
+    "category": "fortress",
+    "lat": 33.8907,
+    "lon": 72.2385,
+    "radius_km": 0.1,
+    "prompts": [
+      "Attock Fort Mughal stone battlements overlooking confluence of Indus and Kabul rivers",
+      "Attock Fort river fortress walls"
+    ]
+  },
+  {
+    "name": "Saif-ul-Malook Lake & Malika Parbat, Naran, Mansehra",
+    "city": "Mansehra",
+    "country": "Pakistan",
+    "category": "alpine_lake",
+    "lat": 34.8778,
+    "lon": 73.6931,
+    "radius_km": 0.2,
+    "prompts": [
+      "Lake Saif-ul-Malook emerald green alpine glacial lake reflecting Malika Parbat Naran Kaghan",
+      "Saif-ul-Malook lake boats and snowy peaks Naran"
+    ]
+  },
+  {
+    "name": "Chilas Rock Carvings & Indus Gorge, Chilas",
+    "city": "Chilas",
+    "country": "Pakistan",
+    "category": "heritage_site",
+    "lat": 35.42,
+    "lon": 74.1,
+    "radius_km": 0.2,
+    "prompts": [
+      "Chilas ancient Buddhist petroglyphs rock carvings along Indus River Karakoram Highway",
+      "Chilas rock art canyon Indus river gorge"
+    ]
+  },
+  {
+    "name": "Shahi Mosque & Chitral Fort, Chitral",
+    "city": "Chitral",
+    "country": "Pakistan",
+    "category": "historical_mosque",
+    "lat": 35.85,
+    "lon": 71.7833,
+    "radius_km": 0.08,
+    "prompts": [
+      "Shahi Mosque Chitral white domes and minarets Kunar River Tirich Mir backdrop",
+      "Chitral Shahi Masjid and historic Mehtar fort"
+    ]
+  },
+  {
+    "name": "Quaid-e-Azam Residency, Ziarat, Balochistan",
+    "city": "Ziarat",
+    "country": "Pakistan",
+    "category": "historical_building",
+    "lat": 30.3853,
+    "lon": 67.7269,
+    "radius_km": 0.05,
+    "prompts": [
+      "Quaid-e-Azam Residency wooden colonial heritage architecture pine trees Ziarat Balochistan",
+      "Ziarat Residency historic wooden building"
+    ]
+  },
+  {
+    "name": "Mir Chakar Rind Fort, Turbat, Kech, Balochistan",
+    "city": "Turbat",
+    "country": "Pakistan",
+    "category": "fortress",
+    "lat": 26.0,
+    "lon": 63.05,
+    "radius_km": 0.08,
+    "prompts": [
+      "Punnu Fort Mir Chakar Rind historic mud-brick citadel Kech River valley Turbat",
+      "Turbat historic mud castle Balochistan"
+    ]
+  },
+  {
+    "name": "Shrine of Baba Bulleh Shah, Kasur, Punjab",
+    "city": "Kasur",
+    "country": "Pakistan",
+    "category": "shrine",
+    "lat": 31.1167,
+    "lon": 74.45,
+    "radius_km": 0.05,
+    "prompts": [
+      "Shrine of Sufi poet Baba Bulleh Shah marble courtyard green dome Kasur Punjab",
+      "Bulleh Shah shrine entrance Kasur"
+    ]
+  },
+  {
+    "name": "Hiran Minar & Hunting Pavilion, Sheikhupura",
+    "city": "Sheikhupura",
+    "country": "Pakistan",
+    "category": "historical_monument",
+    "lat": 31.7486,
+    "lon": 73.9519,
+    "radius_km": 0.08,
+    "prompts": [
+      "Hiran Minar Mughal circular tower and octagonal water pavilion tank Sheikhupura",
+      "Hiran Minar water reservoir and historic tower Sheikhupura"
+    ]
+  },
+  {
+    "name": "Okara Military Farms & Clock Tower, Okara",
+    "city": "Okara",
+    "country": "Pakistan",
+    "category": "civic_monument",
+    "lat": 30.81,
+    "lon": 73.45,
+    "radius_km": 0.05,
+    "prompts": [
+      "Okara city clock tower square and historic dairy farms Punjab",
+      "Okara city center clock tower"
+    ]
+  },
+  {
+    "name": "Kot Diji Fort (Fort Ahmadabad), Khairpur, Sindh",
+    "city": "Khairpur",
+    "country": "Pakistan",
+    "category": "fortress",
+    "lat": 27.3455,
+    "lon": 68.7067,
+    "radius_km": 0.08,
+    "prompts": [
+      "Kot Diji Fort massive historic mud and kiln-brick hill fortress bastions Khairpur Sindh",
+      "Kot Diji fort battlements overlooking date palms"
+    ]
+  },
+  {
+    "name": "Shah Jahan Mosque & Makli Necropolis, Thatta, Sindh",
+    "city": "Thatta",
+    "country": "Pakistan",
+    "category": "unesco_world_heritage",
+    "lat": 24.7472,
+    "lon": 67.9272,
+    "radius_km": 0.1,
+    "prompts": [
+      "Shah Jahan Mosque ninety-three blue glazed ceramic domes Thatta Sindh",
+      "Makli Necropolis vast historic sandstone carved tombs Thatta"
+    ]
+  }
+]

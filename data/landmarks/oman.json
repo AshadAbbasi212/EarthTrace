@@ -1,0 +1,132 @@
+[
+  {
+    "name": "Sultan Qaboos Grand Mosque, Muscat",
+    "city": "Muscat",
+    "country": "Oman",
+    "category": "national_mosque",
+    "lat": 23.5839,
+    "lon": 58.3889,
+    "radius_km": 0.08,
+    "prompts": [
+      "Sultan Qaboos Grand Mosque Indian sandstone central dome five minarets Persian carpet Muscat",
+      "Sultan Qaboos Grand Mosque marble courtyard and archways Muscat"
+    ]
+  },
+  {
+    "name": "Mutrah Corniche & Souq, Muscat",
+    "city": "Muscat",
+    "country": "Oman",
+    "category": "commercial_market",
+    "lat": 23.6231,
+    "lon": 58.5636,
+    "radius_km": 0.08,
+    "prompts": [
+      "Mutrah Corniche harbor waterfront traditional dhows giant incense burner monument Muscat",
+      "Mutrah Souq ornate stained glass lattice entrance Muscat"
+    ]
+  },
+  {
+    "name": "Al Alam Palace & Twin Forts (Al Jalali & Al Mirani), Old Muscat",
+    "city": "Muscat",
+    "country": "Oman",
+    "category": "historical_palace",
+    "lat": 23.6158,
+    "lon": 58.5947,
+    "radius_km": 0.05,
+    "prompts": [
+      "Al Alam Palace Sultan's ceremonial palace gold and blue mushroom columns Old Muscat",
+      "Al Alam Palace facade and Al Jalali Fort background Muscat"
+    ]
+  },
+  {
+    "name": "Al Mughsail Beach Blowholes & Marneef Cave, Salalah, Dhofar",
+    "city": "Salalah",
+    "country": "Oman",
+    "category": "coast",
+    "lat": 16.8778,
+    "lon": 53.7667,
+    "radius_km": 0.1,
+    "prompts": [
+      "Marneef Cave and natural sea water blowholes crashing limestone cliffs Al Mughsail Salalah",
+      "Salalah Khareef season green misty mountains and frankincense trees"
+    ]
+  },
+  {
+    "name": "Sultan Qaboos Mosque Salalah & Frankincense Land Museum",
+    "city": "Salalah",
+    "country": "Oman",
+    "category": "mosque",
+    "lat": 17.0167,
+    "lon": 54.0833,
+    "radius_km": 0.05,
+    "prompts": [
+      "Sultan Qaboos Mosque Salalah two tall minarets and central dome Dhofar",
+      "Al Baleed Archaeological Park and Land of Frankincense Salalah"
+    ]
+  },
+  {
+    "name": "Nizwa Fort & Round Tower, Nizwa",
+    "city": "Nizwa",
+    "country": "Oman",
+    "category": "fortress",
+    "lat": 22.9333,
+    "lon": 57.5306,
+    "radius_km": 0.05,
+    "prompts": [
+      "Nizwa Fort massive circular stone tower battlements and surrounding date palm oasis Oman",
+      "Nizwa Fort cannon parapet and Old Souq Oman"
+    ]
+  },
+  {
+    "name": "Jebel Shams (Grand Canyon of Arabia), Al Hamra",
+    "city": "Nizwa",
+    "country": "Oman",
+    "category": "mountain_peak",
+    "lat": 23.2389,
+    "lon": 57.2647,
+    "radius_km": 1.0,
+    "prompts": [
+      "Jebel Shams mountain Balcony Walk sheer vertical canyon abyss Grand Canyon of Oman",
+      "Jebel Shams summit rocky cliffs overlooking deep wadi"
+    ]
+  },
+  {
+    "name": "Sur Dhow Yard & Al Ayjah Lighthouse, Sur",
+    "city": "Sur",
+    "country": "Oman",
+    "category": "port",
+    "lat": 22.5667,
+    "lon": 59.5333,
+    "radius_km": 0.08,
+    "prompts": [
+      "Al Ayjah Lighthouse white watchtower and traditional wooden dhow ship building yard Sur Oman",
+      "Sur lagoon suspension bridge and dhow harbor"
+    ]
+  },
+  {
+    "name": "Sohar Fort & Sultan Qaboos Mosque, Sohar",
+    "city": "Sohar",
+    "country": "Oman",
+    "category": "fortress",
+    "lat": 24.3667,
+    "lon": 56.75,
+    "radius_km": 0.05,
+    "prompts": [
+      "Sohar Fort bright white stone coastal castle battlements and date palms Batinah coast",
+      "Sultan Qaboos Mosque Sohar blue tiled domes"
+    ]
+  },
+  {
+    "name": "Khasab Castle & Musandam Fjords (Khawr Sham), Khasab",
+    "city": "Khasab",
+    "country": "Oman",
+    "category": "fortress",
+    "lat": 26.1833,
+    "lon": 56.25,
+    "radius_km": 0.2,
+    "prompts": [
+      "Khasab Castle Portuguese fortress and fjord dhow cruising sheer limestone sea cliffs Musandam",
+      "Fjords of Musandam dramatic rocky cliffs turquoise water Khasab"
+    ]
+  }
+]

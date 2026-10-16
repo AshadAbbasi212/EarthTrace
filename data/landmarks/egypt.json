@@ -1,0 +1,288 @@
+[
+  {
+    "name": "Great Pyramid of Giza & Sphinx, Giza, Cairo, Egypt",
+    "city": "Cairo",
+    "country": "Egypt",
+    "category": "world_landmark",
+    "lat": 29.9792,
+    "lon": 31.1342,
+    "radius_km": 0.1,
+    "prompts": [
+      "Great Pyramid of Giza Khufu limestone pyramid and Great Sphinx desert Cairo Egypt",
+      "Pyramids of Giza Khafre pyramid casing stone and Sphinx"
+    ]
+  },
+  {
+    "name": "Grand Egyptian Museum (GEM), Giza, Egypt",
+    "city": "Cairo",
+    "country": "Egypt",
+    "category": "museum",
+    "lat": 29.995,
+    "lon": 31.12,
+    "radius_km": 0.08,
+    "prompts": [
+      "Grand Egyptian Museum GEM triangular translucent alabaster facade Ramesses II statue Giza",
+      "Grand Egyptian Museum grand staircase and entrance Giza"
+    ]
+  },
+  {
+    "name": "Citadel of Saladin & Mosque of Muhammad Ali, Cairo",
+    "city": "Cairo",
+    "country": "Egypt",
+    "category": "historical_mosque",
+    "lat": 30.0289,
+    "lon": 31.2597,
+    "radius_km": 0.08,
+    "prompts": [
+      "Citadel of Saladin and Mosque of Muhammad Ali alabaster twin minarets overlooking Cairo",
+      "Muhammad Ali Alabaster Mosque courtyard and dome Cairo Citadel"
+    ]
+  },
+  {
+    "name": "Khan el-Khalili Historic Bazaar, Islamic Cairo",
+    "city": "Cairo",
+    "country": "Egypt",
+    "category": "commercial_market",
+    "lat": 30.0475,
+    "lon": 31.2622,
+    "radius_km": 0.08,
+    "prompts": [
+      "Khan el-Khalili historic medieval bazaar brass lamps spices Mamluk arches Cairo",
+      "Khan el-Khalili narrow stone shopping street Islamic Cairo"
+    ]
+  },
+  {
+    "name": "Citadel of Qaitbay, Alexandria, Egypt",
+    "city": "Alexandria",
+    "country": "Egypt",
+    "category": "fortress",
+    "lat": 31.2139,
+    "lon": 29.8856,
+    "radius_km": 0.05,
+    "prompts": [
+      "Citadel of Qaitbay 15th-century stone defensive fortress Pharos lighthouse site Alexandria",
+      "Qaitbay Citadel Mediterranean sea fortress Alexandria"
+    ]
+  },
+  {
+    "name": "Bibliotheca Alexandrina (Library of Alexandria)",
+    "city": "Alexandria",
+    "country": "Egypt",
+    "category": "library",
+    "lat": 31.2089,
+    "lon": 29.9092,
+    "radius_km": 0.05,
+    "prompts": [
+      "Bibliotheca Alexandrina tilted disc granite cylinder hieroglyphic carvings Alexandria",
+      "Library of Alexandria modern waterfront architecture"
+    ]
+  },
+  {
+    "name": "Karnak Temple Complex & Hypostyle Hall, Luxor, Egypt",
+    "city": "Luxor",
+    "country": "Egypt",
+    "category": "unesco_world_heritage",
+    "lat": 25.7189,
+    "lon": 32.6572,
+    "radius_km": 0.1,
+    "prompts": [
+      "Karnak Temple Great Hypostyle Hall 134 colossal sandstone papyrus columns Luxor",
+      "Karnak Temple avenue of ram-headed sphinxes Luxor Egypt"
+    ]
+  },
+  {
+    "name": "Valley of the Kings & Temple of Hatshepsut, Luxor",
+    "city": "Luxor",
+    "country": "Egypt",
+    "category": "unesco_world_heritage",
+    "lat": 25.7381,
+    "lon": 32.6075,
+    "radius_km": 0.1,
+    "prompts": [
+      "Mortuary Temple of Hatshepsut Deir el-Bahari colonnaded limestone terraces cliff Luxor",
+      "Temple of Hatshepsut three tiered terraces desert cliff"
+    ]
+  },
+  {
+    "name": "Abu Simbel Sun Temples of Ramesses II, Aswan, Egypt",
+    "city": "Aswan",
+    "country": "Egypt",
+    "category": "unesco_world_heritage",
+    "lat": 22.3369,
+    "lon": 31.6256,
+    "radius_km": 0.05,
+    "prompts": [
+      "Abu Simbel four colossal seated statues of Ramesses II rock-cut temple Lake Nasser Aswan",
+      "Abu Simbel grand rock temple facade Egypt"
+    ]
+  },
+  {
+    "name": "Philae Temple of Isis & Aswan High Dam",
+    "city": "Aswan",
+    "country": "Egypt",
+    "category": "unesco_world_heritage",
+    "lat": 24.0256,
+    "lon": 32.8842,
+    "radius_km": 0.08,
+    "prompts": [
+      "Philae Temple of Isis island sanctuary pylons Nile River Aswan",
+      "Philae island temple complex Aswan"
+    ]
+  },
+  {
+    "name": "Al Sahaba Mosque & Naama Bay Promenade, Sharm El Sheikh",
+    "city": "Sharm El Sheikh",
+    "country": "Egypt",
+    "category": "national_mosque",
+    "lat": 27.8653,
+    "lon": 34.2981,
+    "radius_km": 0.05,
+    "prompts": [
+      "Al Sahaba Mosque magnificent Ottoman-Fatimid hybrid twin minarets Old Market Sharm El Sheikh",
+      "Naama Bay pedestrian beach promenade Red Sea resort Sharm"
+    ]
+  },
+  {
+    "name": "Al Mina Mosque & Hurghada Marina Boulevard",
+    "city": "Hurghada",
+    "country": "Egypt",
+    "category": "national_mosque",
+    "lat": 27.2289,
+    "lon": 33.8422,
+    "radius_km": 0.05,
+    "prompts": [
+      "Al Mina Mosque white marble domes and minarets Hurghada Marina Red Sea",
+      "Hurghada Marina luxury yacht promenade and restaurants"
+    ]
+  },
+  {
+    "name": "Suez Canal Authority Headquarters & Port Said Lighthouse",
+    "city": "Port Said",
+    "country": "Egypt",
+    "category": "civic_building",
+    "lat": 31.2589,
+    "lon": 32.3089,
+    "radius_km": 0.05,
+    "prompts": [
+      "Suez Canal Authority dome palace building waterfront Port Said northern entrance",
+      "Port Said octagonal concrete historic lighthouse"
+    ]
+  },
+  {
+    "name": "Suez Canal Southern Gateway & Port Tawfik Promenade",
+    "city": "Suez",
+    "country": "Egypt",
+    "category": "port",
+    "lat": 29.9667,
+    "lon": 32.55,
+    "radius_km": 0.1,
+    "prompts": [
+      "Suez Canal southern mouth container ships entering Gulf of Suez Port Tawfik",
+      "Suez city waterfront promenade"
+    ]
+  },
+  {
+    "name": "Dar Ibn Luqman (Where King Louis IX was Imprisoned), Mansoura",
+    "city": "Mansoura",
+    "country": "Egypt",
+    "category": "historical_building",
+    "lat": 31.0436,
+    "lon": 31.3789,
+    "radius_km": 0.05,
+    "prompts": [
+      "Dar Ibn Luqman historic medieval Crusader prison museum Mansoura Nile Delta",
+      "Mansoura University campus buildings"
+    ]
+  },
+  {
+    "name": "Sayyid Ahmed al-Badawi Mosque, Tanta, Gharbia",
+    "city": "Tanta",
+    "country": "Egypt",
+    "category": "historical_shrine",
+    "lat": 30.7872,
+    "lon": 31.0019,
+    "radius_km": 0.05,
+    "prompts": [
+      "Sayyid Ahmed al-Badawi Mosque grand three domes and twin minarets pilgrimage center Tanta",
+      "Al Badawi Mosque courtyard Tanta"
+    ]
+  },
+  {
+    "name": "Monastery of the Holy Virgin (Deir Dronka), Asyut",
+    "city": "Asyut",
+    "country": "Egypt",
+    "category": "historical_church",
+    "lat": 27.1333,
+    "lon": 31.1667,
+    "radius_km": 0.08,
+    "prompts": [
+      "Deir Dronka Monastery of the Holy Virgin carved into mountain cliff Asyut Upper Egypt",
+      "Dronka cave monastery overlooking Nile valley Asyut"
+    ]
+  },
+  {
+    "name": "Wadi El Rayan Waterfalls & Lake Qarun, Faiyum",
+    "city": "Faiyum",
+    "country": "Egypt",
+    "category": "natural_landmark",
+    "lat": 29.2333,
+    "lon": 30.4167,
+    "radius_km": 0.2,
+    "prompts": [
+      "Wadi El Rayan natural desert waterfalls connecting upper and lower lakes Faiyum Egypt",
+      "Wadi Al-Hitan Valley of Whales fossil desert Faiyum"
+    ]
+  },
+  {
+    "name": "Ismailia Canal Promenade & French Colonial Villas",
+    "city": "Ismailia",
+    "country": "Egypt",
+    "category": "colonial_architecture",
+    "lat": 30.5833,
+    "lon": 32.2667,
+    "radius_km": 0.08,
+    "prompts": [
+      "Ferdinand de Lesseps historic villa and Lake Timsah gardens Ismailia Suez Canal",
+      "Ismailia green tree-lined boulevards"
+    ]
+  },
+  {
+    "name": "Shali Fortress & Temple of the Oracle of Amun, Siwa Oasis",
+    "city": "Siwa Oasis",
+    "country": "Egypt",
+    "category": "heritage_village",
+    "lat": 29.2033,
+    "lon": 25.5194,
+    "radius_km": 0.1,
+    "prompts": [
+      "Shali Fortress melting kershef salt-mud brick ruins date palm oasis Siwa Western Desert",
+      "Cleopatra Bath natural spring and salt lake pools Siwa"
+    ]
+  },
+  {
+    "name": "Dahab Blue Hole & Lighthouse Beach Promenade",
+    "city": "Dahab",
+    "country": "Egypt",
+    "category": "coast",
+    "lat": 28.5722,
+    "lon": 34.5369,
+    "radius_km": 0.1,
+    "prompts": [
+      "Dahab Blue Hole deep submarine marine sinkhole Sinai coast Red Sea",
+      "Dahab beachfront boardwalk bedouin cafes and dive shops"
+    ]
+  },
+  {
+    "name": "Cleopatra Beach Rock Bath & Ageeba Cove, Marsa Matruh",
+    "city": "Marsa Matruh",
+    "country": "Egypt",
+    "category": "coast",
+    "lat": 31.35,
+    "lon": 27.2333,
+    "radius_km": 0.15,
+    "prompts": [
+      "Ageeba Beach dramatic Mediterranean limestone cliffs turquoise sea Marsa Matruh",
+      "Cleopatra Rock natural coastal wave bath Marsa Matruh"
+    ]
+  }
+]

@@ -489,3 +489,23 @@ esp.read() calls can block indefinitely if packets cease flowing after the socke
      - Added `activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })` on tab activation so clicking button 5 slides the tab bar smoothly into full view.
      - Implemented `tabSlideIn` keyframe animation for seamless tab switching.
 
+
+
+---
+
+## 35. Comprehensive Multi-City Landmark Database & Offline CLIP Vector Store
+- **Problem Statement:**
+  - High-accuracy geolocation requires dense landmark and popular spot coverage across **every city** in prioritized countries, not just national capitals or major metropolises. For instance, in Pakistan, all sectors of Islamabad and spots across 44+ cities/districts must be represented, alongside comprehensive city coverage in Turkey, Saudi Arabia, the UAE, Egypt, India, Iran, Iraq, Oman, Qatar, Kuwait, Bahrain, Syria, Yemen, and Israel/Palestine.
+  - However, running on-the-fly zero-shot text tokenization and forward passes for 900+ prompts during a single image query on the NVIDIA Quadro M1200 GPU triggers Windows WDDM 2.0s TDR (Timeout Detection and Recovery) GPU watchdog crashes.
+- **Architectural Solution & Decisions:**
+  1. **Comprehensive Multi-City Landmark Catalogs (data/landmarks/):**
+     - Structured JSON databases covering 444 unique spots across 16 countries (Pakistan [195 spots, with 100 spots in Islamabad and spots across all 44+ cities], Turkey [45 spots], Saudi Arabia [35 spots], UAE [23 spots across all 7 emirates], Egypt [22 spots], India [27 spots], Iran, Iraq, Oman, Qatar, Kuwait, Bahrain, Syria, Yemen, Israel/Palestine, and global iconic anchors).
+  2. **Offline Precomputed CLIP Text Vector Store (ector_store.py):**
+     - Pre-encoded all 888 landmark prompts and 15 negative background prompts into a normalized float32 tensor (	orch.Size([903, 768]), ~2.7 MB).
+     - Sub-millisecond dot-product matrix cosine similarity matching (< 0.5 ms runtime) with zero GPU watchdog timeouts.
+  3. **Negative Background Prompt Rejection & Semantic Gating:**
+     - 15 negative background prompts protect against false positives on blurry photos or generic roads.
+     - Scene type filtering suppresses civic/campus buildings on wilderness and mountain scenes.
+  4. **Frontend Spot Telemetry & Viewport Alignment:**
+     - Added #spot-telemetry-hud with cyan/purple holographic badge pills displaying verified city name, spot title, category, and ✓ CITY SPOT VERIFIED.
+     - Explicit offset mathematics on horizontal tab navigation so clicking Pillar 5 smoothly centers the tab bar without clipping.

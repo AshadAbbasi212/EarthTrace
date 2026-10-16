@@ -290,6 +290,32 @@ class LandmarkMatcher:
         Returns exact candidate metadata ONLY if confident, category-compatible, and clearly exceeding negative background prompts.
         """
         model_device = getattr(clip_model, "device", None) or (device or ("cuda" if torch.cuda.is_available() else "cpu"))
+
+        # First check LandmarkVectorStore for instant precomputed search across all cities
+        try:
+            from geolocator.pipeline.vector_store import LandmarkVectorStore
+            v_store = LandmarkVectorStore.get_instance()
+            if v_store.is_ready and hasattr(clip_model, "get_image_features"):
+                im_inputs = clip_proc(images=image, return_tensors="pt").to(model_device)
+                with torch.no_grad():
+                    im_out = clip_model.get_image_features(**im_inputs)
+                    im_pool = im_out.pooler_output if hasattr(im_out, "pooler_output") else im_out
+                    im_features = torch.nn.functional.normalize(im_pool, dim=1)
+                    logit_scale = float(clip_model.logit_scale.exp().item()) if hasattr(clip_model, "logit_scale") else 100.0
+                    v_res = v_store.search(
+                        image_embedding=im_features,
+                        candidate_countries=candidate_countries,
+                        scene_type=scene_type,
+                        has_buildings=has_buildings,
+                        logit_scale=logit_scale,
+                        min_confidence=min_confidence,
+                    )
+                    if v_res is not None:
+                        return v_res
+        except Exception as e_vs:
+            logger.debug("[landmark_matcher] VectorStore search bypass: %s", e_vs)
+
+        # Fallback to local prompt database
         if hasattr(clip_model, "get_text_features") and hasattr(clip_model, "get_image_features"):
             text_features = self._get_text_features(clip_model, clip_proc, model_device)
             im_inputs = clip_proc(images=image, return_tensors="pt").to(model_device)

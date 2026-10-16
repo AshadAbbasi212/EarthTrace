@@ -1,0 +1,457 @@
+[
+  {
+    "name": "The Kaaba & Masjid al-Haram, Mecca",
+    "city": "Mecca",
+    "country": "Saudi Arabia",
+    "category": "world_landmark",
+    "lat": 21.4225,
+    "lon": 39.8262,
+    "radius_km": 0.05,
+    "prompts": [
+      "The Holy Kaaba black cloth kiswah mataf marble courtyard Masjid al-Haram Mecca",
+      "Masjid al-Haram Grand Mosque marble courtyard and Kaaba Mecca"
+    ]
+  },
+  {
+    "name": "Abraj Al Bait Makkah Clock Royal Tower, Mecca",
+    "city": "Mecca",
+    "country": "Saudi Arabia",
+    "category": "commercial_towers",
+    "lat": 21.4189,
+    "lon": 39.8256,
+    "radius_km": 0.05,
+    "prompts": [
+      "Abraj Al Bait Makkah Clock Tower giant four-faced illuminated clock spire towering over Kaaba",
+      "Makkah Royal Clock Tower skyscraper Mecca"
+    ]
+  },
+  {
+    "name": "Mount Arafat (Jabal al-Rahmah), Mecca",
+    "city": "Mecca",
+    "country": "Saudi Arabia",
+    "category": "historical_monument",
+    "lat": 21.3547,
+    "lon": 39.9842,
+    "radius_km": 0.1,
+    "prompts": [
+      "Jabal al-Rahmah Mount of Mercy stone pillar granite hill plains of Arafat Mecca",
+      "Mount Arafat white pillar monument during Hajj pilgrimage"
+    ]
+  },
+  {
+    "name": "Al-Masjid an-Nabawi (Prophet's Mosque Green Dome), Medina",
+    "city": "Medina",
+    "country": "Saudi Arabia",
+    "category": "world_landmark",
+    "lat": 24.4672,
+    "lon": 39.6111,
+    "radius_km": 0.05,
+    "prompts": [
+      "Al-Masjid an-Nabawi Prophet's Mosque iconic Green Dome and giant folding umbrella courtyard Medina",
+      "Prophet's Mosque marble plaza Green Dome and minarets Medina"
+    ]
+  },
+  {
+    "name": "Quba Mosque, Medina",
+    "city": "Medina",
+    "country": "Saudi Arabia",
+    "category": "historical_mosque",
+    "lat": 24.4394,
+    "lon": 39.6172,
+    "radius_km": 0.05,
+    "prompts": [
+      "Quba Mosque first mosque in Islam white domes four minarets palm courtyard Medina",
+      "Masjid Quba white marble portico Medina"
+    ]
+  },
+  {
+    "name": "Mount Uhud & Archers Hill (Jabal al-Rumat), Medina",
+    "city": "Medina",
+    "country": "Saudi Arabia",
+    "category": "mountain_peak",
+    "lat": 24.5033,
+    "lon": 39.6125,
+    "radius_km": 0.2,
+    "prompts": [
+      "Mount Uhud red volcanic mountain ridge and Archers Hill cemetery Medina",
+      "Jabal Uhud rocky mountain backdrop Medina"
+    ]
+  },
+  {
+    "name": "Kingdom Centre & Sky Bridge, Riyadh",
+    "city": "Riyadh",
+    "country": "Saudi Arabia",
+    "category": "commercial_towers",
+    "lat": 24.7114,
+    "lon": 46.6744,
+    "radius_km": 0.05,
+    "prompts": [
+      "Kingdom Centre skyscraper inverted parabolic arch and illuminated Sky Bridge Riyadh",
+      "Kingdom Tower modern reflective skyscraper Olaya Riyadh"
+    ]
+  },
+  {
+    "name": "Al Faisaliyah Centre, Olaya, Riyadh",
+    "city": "Riyadh",
+    "country": "Saudi Arabia",
+    "category": "commercial_towers",
+    "lat": 24.6903,
+    "lon": 46.6853,
+    "radius_km": 0.05,
+    "prompts": [
+      "Al Faisaliyah Centre pyramid skyscraper golden glass sphere top King Fahd Road Riyadh",
+      "Al Faisaliyah Tower modern high-rise Riyadh"
+    ]
+  },
+  {
+    "name": "Historic Diriyah & At-Turaif District, Riyadh",
+    "city": "Riyadh",
+    "country": "Saudi Arabia",
+    "category": "unesco_world_heritage",
+    "lat": 24.7333,
+    "lon": 46.575,
+    "radius_km": 0.1,
+    "prompts": [
+      "At-Turaif UNESCO World Heritage district mud-brick palaces Wadi Hanifa Diriyah Riyadh",
+      "Diriyah mud-brick fortress and heritage buildings Riyadh"
+    ]
+  },
+  {
+    "name": "Masmak Fortress (Al Masmak Palace), Deira, Riyadh",
+    "city": "Riyadh",
+    "country": "Saudi Arabia",
+    "category": "fortress",
+    "lat": 24.6311,
+    "lon": 46.7133,
+    "radius_km": 0.05,
+    "prompts": [
+      "Al Masmak Fortress clay and mud-brick citadel four conical watchtowers historic Riyadh",
+      "Masmak Palace fortress wooden door Riyadh"
+    ]
+  },
+  {
+    "name": "King Abdullah Financial District (KAFD) Towers, Riyadh",
+    "city": "Riyadh",
+    "country": "Saudi Arabia",
+    "category": "commercial_district",
+    "lat": 24.7667,
+    "lon": 46.6389,
+    "radius_km": 0.15,
+    "prompts": [
+      "KAFD King Abdullah Financial District futuristic geometric crystal skyscrapers Riyadh",
+      "KAFD financial towers skyline Riyadh"
+    ]
+  },
+  {
+    "name": "King Fahd's Fountain, Jeddah Corniche",
+    "city": "Jeddah",
+    "country": "Saudi Arabia",
+    "category": "civic_monument",
+    "lat": 21.5161,
+    "lon": 39.1464,
+    "radius_km": 0.05,
+    "prompts": [
+      "King Fahd Fountain world's tallest seawater fountain jet Red Sea Jeddah Corniche",
+      "Jeddah fountain water plume illuminated evening Red Sea"
+    ]
+  },
+  {
+    "name": "Al-Balad Historic District (Old Jeddah), Jeddah",
+    "city": "Jeddah",
+    "country": "Saudi Arabia",
+    "category": "unesco_world_heritage",
+    "lat": 21.4858,
+    "lon": 39.1878,
+    "radius_km": 0.08,
+    "prompts": [
+      "Historic Al-Balad coral stone tower houses intricate carved wooden roshan balconies Jeddah",
+      "Al-Balad Old Jeddah ancient street and wooden latticework"
+    ]
+  },
+  {
+    "name": "Al-Rahmah Floating Mosque, Jeddah Corniche",
+    "city": "Jeddah",
+    "country": "Saudi Arabia",
+    "category": "mosque",
+    "lat": 21.5906,
+    "lon": 39.1103,
+    "radius_km": 0.05,
+    "prompts": [
+      "Al-Rahmah Floating Mosque white turquoise domed mosque built on stilts over Red Sea Jeddah",
+      "Floating Mosque Jeddah Red Sea promenade"
+    ]
+  },
+  {
+    "name": "King Abdulaziz Center for World Culture (Ithra), Dhahran",
+    "city": "Dammam",
+    "country": "Saudi Arabia",
+    "category": "museum",
+    "lat": 26.335,
+    "lon": 50.12,
+    "radius_km": 0.08,
+    "prompts": [
+      "Ithra King Abdulaziz Center smooth pebble-shaped stainless steel architecture Dhahran Dammam",
+      "Ithra cultural center monumental modern landmark"
+    ]
+  },
+  {
+    "name": "Khobar Water Tower & Corniche, Al Khobar",
+    "city": "Al Khobar",
+    "country": "Saudi Arabia",
+    "category": "civic_monument",
+    "lat": 26.2867,
+    "lon": 50.2217,
+    "radius_km": 0.05,
+    "prompts": [
+      "Khobar Water Tower modern illuminated beacon Corniche Arabian Gulf Al Khobar",
+      "Al Khobar water tower and seafront park"
+    ]
+  },
+  {
+    "name": "Hegra (Madain Salih - Qasr al-Farid), AlUla",
+    "city": "AlUla",
+    "country": "Saudi Arabia",
+    "category": "unesco_world_heritage",
+    "lat": 26.8,
+    "lon": 37.95,
+    "radius_km": 0.2,
+    "prompts": [
+      "Hegra Madain Salih Qasr al-Farid carved Nabataean tomb sandstone monolith desert AlUla",
+      "Qasr al-Farid lonely tomb Hegra UNESCO AlUla"
+    ]
+  },
+  {
+    "name": "Elephant Rock (Jabal AlFil), AlUla",
+    "city": "AlUla",
+    "country": "Saudi Arabia",
+    "category": "natural_landmark",
+    "lat": 26.6869,
+    "lon": 37.9897,
+    "radius_km": 0.08,
+    "prompts": [
+      "Elephant Rock Jabal AlFil natural elephant-shaped red sandstone arch desert AlUla",
+      "Elephant Rock AlUla illuminated at night"
+    ]
+  },
+  {
+    "name": "Maraya Concert Hall (Mirror Building), Ashar Valley, AlUla",
+    "city": "AlUla",
+    "country": "Saudi Arabia",
+    "category": "civic_building",
+    "lat": 26.7028,
+    "lon": 37.8972,
+    "radius_km": 0.05,
+    "prompts": [
+      "Maraya Concert Hall giant mirrored cube building reflecting red canyon desert Ashar Valley AlUla",
+      "Maraya mirror building AlUla"
+    ]
+  },
+  {
+    "name": "Rijal Almaa Heritage Village, Asir Province, Abha",
+    "city": "Abha",
+    "country": "Saudi Arabia",
+    "category": "unesco_world_heritage",
+    "lat": 18.2167,
+    "lon": 42.3167,
+    "radius_km": 0.08,
+    "prompts": [
+      "Rijal Almaa gingerbread multi-story stone castles white painted windows Asir mountains Abha",
+      "Rijal Almaa traditional stone fortress village"
+    ]
+  },
+  {
+    "name": "Al-Soudah Peak & Asir National Park, Abha",
+    "city": "Abha",
+    "country": "Saudi Arabia",
+    "category": "mountain_peak",
+    "lat": 18.2667,
+    "lon": 42.3667,
+    "radius_km": 1.0,
+    "prompts": [
+      "Jabal Sawda highest peak in Saudi Arabia juniper pine forest clouds Asir Abha",
+      "Al Soudah mountain ridge viewpoint Abha"
+    ]
+  },
+  {
+    "name": "Khamis Mushait Heritage Market & Clock Tower",
+    "city": "Khamis Mushait",
+    "country": "Saudi Arabia",
+    "category": "commercial_market",
+    "lat": 18.3,
+    "lon": 42.7333,
+    "radius_km": 0.05,
+    "prompts": [
+      "Khamis Mushait silver and spice traditional market Asir plateau",
+      "Khamis Mushait city center roundabout"
+    ]
+  },
+  {
+    "name": "Shubra Palace Museum & Rose Valley, Taif",
+    "city": "Taif",
+    "country": "Saudi Arabia",
+    "category": "historical_palace",
+    "lat": 21.2833,
+    "lon": 40.4167,
+    "radius_km": 0.05,
+    "prompts": [
+      "Shubra Palace white marble and wooden lattice balconies heritage museum Taif",
+      "Taif rose fields and mountain palace"
+    ]
+  },
+  {
+    "name": "Al Hada Mountain Cable Car Highway, Taif",
+    "city": "Taif",
+    "country": "Saudi Arabia",
+    "category": "mountain_ridge",
+    "lat": 21.3667,
+    "lon": 40.2833,
+    "radius_km": 0.5,
+    "prompts": [
+      "Al Hada winding mountain switchback highway illuminated night cliffs Taif",
+      "Al Hada cable car and steep mountain escarpment"
+    ]
+  },
+  {
+    "name": "Tabuk Castle (Tabuk Fort) & Ain Sukkar",
+    "city": "Tabuk",
+    "country": "Saudi Arabia",
+    "category": "fortress",
+    "lat": 28.3833,
+    "lon": 36.5667,
+    "radius_km": 0.05,
+    "prompts": [
+      "Tabuk Ottoman stone fortress castle and historic spring Hijaz pilgrimage Tabuk",
+      "Tabuk Castle stone courtyard"
+    ]
+  },
+  {
+    "name": "Wadi Al Disah (Valley of Palms), Tabuk Province",
+    "city": "Tabuk",
+    "country": "Saudi Arabia",
+    "category": "canyon",
+    "lat": 27.6,
+    "lon": 36.4667,
+    "radius_km": 1.0,
+    "prompts": [
+      "Wadi Al Disah dramatic sandstone canyon towers freshwater stream palm trees Tabuk",
+      "Al Disah valley red sandstone pillars"
+    ]
+  },
+  {
+    "name": "Buraidah Date City & Camel Market, Qassim",
+    "city": "Buraidah",
+    "country": "Saudi Arabia",
+    "category": "commercial_market",
+    "lat": 26.3333,
+    "lon": 43.9667,
+    "radius_km": 0.2,
+    "prompts": [
+      "Buraidah world's largest date festival market and desert camel auction Qassim",
+      "Buraidah Date City marketplace Qassim"
+    ]
+  },
+  {
+    "name": "A'arif Fort & Rock Art of Jubbah, Hail",
+    "city": "Hail",
+    "country": "Saudi Arabia",
+    "category": "unesco_world_heritage",
+    "lat": 27.5167,
+    "lon": 41.6833,
+    "radius_km": 0.1,
+    "prompts": [
+      "A'arif Fort mud-brick castle hilltop overlooking Hail city and Jubbah rock art UNESCO",
+      "Qishlah Palace mud-brick fortress Hail"
+    ]
+  },
+  {
+    "name": "Al-Aan Palace & Historic Al-Ukhdood Ruins, Najran",
+    "city": "Najran",
+    "country": "Saudi Arabia",
+    "category": "historical_palace",
+    "lat": 17.4833,
+    "lon": 44.1333,
+    "radius_km": 0.08,
+    "prompts": [
+      "Al-Aan Palace traditional multi-story mud castle palm groves Najran",
+      "Al-Ukhdood archaeological stone inscriptions Najran"
+    ]
+  },
+  {
+    "name": "Farasan Islands & Ottoman Fort, Jizan",
+    "city": "Jizan",
+    "country": "Saudi Arabia",
+    "category": "island",
+    "lat": 16.7,
+    "lon": 42.1167,
+    "radius_km": 0.5,
+    "prompts": [
+      "Farasan Islands turquoise coral reefs and Ottoman fort Red Sea Jizan",
+      "Jizan coastal corniche and Al Dosariya Castle"
+    ]
+  },
+  {
+    "name": "Historic Yanbu Al-Bahr & Royal Commission Waterfront",
+    "city": "Yanbu",
+    "country": "Saudi Arabia",
+    "category": "heritage_village",
+    "lat": 24.0833,
+    "lon": 38.05,
+    "radius_km": 0.1,
+    "prompts": [
+      "Historic Yanbu Al-Bahr old coral stone port buildings and Red Sea waterfront promenade",
+      "Yanbu industrial city palm beach"
+    ]
+  },
+  {
+    "name": "Al-Qara Hill Caves & Al-Ahsa Oasis, Hofuf",
+    "city": "Al Ahsa",
+    "country": "Saudi Arabia",
+    "category": "unesco_world_heritage",
+    "lat": 25.4167,
+    "lon": 49.6833,
+    "radius_km": 0.2,
+    "prompts": [
+      "Al-Qara Mountain intricate wind-carved sandstone caves largest date palm oasis UNESCO Al Ahsa Hofuf",
+      "Ibrahim Palace Ottoman fortress Hofuf Al Ahsa"
+    ]
+  },
+  {
+    "name": "Al Fanateer Beach & Marina Promenade, Jubail",
+    "city": "Jubail",
+    "country": "Saudi Arabia",
+    "category": "coast",
+    "lat": 27.0167,
+    "lon": 49.6667,
+    "radius_km": 0.15,
+    "prompts": [
+      "Al Fanateer beach corniche palm tree promenade Persian Gulf Jubail Industrial City",
+      "Jubail Fanateer Marina"
+    ]
+  },
+  {
+    "name": "Thee Ain Marble Village (Dhee Ayn), Al Bahah",
+    "city": "Al Bahah",
+    "country": "Saudi Arabia",
+    "category": "heritage_village",
+    "lat": 19.9297,
+    "lon": 41.4428,
+    "radius_km": 0.08,
+    "prompts": [
+      "Thee Ayn ancient white marble and multi-story stone castle village banana grove Al Bahah",
+      "Dhee Ayn marble fortress village Saudi Arabia"
+    ]
+  },
+  {
+    "name": "Northern Borders Desert Gateway & Valleys, Arar",
+    "city": "Arar",
+    "country": "Saudi Arabia",
+    "category": "desert",
+    "lat": 30.9833,
+    "lon": 41.0167,
+    "radius_km": 0.5,
+    "prompts": [
+      "Arar desert limestone plains Northern Borders highway gateway Saudi Arabia",
+      "Arar city center park and monument"
+    ]
+  }
+]

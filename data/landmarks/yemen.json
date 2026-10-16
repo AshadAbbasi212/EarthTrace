@@ -1,0 +1,93 @@
+[
+  {
+    "name": "Old City of Sanaa Tower Houses & Bab al-Yaman",
+    "city": "Sanaa",
+    "country": "Yemen",
+    "category": "unesco_world_heritage",
+    "lat": 15.3547,
+    "lon": 44.2156,
+    "radius_km": 0.1,
+    "prompts": [
+      "Old City of Sanaa multi-story rammed earth tower houses white gypsum filigree windows Yemen",
+      "Bab al-Yaman medieval fortified gateway to Old Sanaa"
+    ]
+  },
+  {
+    "name": "Dar al-Hajar (Rock Palace), Wadi Dhahr, Sanaa",
+    "city": "Sanaa",
+    "country": "Yemen",
+    "category": "historical_palace",
+    "lat": 15.4411,
+    "lon": 44.1294,
+    "radius_km": 0.05,
+    "prompts": [
+      "Dar al-Hajar iconic royal palace perched atop towering natural rock pinnacle Wadi Dhahr Sanaa",
+      "Rock Palace Dar al-Hajar Yemen landmark"
+    ]
+  },
+  {
+    "name": "Al Saleh Mosque, Sanaa",
+    "city": "Sanaa",
+    "country": "Yemen",
+    "category": "national_mosque",
+    "lat": 15.325,
+    "lon": 44.2083,
+    "radius_km": 0.08,
+    "prompts": [
+      "Al Saleh Mosque monumental yellow limestone central dome six tall minarets Sanaa",
+      "Al Saleh Grand Mosque facade and courtyard Sanaa"
+    ]
+  },
+  {
+    "name": "Shibam Hadhramaut Mud Skyscraper City",
+    "city": "Shibam",
+    "country": "Yemen",
+    "category": "unesco_world_heritage",
+    "lat": 15.9264,
+    "lon": 48.6278,
+    "radius_km": 0.1,
+    "prompts": [
+      "Shibam Hadhramaut ancient high-rise mud brick skyscrapers Manhattan of the Desert Yemen",
+      "Walled city of Shibam mud tower apartments desert oasis"
+    ]
+  },
+  {
+    "name": "Cisterns of Tawila & Crater Fortress, Aden",
+    "city": "Aden",
+    "country": "Yemen",
+    "category": "historical_monument",
+    "lat": 12.775,
+    "lon": 45.0333,
+    "radius_km": 0.08,
+    "prompts": [
+      "Cisterns of Tawila ancient volcanic rock water tanks Shamsan mountain Crater Aden",
+      "Aden Crater harbor and volcanic mountain backdrop"
+    ]
+  },
+  {
+    "name": "Al-Qahira Castle & Al-Ashrafiya Mosque, Taiz",
+    "city": "Taiz",
+    "country": "Yemen",
+    "category": "fortress",
+    "lat": 13.575,
+    "lon": 44.0167,
+    "radius_km": 0.08,
+    "prompts": [
+      "Cairo Castle Al-Qahira stone citadel perched on Mount Sabir overlooking Taiz city",
+      "Al-Ashrafiya Mosque twin white minarets Taiz"
+    ]
+  },
+  {
+    "name": "Dragon's Blood Tree Forest (Dixam Plateau), Socotra",
+    "city": "Socotra",
+    "country": "Yemen",
+    "category": "natural_landmark",
+    "lat": 12.5167,
+    "lon": 53.9167,
+    "radius_km": 1.0,
+    "prompts": [
+      "Dragon's Blood trees umbrella shaped Dracaena cinnabari Dixam plateau rocky canyon Socotra",
+      "Socotra island endemic dragon blood tree forest"
+    ]
+  }
+]

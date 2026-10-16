@@ -1,0 +1,353 @@
+[
+  {
+    "name": "India Gate & Kartavya Path, New Delhi",
+    "city": "Delhi",
+    "country": "India",
+    "category": "national_monument",
+    "lat": 28.6128,
+    "lon": 77.2294,
+    "radius_km": 0.05,
+    "prompts": [
+      "India Gate triumphal war memorial sandstone arch Kartavya Path New Delhi",
+      "India Gate canopy and ceremonial avenue Delhi"
+    ]
+  },
+  {
+    "name": "Red Fort (Lal Qila), Old Delhi",
+    "city": "Delhi",
+    "country": "India",
+    "category": "unesco_world_heritage",
+    "lat": 28.6561,
+    "lon": 77.2411,
+    "radius_km": 0.08,
+    "prompts": [
+      "Red Fort Lal Qila red sandstone Mughal fortress Lahore Gate Old Delhi",
+      "Red Fort massive defensive walls and battlements Delhi"
+    ]
+  },
+  {
+    "name": "Qutub Minar & Iron Pillar, Mehrauli, Delhi",
+    "city": "Delhi",
+    "country": "India",
+    "category": "unesco_world_heritage",
+    "lat": 28.5244,
+    "lon": 77.1856,
+    "radius_km": 0.05,
+    "prompts": [
+      "Qutub Minar fluted red sandstone minaret tower balcony carvings Mehrauli Delhi",
+      "Qutub Minar complex and Quwwat-ul-Islam mosque"
+    ]
+  },
+  {
+    "name": "Lotus Temple (Bahai House of Worship), New Delhi",
+    "city": "Delhi",
+    "country": "India",
+    "category": "temple",
+    "lat": 28.5533,
+    "lon": 77.2589,
+    "radius_km": 0.05,
+    "prompts": [
+      "Lotus Temple white marble lotus flower petal architecture reflection ponds New Delhi",
+      "Lotus Temple Bahai prayer hall gardens Delhi"
+    ]
+  },
+  {
+    "name": "Taj Mahal & Yamuna River, Agra",
+    "city": "Agra",
+    "country": "India",
+    "category": "world_landmark",
+    "lat": 27.175,
+    "lon": 78.0422,
+    "radius_km": 0.05,
+    "prompts": [
+      "Taj Mahal white marble Mughal mausoleum dome reflecting pool and minarets Agra India",
+      "Taj Mahal symmetry gardens and central dome Yamuna river"
+    ]
+  },
+  {
+    "name": "Agra Fort (Red Sandstone Imperial Palace), Agra",
+    "city": "Agra",
+    "country": "India",
+    "category": "unesco_world_heritage",
+    "lat": 27.1794,
+    "lon": 78.0211,
+    "radius_km": 0.08,
+    "prompts": [
+      "Agra Fort red sandstone Jahangiri Mahal and marble Musamman Burj overlooking Taj Mahal",
+      "Agra Fort massive ramparts and Amar Singh Gate"
+    ]
+  },
+  {
+    "name": "Gateway of India & Taj Mahal Palace Hotel, Mumbai",
+    "city": "Mumbai",
+    "country": "India",
+    "category": "national_monument",
+    "lat": 18.922,
+    "lon": 72.8347,
+    "radius_km": 0.05,
+    "prompts": [
+      "Gateway of India basalt triumphal arch and Taj Mahal Palace Hotel Mumbai harbor",
+      "Gateway of India waterfront monument Colaba Mumbai"
+    ]
+  },
+  {
+    "name": "Chhatrapati Shivaji Maharaj Terminus (VT Station), Mumbai",
+    "city": "Mumbai",
+    "country": "India",
+    "category": "unesco_world_heritage",
+    "lat": 18.94,
+    "lon": 72.8353,
+    "radius_km": 0.05,
+    "prompts": [
+      "CST Victoria Terminus railway station Victorian Gothic revival stained glass dome Mumbai",
+      "CSMT railway terminus clock tower Mumbai"
+    ]
+  },
+  {
+    "name": "Marine Drive & Queen's Necklace Promenade, Mumbai",
+    "city": "Mumbai",
+    "country": "India",
+    "category": "coast",
+    "lat": 18.9431,
+    "lon": 72.8231,
+    "radius_km": 0.15,
+    "prompts": [
+      "Marine Drive curved sea-facing promenade Art Deco buildings Arabian Sea Mumbai",
+      "Queen's Necklace Marine Drive night lights Mumbai"
+    ]
+  },
+  {
+    "name": "Vidhana Soudha & Attara Kacheri, Bengaluru",
+    "city": "Bengaluru",
+    "country": "India",
+    "category": "government",
+    "lat": 12.9797,
+    "lon": 77.5908,
+    "radius_km": 0.05,
+    "prompts": [
+      "Vidhana Soudha monumental Neo-Dravidian granite legislative palace Bangalore",
+      "Vidhana Soudha white granite state capitol Bengaluru"
+    ]
+  },
+  {
+    "name": "Bangalore Palace & Tudor Towers, Bengaluru",
+    "city": "Bengaluru",
+    "country": "India",
+    "category": "historical_palace",
+    "lat": 12.9986,
+    "lon": 77.5922,
+    "radius_km": 0.08,
+    "prompts": [
+      "Bangalore Palace Tudor style stone castle battlements and wooden interiors Bangalore",
+      "Bangalore Palace exterior gardens"
+    ]
+  },
+  {
+    "name": "Victoria Memorial & Maidan Gardens, Kolkata",
+    "city": "Kolkata",
+    "country": "India",
+    "category": "historical_palace",
+    "lat": 22.5447,
+    "lon": 88.3425,
+    "radius_km": 0.08,
+    "prompts": [
+      "Victoria Memorial white Makrana marble monument dome reflecting ponds Maidan Kolkata",
+      "Victoria Memorial colonnades and gardens Calcutta"
+    ]
+  },
+  {
+    "name": "Howrah Bridge (Rabindra Setu) & Hooghly River, Kolkata",
+    "city": "Kolkata",
+    "country": "India",
+    "category": "bridge",
+    "lat": 22.5853,
+    "lon": 88.3467,
+    "radius_km": 0.15,
+    "prompts": [
+      "Howrah Bridge iconic cantilever steel truss bridge over Hooghly River Kolkata",
+      "Howrah Bridge busy yellow taxi traffic Kolkata"
+    ]
+  },
+  {
+    "name": "Kapaleeshwarar Temple Dravidian Gopuram, Mylapore, Chennai",
+    "city": "Chennai",
+    "country": "India",
+    "category": "temple",
+    "lat": 13.0333,
+    "lon": 80.2694,
+    "radius_km": 0.05,
+    "prompts": [
+      "Kapaleeshwarar Temple rainbow painted Dravidian gopuram pyramid tower Mylapore Chennai",
+      "Mylapore temple tank and gopuram Chennai"
+    ]
+  },
+  {
+    "name": "Marina Beach & Light House Promenade, Chennai",
+    "city": "Chennai",
+    "country": "India",
+    "category": "coast",
+    "lat": 13.05,
+    "lon": 80.2833,
+    "radius_km": 0.2,
+    "prompts": [
+      "Marina Beach wide sandy urban coastline Bay of Bengal promenade Chennai",
+      "Marina Beach lighthouse and statues Chennai"
+    ]
+  },
+  {
+    "name": "Charminar & Laad Bazaar, Hyderabad",
+    "city": "Hyderabad",
+    "country": "India",
+    "category": "historical_monument",
+    "lat": 17.3617,
+    "lon": 78.4747,
+    "radius_km": 0.05,
+    "prompts": [
+      "Charminar four grand minarets arched gateway monument Old City Hyderabad",
+      "Charminar illuminated at evening bustling street bazaar Hyderabad"
+    ]
+  },
+  {
+    "name": "Golconda Fort & Acoustic Echo Pavilion, Hyderabad",
+    "city": "Hyderabad",
+    "country": "India",
+    "category": "fortress",
+    "lat": 17.3833,
+    "lon": 78.4011,
+    "radius_km": 0.1,
+    "prompts": [
+      "Golconda Fort medieval granite hilltop citadel fortress walls Hyderabad",
+      "Golconda Fort Bala Hissar pavilion view"
+    ]
+  },
+  {
+    "name": "Sabarmati Ashram & Riverfront Promenade, Ahmedabad",
+    "city": "Ahmedabad",
+    "country": "India",
+    "category": "heritage_site",
+    "lat": 23.06,
+    "lon": 72.58,
+    "radius_km": 0.08,
+    "prompts": [
+      "Sabarmati Ashram Mahatma Gandhi residence Hriday Kunj riverside Ahmedabad",
+      "Sabarmati Riverfront modern promenade Ahmedabad"
+    ]
+  },
+  {
+    "name": "Adalaj Stepwell (Rudabai Stepwell), Gandhinagar / Ahmedabad",
+    "city": "Ahmedabad",
+    "country": "India",
+    "category": "historical_monument",
+    "lat": 23.1667,
+    "lon": 72.58,
+    "radius_km": 0.05,
+    "prompts": [
+      "Adalaj Stepwell five stories deep carved sandstone subterranean architecture Ahmedabad",
+      "Adalaj stepwell intricately carved pillars"
+    ]
+  },
+  {
+    "name": "Hawa Mahal (Palace of Winds), Jaipur",
+    "city": "Jaipur",
+    "country": "India",
+    "category": "historical_palace",
+    "lat": 26.9239,
+    "lon": 75.8267,
+    "radius_km": 0.05,
+    "prompts": [
+      "Hawa Mahal Palace of Winds pink honeycomb sandstone facade jharokha windows Jaipur",
+      "Hawa Mahal five-story pink palace street view Jaipur"
+    ]
+  },
+  {
+    "name": "Amber Fort (Amer Palace) & Maota Lake, Jaipur",
+    "city": "Jaipur",
+    "country": "India",
+    "category": "unesco_world_heritage",
+    "lat": 26.9856,
+    "lon": 75.8511,
+    "radius_km": 0.1,
+    "prompts": [
+      "Amber Fort yellow and pink sandstone Rajput fortress overlooking Maota Lake Jaipur",
+      "Amer Fort Sheesh Mahal mirror courtyard Jaipur"
+    ]
+  },
+  {
+    "name": "Golden Temple (Harmandir Sahib), Amritsar",
+    "city": "Amritsar",
+    "country": "India",
+    "category": "temple",
+    "lat": 31.62,
+    "lon": 74.8764,
+    "radius_km": 0.05,
+    "prompts": [
+      "Golden Temple Harmandir Sahib gold-plated gurdwara surrounded by sacred Amrit Sarovar lake Amritsar",
+      "Golden Temple illuminated at night reflecting in holy pool"
+    ]
+  },
+  {
+    "name": "Dashashwamedh Ghat & Ganga Aarti Steps, Varanasi",
+    "city": "Varanasi",
+    "country": "India",
+    "category": "heritage_site",
+    "lat": 25.3108,
+    "lon": 83.0106,
+    "radius_km": 0.08,
+    "prompts": [
+      "Dashashwamedh Ghat Ganga Aarti ceremony steps holy Ganges river Varanasi",
+      "Varanasi ghats ancient riverfront temples and boats Ganges"
+    ]
+  },
+  {
+    "name": "Dal Lake Shikara Houseboats & Shankaracharya Hill, Srinagar",
+    "city": "Srinagar",
+    "country": "India",
+    "category": "lake",
+    "lat": 34.0833,
+    "lon": 74.8667,
+    "radius_km": 0.2,
+    "prompts": [
+      "Dal Lake wooden carved shikara boats floating gardens Pir Panjal mountains Srinagar Kashmir",
+      "Houseboats on Dal Lake reflection Zabarwan hills Srinagar"
+    ]
+  },
+  {
+    "name": "Capitol Complex (Palace of Assembly & Open Hand), Chandigarh",
+    "city": "Chandigarh",
+    "country": "India",
+    "category": "unesco_world_heritage",
+    "lat": 30.7583,
+    "lon": 76.8042,
+    "radius_km": 0.08,
+    "prompts": [
+      "Le Corbusier Capitol Complex concrete brutalist Palace of Assembly Open Hand Monument Chandigarh",
+      "Open Hand Monument giant rotating metal sculpture Chandigarh"
+    ]
+  },
+  {
+    "name": "Fort Kochi Chinese Fishing Nets & Mattancherry, Kochi",
+    "city": "Kochi",
+    "country": "India",
+    "category": "coast",
+    "lat": 9.9667,
+    "lon": 76.2417,
+    "radius_km": 0.08,
+    "prompts": [
+      "Chinese Fishing Nets cantilever wooden shore-operated fishing rigs Fort Kochi Kerala",
+      "Fort Kochi beach sunset Chinese nets"
+    ]
+  },
+  {
+    "name": "Basilica of Bom Jesus & Church of Our Lady of the Immaculate Conception, Goa",
+    "city": "Goa",
+    "country": "India",
+    "category": "historical_church",
+    "lat": 15.5008,
+    "lon": 73.9117,
+    "radius_km": 0.05,
+    "prompts": [
+      "Basilica of Bom Jesus Baroque red laterite stone Catholic cathedral Old Goa",
+      "Our Lady of the Immaculate Conception Church white zigzag stairway Panaji Goa"
+    ]
+  }
+]

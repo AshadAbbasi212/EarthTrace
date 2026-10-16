@@ -1,0 +1,106 @@
+[
+  {
+    "name": "Kuwait Towers, Arabian Gulf Street, Kuwait City",
+    "city": "Kuwait City",
+    "country": "Kuwait",
+    "category": "national_monument",
+    "lat": 29.3897,
+    "lon": 48.0033,
+    "radius_km": 0.05,
+    "prompts": [
+      "Kuwait Towers three slender towers blue-green enameled steel spheres Arabian Gulf Street Kuwait City",
+      "Kuwait Towers landmark observation spheres and gulf coastline"
+    ]
+  },
+  {
+    "name": "Grand Mosque of Kuwait (Al-Masjid Al-Kabir), Kuwait City",
+    "city": "Kuwait City",
+    "country": "Kuwait",
+    "category": "national_mosque",
+    "lat": 29.3789,
+    "lon": 47.975,
+    "radius_km": 0.05,
+    "prompts": [
+      "Grand Mosque of Kuwait traditional Islamic architecture central dome and minaret Kuwait City",
+      "Al-Masjid Al-Kabir Grand Mosque Kuwait interior dome"
+    ]
+  },
+  {
+    "name": "Al Hamra Tower Skyscraper, Kuwait City",
+    "city": "Kuwait City",
+    "country": "Kuwait",
+    "category": "commercial_towers",
+    "lat": 29.3792,
+    "lon": 47.9936,
+    "radius_km": 0.05,
+    "prompts": [
+      "Al Hamra Tower curved carved concrete and glass skyscraper Kuwait City",
+      "Al Hamra tower tallest building in Kuwait"
+    ]
+  },
+  {
+    "name": "The Scientific Center & Dhow Harbor, Salmiya",
+    "city": "Salmiya",
+    "country": "Kuwait",
+    "category": "museum",
+    "lat": 29.3611,
+    "lon": 48.0778,
+    "radius_km": 0.08,
+    "prompts": [
+      "The Scientific Center Kuwait aquarium and Fateh Al-Khair wooden dhow Salmiya",
+      "Salmiya seaside corniche and dhow pier"
+    ]
+  },
+  {
+    "name": "Marina Mall & Marina Crescent, Salmiya",
+    "city": "Salmiya",
+    "country": "Kuwait",
+    "category": "shopping_mall",
+    "lat": 29.3417,
+    "lon": 48.0667,
+    "radius_km": 0.08,
+    "prompts": [
+      "Marina Mall waterfront glass dome and Marina Crescent promenade Salmiya Kuwait",
+      "Marina Crescent beachfront dining Kuwait"
+    ]
+  },
+  {
+    "name": "The Avenues Mall, Al-Rai, Farwaniya",
+    "city": "Farwaniya",
+    "country": "Kuwait",
+    "category": "shopping_mall",
+    "lat": 29.3039,
+    "lon": 47.9356,
+    "radius_km": 0.1,
+    "prompts": [
+      "The Avenues Mall Kuwait Grand Avenue transparent glass arched roof palm trees shopping district",
+      "The Avenues Mall interior European street promenade Kuwait"
+    ]
+  },
+  {
+    "name": "Red Fort of Jahra (Al-Qasr Al-Ahmar), Jahra",
+    "city": "Jahra",
+    "country": "Kuwait",
+    "category": "fortress",
+    "lat": 29.3361,
+    "lon": 47.6778,
+    "radius_km": 0.05,
+    "prompts": [
+      "Red Fort of Jahra rectangular mud-brick fortress battlements historic Battle of Jahra Kuwait",
+      "Al-Qasr Al-Ahmar Red Fort courtyard Jahra"
+    ]
+  },
+  {
+    "name": "KOC Display Center & Ahmadi Public Park, Al Ahmadi",
+    "city": "Al Ahmadi",
+    "country": "Kuwait",
+    "category": "park",
+    "lat": 29.0778,
+    "lon": 48.0833,
+    "radius_km": 0.1,
+    "prompts": [
+      "Ahmadi oil township landscaped gardens and Kuwait Oil Company headquarters",
+      "Al Ahmadi park and oil city memorial"
+    ]
+  }
+]

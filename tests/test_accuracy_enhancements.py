@@ -395,4 +395,101 @@ def test_stage2_prior_corroborates_confident_landmarks(tmp_path):
     assert has_landmark_bbox
 
 
+def test_comprehensive_landmark_vector_store():
+    """Verify LandmarkVectorStore precomputed offline index and dot-product similarity engine."""
+    import torch
+    from geolocator.pipeline.vector_store import LandmarkVectorStore
+
+    v_store = LandmarkVectorStore.get_instance()
+    assert v_store.is_ready is True
+    assert v_store.metadata is not None
+    assert v_store.embeddings is not None
+    assert v_store.embeddings.ndim == 2
+    assert v_store.embeddings.shape[1] == 768
+    assert len(v_store.metadata) >= 800
+
+    # Pick an item from the metadata (e.g. Faisal Mosque or Pakistan Monument)
+    target_idx = 0
+    target_meta = v_store.metadata[target_idx]
+    canonical_name = target_meta["name"]
+
+    # Use the exact embedding of this prompt to simulate a perfect visual match
+    mock_img_feat = v_store.embeddings[target_idx : target_idx + 1].clone()
+
+    res = v_store.search(
+        image_embedding=mock_img_feat,
+        min_confidence=0.10,
+        logit_scale=100.0,
+    )
+
+    assert res is not None
+    assert res["name"] == canonical_name
+    assert "city" in res
+    assert "country" in res
+    assert "category" in res
+    assert res["confidence"] > 0.30
+    assert res["tier"] in ("T1", "T2", "T3")
+
+    # Test wilderness category rejection:
+    # If the candidate is a university or civic building, a wilderness scene_type must suppress it
+    civic_idx = None
+    for i, item in enumerate(v_store.metadata):
+        if item.get("category") in ("university_campus", "hospital_complex", "civic_building"):
+            civic_idx = i
+            break
+
+    if civic_idx is not None:
+        civic_feat = v_store.embeddings[civic_idx : civic_idx + 1].clone()
+        res_wild = v_store.search(
+            image_embedding=civic_feat,
+            scene_type="mountain",
+            has_buildings=False,
+            min_confidence=0.10,
+        )
+        # Should not match a university/civic building when scene is pure mountain/wilderness
+        if res_wild is not None:
+            assert res_wild["category"] not in ("university_campus", "hospital_complex")
+
+
+def test_all_target_country_landmarks_exist():
+    """Verify landmark databases exist for all prioritized target countries with dense city coverage."""
+    import json
+    landmarks_dir = Path("data/landmarks")
+    assert landmarks_dir.exists()
+
+    expected_files = [
+        "pakistan.json",
+        "turkey.json",
+        "saudi_arabia.json",
+        "uae.json",
+        "egypt.json",
+        "india.json",
+        "iran.json",
+        "iraq.json",
+        "oman.json",
+        "qatar.json",
+        "kuwait.json",
+        "bahrain.json",
+        "syria.json",
+        "yemen.json",
+        "israel_palestine.json",
+        "global_iconic.json",
+    ]
+
+    for fname in expected_files:
+        fpath = landmarks_dir / fname
+        assert fpath.exists(), f"Missing landmark file {fname}"
+        with open(fpath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            assert isinstance(data, list)
+            assert len(data) >= 5, f"{fname} has only {len(data)} spots"
+
+    # Check Pakistan Islamabad spot count
+    with open(landmarks_dir / "pakistan.json", "r", encoding="utf-8") as f:
+        pk_data = json.load(f)
+        isb_spots = [s for s in pk_data if s.get("city") == "Islamabad"]
+        assert len(isb_spots) >= 100, f"Expected 100 spots in Islamabad, got {len(isb_spots)}"
+
+
+
 

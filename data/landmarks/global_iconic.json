@@ -1,0 +1,106 @@
+[
+  {
+    "name": "Eiffel Tower & Champ de Mars, Paris, France",
+    "city": "Paris",
+    "country": "France",
+    "category": "world_landmark",
+    "lat": 48.8584,
+    "lon": 2.2945,
+    "radius_km": 0.05,
+    "prompts": [
+      "Eiffel Tower wrought-iron lattice tower Champ de Mars Seine river Paris France",
+      "Eiffel Tower landmark Paris"
+    ]
+  },
+  {
+    "name": "Colosseum & Arch of Constantine, Rome, Italy",
+    "city": "Rome",
+    "country": "Italy",
+    "category": "world_landmark",
+    "lat": 41.8902,
+    "lon": 12.4922,
+    "radius_km": 0.05,
+    "prompts": [
+      "Colosseum iconic ancient Roman amphitheatre travertine arches Rome Italy",
+      "Flavian Amphitheatre Colosseum exterior Rome"
+    ]
+  },
+  {
+    "name": "Big Ben & Palace of Westminster, London, UK",
+    "city": "London",
+    "country": "United Kingdom",
+    "category": "world_landmark",
+    "lat": 51.5007,
+    "lon": -0.1246,
+    "radius_km": 0.05,
+    "prompts": [
+      "Big Ben Elizabeth Tower clock face and Houses of Parliament Thames bridge London",
+      "Palace of Westminster Big Ben clock tower London"
+    ]
+  },
+  {
+    "name": "Statue of Liberty & New York Harbor, USA",
+    "city": "New York",
+    "country": "United States",
+    "category": "world_landmark",
+    "lat": 40.6892,
+    "lon": -74.0445,
+    "radius_km": 0.05,
+    "prompts": [
+      "Statue of Liberty copper green neoclassical statue torch Liberty Island New York Harbor",
+      "Statue of Liberty Manhattan skyline background"
+    ]
+  },
+  {
+    "name": "Sydney Opera House & Harbor Bridge, Sydney, Australia",
+    "city": "Sydney",
+    "country": "Australia",
+    "category": "world_landmark",
+    "lat": -33.8568,
+    "lon": 151.2153,
+    "radius_km": 0.05,
+    "prompts": [
+      "Sydney Opera House shell sail roof white ceramic tiles Sydney Harbour Australia",
+      "Sydney Opera House and Harbour Bridge"
+    ]
+  },
+  {
+    "name": "Christ the Redeemer (Cristo Redentor), Rio de Janeiro, Brazil",
+    "city": "Rio de Janeiro",
+    "country": "Brazil",
+    "category": "world_landmark",
+    "lat": -22.9519,
+    "lon": -43.2105,
+    "radius_km": 0.05,
+    "prompts": [
+      "Christ the Redeemer colossal Art Deco statue outstretched arms Corcovado Mountain Rio de Janeiro",
+      "Cristo Redentor summit view Rio de Janeiro"
+    ]
+  },
+  {
+    "name": "Machu Picchu Inca Citadel, Andes, Peru",
+    "city": "Cusco",
+    "country": "Peru",
+    "category": "world_landmark",
+    "lat": -13.1631,
+    "lon": -72.545,
+    "radius_km": 0.1,
+    "prompts": [
+      "Machu Picchu ancient Inca stone ruins agricultural terraces Huayna Picchu mountain peak Peru",
+      "Machu Picchu citadel terraces Andes mountains"
+    ]
+  },
+  {
+    "name": "Great Wall of China (Mutianyu), Beijing, China",
+    "city": "Beijing",
+    "country": "China",
+    "category": "world_landmark",
+    "lat": 40.4319,
+    "lon": 116.5704,
+    "radius_km": 0.5,
+    "prompts": [
+      "Great Wall of China stone watchtowers winding across mountainous ridgeline Mutianyu",
+      "Great Wall stone battlements green mountains Beijing"
+    ]
+  }
+]

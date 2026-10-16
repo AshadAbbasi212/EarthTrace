@@ -878,6 +878,124 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
   white-space: nowrap;
 }
 
+/* Spot & City Granular Telemetry Bar */
+.spot-telemetry-hud {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.spot-telemetry-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.12), rgba(139, 92, 246, 0.12));
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+  padding: 0.45rem 0.85rem;
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  flex-wrap: wrap;
+}
+
+.spot-telemetry-icon {
+  font-size: 0.95rem;
+}
+
+.spot-telemetry-city {
+  font-weight: 700;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.spot-telemetry-sep {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.spot-telemetry-name {
+  color: #fff;
+  font-weight: 600;
+}
+
+.spot-telemetry-category {
+  background: rgba(139, 92, 246, 0.25);
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  color: #c4b5fd;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.spot-telemetry-badge {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.6);
+  color: #34d399;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  letter-spacing: 0.05em;
+  margin-left: auto;
+}
+
+/* Exact Mark Pinpoint Telemetry */
+.exact-mark-hud {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.exact-mark-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid var(--emerald);
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+}
+
+.exact-mark-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--emerald);
+  box-shadow: 0 0 8px var(--emerald);
+  animation: pulse 1.5s infinite;
+}
+
+.exact-mark-title {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--emerald);
+}
+
+.exact-mark-metrics {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.exact-metric-tag {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  background: rgba(6, 10, 20, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  color: #cbd5e1;
+}
+
 .result-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

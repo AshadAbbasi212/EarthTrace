@@ -12,7 +12,9 @@ build/
 # Local data & models
 .geo-cache/
 models/
-data/
+/data/*
+!/data/landmarks/
+vendor/**/data/
 !src/geolocator/data/
 *.sqlite
 jobs/

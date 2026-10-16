@@ -1,0 +1,106 @@
+[
+  {
+    "name": "Museum of Islamic Art (MIA), Doha",
+    "city": "Doha",
+    "country": "Qatar",
+    "category": "museum",
+    "lat": 25.2953,
+    "lon": 51.5392,
+    "radius_km": 0.05,
+    "prompts": [
+      "Museum of Islamic Art I.M. Pei geometric limestone cube architecture Doha harbor Qatar",
+      "MIA Museum of Islamic Art dhow boats and Doha skyline"
+    ]
+  },
+  {
+    "name": "Souq Waqif Heritage Bazaar, Doha",
+    "city": "Doha",
+    "country": "Qatar",
+    "category": "commercial_market",
+    "lat": 25.2867,
+    "lon": 51.5333,
+    "radius_km": 0.08,
+    "prompts": [
+      "Souq Waqif mud-rendered traditional market buildings spice stalls falcon souq Doha",
+      "Souq Waqif bustling evening street dining Doha"
+    ]
+  },
+  {
+    "name": "Katara Cultural Village & Amphitheatre, Doha",
+    "city": "Doha",
+    "country": "Qatar",
+    "category": "civic_building",
+    "lat": 25.3589,
+    "lon": 51.5258,
+    "radius_km": 0.08,
+    "prompts": [
+      "Katara Cultural Village classical Greco-Roman amphitheatre pigeon towers Doha",
+      "Katara Cultural Village mosque and promenade Doha"
+    ]
+  },
+  {
+    "name": "The Pearl-Qatar Luxury Island Marina, Doha",
+    "city": "Doha",
+    "country": "Qatar",
+    "category": "marina",
+    "lat": 25.37,
+    "lon": 51.55,
+    "radius_km": 0.1,
+    "prompts": [
+      "The Pearl Qatar artificial island luxury yacht marina Mediterranean pastel towers Doha",
+      "The Pearl Porto Arabia promenade Doha"
+    ]
+  },
+  {
+    "name": "National Museum of Qatar (Desert Rose), Doha",
+    "city": "Doha",
+    "country": "Qatar",
+    "category": "museum",
+    "lat": 25.2881,
+    "lon": 51.5486,
+    "radius_km": 0.05,
+    "prompts": [
+      "National Museum of Qatar Jean Nouvel interlocking desert rose disk architecture Doha",
+      "NMoQ National Museum of Qatar exterior curved disks"
+    ]
+  },
+  {
+    "name": "Lusail Iconic Stadium & Katara Towers, Lusail",
+    "city": "Lusail",
+    "country": "Qatar",
+    "category": "stadium",
+    "lat": 25.4206,
+    "lon": 51.4903,
+    "radius_km": 0.1,
+    "prompts": [
+      "Lusail Iconic Stadium golden bowl World Cup arena and Katara crescent towers Lusail",
+      "Lusail Stadium golden woven bowl facade Qatar"
+    ]
+  },
+  {
+    "name": "Al Janoub Stadium & Al Wakrah Old Souq, Al Wakrah",
+    "city": "Al Wakrah",
+    "country": "Qatar",
+    "category": "stadium",
+    "lat": 25.1764,
+    "lon": 51.5742,
+    "radius_km": 0.1,
+    "prompts": [
+      "Al Janoub Stadium Zaha Hadid curved aerodynamic dhow hull roof Al Wakrah",
+      "Souq Al Wakrah waterfront heritage marketplace"
+    ]
+  },
+  {
+    "name": "Al Bayt Stadium (Nomadic Tent) & Al Khor Corniche",
+    "city": "Al Khor",
+    "country": "Qatar",
+    "category": "stadium",
+    "lat": 25.6522,
+    "lon": 51.4878,
+    "radius_km": 0.1,
+    "prompts": [
+      "Al Bayt Stadium giant black and white Bedouin tent architecture Al Khor Qatar",
+      "Al Bayt Stadium desert tent arena Al Khor"
+    ]
+  }
+]

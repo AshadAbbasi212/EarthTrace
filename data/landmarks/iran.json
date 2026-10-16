@@ -1,0 +1,210 @@
+[
+  {
+    "name": "Azadi Tower (Freedom Monument), Tehran",
+    "city": "Tehran",
+    "country": "Iran",
+    "category": "national_monument",
+    "lat": 35.6997,
+    "lon": 51.3381,
+    "radius_km": 0.05,
+    "prompts": [
+      "Azadi Tower white marble inverted Y-shaped monument Azadi Square Tehran",
+      "Shahyad Azadi Tower fountain plaza Tehran"
+    ]
+  },
+  {
+    "name": "Milad Tower, Tehran",
+    "city": "Tehran",
+    "country": "Iran",
+    "category": "commercial_towers",
+    "lat": 35.7447,
+    "lon": 51.3753,
+    "radius_km": 0.05,
+    "prompts": [
+      "Milad Tower sixth-tallest telecommunications tower head pod Alborz mountains Tehran",
+      "Milad Tower observation deck overlooking Tehran skyline"
+    ]
+  },
+  {
+    "name": "Golestan Palace & Marble Throne, Tehran",
+    "city": "Tehran",
+    "country": "Iran",
+    "category": "unesco_world_heritage",
+    "lat": 35.6797,
+    "lon": 51.4203,
+    "radius_km": 0.05,
+    "prompts": [
+      "Golestan Palace Qajar tilework courtyard Hall of Mirrors Tehran",
+      "Golestan Palace exterior facade Persian pool"
+    ]
+  },
+  {
+    "name": "Naqsh-e Jahan Square & Shah Mosque, Isfahan",
+    "city": "Isfahan",
+    "country": "Iran",
+    "category": "unesco_world_heritage",
+    "lat": 32.6575,
+    "lon": 51.6778,
+    "radius_km": 0.1,
+    "prompts": [
+      "Naqsh-e Jahan Square vast Safavid royal plaza turquoise Shah Mosque reflection pool Isfahan",
+      "Shah Mosque Imam Mosque seven-colored tilework entrance portal Isfahan"
+    ]
+  },
+  {
+    "name": "Si-o-se-pol (Bridge of Thirty-Three Arches), Isfahan",
+    "city": "Isfahan",
+    "country": "Iran",
+    "category": "bridge",
+    "lat": 32.6447,
+    "lon": 51.6675,
+    "radius_km": 0.05,
+    "prompts": [
+      "Si-o-se-pol double-decked thirty-three stone arch bridge Zayandeh River Isfahan",
+      "Khaju Bridge and Si-o-se-pol illuminated Isfahan"
+    ]
+  },
+  {
+    "name": "Nasir al-Mulk (Pink Mosque), Shiraz",
+    "city": "Shiraz",
+    "country": "Iran",
+    "category": "historical_mosque",
+    "lat": 29.6083,
+    "lon": 52.5486,
+    "radius_km": 0.05,
+    "prompts": [
+      "Nasir al-Mulk Pink Mosque kaleidoscope stained glass windows casting rainbow light Persian carpets Shiraz",
+      "Pink Mosque Shiraz interior colorful morning sun"
+    ]
+  },
+  {
+    "name": "Persepolis (Takht-e Jamshid), Shiraz",
+    "city": "Shiraz",
+    "country": "Iran",
+    "category": "unesco_world_heritage",
+    "lat": 29.9353,
+    "lon": 52.8914,
+    "radius_km": 0.15,
+    "prompts": [
+      "Persepolis Takht-e Jamshid ancient Achaemenid ceremonial capital stone columns Gate of All Nations",
+      "Persepolis ruins monumental stairways and bas-reliefs Shiraz"
+    ]
+  },
+  {
+    "name": "Tomb of Hafez (Hafezieh), Shiraz",
+    "city": "Shiraz",
+    "country": "Iran",
+    "category": "historical_shrine",
+    "lat": 29.6256,
+    "lon": 52.5583,
+    "radius_km": 0.05,
+    "prompts": [
+      "Hafezieh octagonal copper dome pavilion tomb of Persian poet Hafez gardens Shiraz",
+      "Tomb of Hafez illuminated pavilion Shiraz"
+    ]
+  },
+  {
+    "name": "Tabriz Historic Bazaar Complex & Blue Mosque, Tabriz",
+    "city": "Tabriz",
+    "country": "Iran",
+    "category": "unesco_world_heritage",
+    "lat": 38.08,
+    "lon": 46.2917,
+    "radius_km": 0.08,
+    "prompts": [
+      "Tabriz Historic Grand Bazaar vaulted brick arches UNESCO World Heritage Tabriz",
+      "Blue Mosque Kaboud Mosque dark blue cobalt ceramic tiles Tabriz"
+    ]
+  },
+  {
+    "name": "Imam Reza Holy Shrine Complex, Mashhad",
+    "city": "Mashhad",
+    "country": "Iran",
+    "category": "historical_shrine",
+    "lat": 36.2878,
+    "lon": 59.6156,
+    "radius_km": 0.1,
+    "prompts": [
+      "Imam Reza Holy Shrine vast golden dome seven courtyards blue minarets Mashhad",
+      "Imam Reza shrine complex illuminated marble plazas Mashhad"
+    ]
+  },
+  {
+    "name": "Jameh Mosque of Yazd & Historic Windcatchers (Badgirs)",
+    "city": "Yazd",
+    "country": "Iran",
+    "category": "unesco_world_heritage",
+    "lat": 31.9014,
+    "lon": 54.3689,
+    "radius_km": 0.08,
+    "prompts": [
+      "Jameh Mosque of Yazd tallest tiled minarets and mud-brick desert badgir windcatchers Yazd",
+      "Yazd historical city mudbrick rooftops and wind towers"
+    ]
+  },
+  {
+    "name": "Zoroastrian Tower of Silence (Dakhmeh), Yazd",
+    "city": "Yazd",
+    "country": "Iran",
+    "category": "historical_monument",
+    "lat": 31.825,
+    "lon": 54.3583,
+    "radius_km": 0.08,
+    "prompts": [
+      "Zoroastrian Tower of Silence circular stone cemetery hilltop arid desert Yazd",
+      "Yazd Dakhmeh desert hill structures"
+    ]
+  },
+  {
+    "name": "Fatima Masumeh Holy Shrine, Qom",
+    "city": "Qom",
+    "country": "Iran",
+    "category": "historical_shrine",
+    "lat": 34.6417,
+    "lon": 50.8789,
+    "radius_km": 0.08,
+    "prompts": [
+      "Fatima Masumeh Shrine shimmering pure gold central dome and turquoise tilework Qom",
+      "Holy Shrine of Hazrat Masoumeh courtyard Qom"
+    ]
+  },
+  {
+    "name": "Fin Garden & Sultan Amir Ahmad Bathhouse, Kashan",
+    "city": "Kashan",
+    "country": "Iran",
+    "category": "unesco_world_heritage",
+    "lat": 33.9458,
+    "lon": 51.3719,
+    "radius_km": 0.05,
+    "prompts": [
+      "Bagh-e Fin classic Persian garden turquoise water pools cypress trees Kashan",
+      "Sultan Amir Ahmad Bathhouse dome roof glass lenses Kashan"
+    ]
+  },
+  {
+    "name": "Taq-e Bostan Sasanian Rock Bas-Reliefs, Kermanshah",
+    "city": "Kermanshah",
+    "country": "Iran",
+    "category": "heritage_site",
+    "lat": 34.3878,
+    "lon": 47.1306,
+    "radius_km": 0.05,
+    "prompts": [
+      "Taq-e Bostan carved stone rock arches Sasanian king khosrow investiture spring pool Kermanshah",
+      "Taq-e Bostan ancient rock carvings Kermanshah"
+    ]
+  },
+  {
+    "name": "Greek Ship Wreck & Coral Beach, Kish Island",
+    "city": "Kish Island",
+    "country": "Iran",
+    "category": "coast",
+    "lat": 26.5167,
+    "lon": 53.9,
+    "radius_km": 0.1,
+    "prompts": [
+      "Greek Ship rusted steamship stranded on coral reef sunset Persian Gulf Kish Island",
+      "Kish Island white coral beach and pier"
+    ]
+  }
+]

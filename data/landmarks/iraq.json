@@ -1,0 +1,158 @@
+[
+  {
+    "name": "Al-Mustansiriya Madrasah & Tigris River, Baghdad",
+    "city": "Baghdad",
+    "country": "Iraq",
+    "category": "historical_building",
+    "lat": 33.3381,
+    "lon": 44.3889,
+    "radius_km": 0.05,
+    "prompts": [
+      "Mustansiriya Madrasah medieval Abbasid brick arched university on Tigris riverbank Baghdad",
+      "Mustansiriya courtyard and geometric brickwork Baghdad"
+    ]
+  },
+  {
+    "name": "Swords of Qadisiyah (Hands of Victory), Baghdad",
+    "city": "Baghdad",
+    "country": "Iraq",
+    "category": "national_monument",
+    "lat": 33.3058,
+    "lon": 44.3833,
+    "radius_km": 0.05,
+    "prompts": [
+      "Hands of Victory Swords of Qadisiyah massive crossed bronze swords archway parade ground Baghdad",
+      "Swords of Qadisiyah triumphal arch Baghdad"
+    ]
+  },
+  {
+    "name": "Al-Shaheed Monument (Martyrs' Monument), Baghdad",
+    "city": "Baghdad",
+    "country": "Iraq",
+    "category": "national_monument",
+    "lat": 33.3422,
+    "lon": 44.4444,
+    "radius_km": 0.08,
+    "prompts": [
+      "Al-Shaheed Monument giant split turquoise dome rising from circular water lake Baghdad",
+      "Martyrs Monument turquoise dome halves Baghdad"
+    ]
+  },
+  {
+    "name": "Imam Ali Holy Shrine, Najaf",
+    "city": "Najaf",
+    "country": "Iraq",
+    "category": "historical_shrine",
+    "lat": 31.9961,
+    "lon": 44.3142,
+    "radius_km": 0.05,
+    "prompts": [
+      "Imam Ali Holy Shrine pure gold dome and minarets grand tiled courtyard Najaf Iraq",
+      "Imam Ali Shrine golden dome and pilgrims plaza Najaf"
+    ]
+  },
+  {
+    "name": "Wadi-us-Salaam (Valley of Peace Cemetery), Najaf",
+    "city": "Najaf",
+    "country": "Iraq",
+    "category": "historical_necropolis",
+    "lat": 32.0083,
+    "lon": 44.3167,
+    "radius_km": 0.5,
+    "prompts": [
+      "Wadi-us-Salaam world's largest cemetery millions of brick graves and domes Najaf",
+      "Valley of Peace cemetery expanse Najaf"
+    ]
+  },
+  {
+    "name": "Imam Husayn Holy Shrine, Karbala",
+    "city": "Karbala",
+    "country": "Iraq",
+    "category": "historical_shrine",
+    "lat": 32.6161,
+    "lon": 44.0325,
+    "radius_km": 0.05,
+    "prompts": [
+      "Imam Husayn Holy Shrine illuminated golden dome and minarets Karbala Iraq",
+      "Imam Husayn and Al-Abbas holy shrines pedestrian plaza Karbala"
+    ]
+  },
+  {
+    "name": "Erbil Citadel (Hawler Citadel), Erbil, Kurdistan",
+    "city": "Erbil",
+    "country": "Iraq",
+    "category": "unesco_world_heritage",
+    "lat": 36.1911,
+    "lon": 44.0092,
+    "radius_km": 0.08,
+    "prompts": [
+      "Erbil Citadel ancient fortified tell mound continuous mud-brick perimeter wall Erbil",
+      "Hawler Citadel entrance gate and central fountains Erbil"
+    ]
+  },
+  {
+    "name": "Shatt al-Arab Corniche & Old Shanashil Houses, Basra",
+    "city": "Basra",
+    "country": "Iraq",
+    "category": "heritage_village",
+    "lat": 30.5167,
+    "lon": 47.8333,
+    "radius_km": 0.08,
+    "prompts": [
+      "Basra historic wooden carved shanasheel balconies along canals and Shatt al-Arab corniche",
+      "Basra waterfront and palm trees"
+    ]
+  },
+  {
+    "name": "Al-Nuri Great Mosque & Al-Hadba Leaning Minaret, Mosul",
+    "city": "Mosul",
+    "country": "Iraq",
+    "category": "historical_mosque",
+    "lat": 36.3433,
+    "lon": 43.1278,
+    "radius_km": 0.05,
+    "prompts": [
+      "Great Mosque of al-Nuri historic green dome and reconstructed Al-Hadba leaning cylindrical minaret Mosul",
+      "Al Nuri mosque Mosul Old City"
+    ]
+  },
+  {
+    "name": "Great Mosque of Samarra (Malwiya Spiral Minaret)",
+    "city": "Samarra",
+    "country": "Iraq",
+    "category": "unesco_world_heritage",
+    "lat": 34.2064,
+    "lon": 43.88,
+    "radius_km": 0.08,
+    "prompts": [
+      "Malwiya Minaret colossal 52-meter spiral sandstone cone ramp minaret Great Mosque Samarra",
+      "Spiral minaret of Samarra UNESCO World Heritage"
+    ]
+  },
+  {
+    "name": "Ancient City of Babylon & Ishtar Gate, Hillah",
+    "city": "Babylon",
+    "country": "Iraq",
+    "category": "unesco_world_heritage",
+    "lat": 32.5422,
+    "lon": 44.4208,
+    "radius_km": 0.1,
+    "prompts": [
+      "Ancient Babylon reconstructed blue-glazed brick Ishtar Gate and lion relief walls Hillah",
+      "Babylon archaeological ruins and Saddam palace mound"
+    ]
+  },
+  {
+    "name": "Amna Suraka (Red Security Museum) & Mount Goyzha, Sulaymaniyah",
+    "city": "Sulaymaniyah",
+    "country": "Iraq",
+    "category": "museum",
+    "lat": 35.5667,
+    "lon": 45.4333,
+    "radius_km": 0.08,
+    "prompts": [
+      "Sulaymaniyah city view from Mount Goyzha Kurdish mountains and Amna Suraka museum",
+      "Mount Goyzha overlook Sulaymaniyah"
+    ]
+  }
+]

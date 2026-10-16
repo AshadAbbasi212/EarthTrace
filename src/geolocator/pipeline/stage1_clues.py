@@ -1129,6 +1129,9 @@ class Stage1Clues:
                             prior=3.5,
                             metadata={
                                 "landmark": l_name,
+                                "city": lm_res.get("city", ""),
+                                "country": l_country or "",
+                                "category": lm_res.get("category", ""),
                                 "tier": "T1" if l_conf >= 0.70 else "T2",
                                 "radius_km": lm_res.get("radius_km", 2.0) if l_conf >= 0.70 else 50.0,
                                 "source": "landmark_matcher",

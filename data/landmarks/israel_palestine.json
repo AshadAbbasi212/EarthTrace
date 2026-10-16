@@ -1,0 +1,158 @@
+[
+  {
+    "name": "Dome of the Rock (Qubbat as-Sakhrah), Jerusalem",
+    "city": "Jerusalem",
+    "country": "Israel",
+    "category": "world_landmark",
+    "lat": 31.778,
+    "lon": 35.2354,
+    "radius_km": 0.05,
+    "prompts": [
+      "Dome of the Rock iconic golden dome octagonal blue Persian ceramic tilework Temple Mount Jerusalem",
+      "Qubbat as-Sakhrah Golden Dome and marble plaza Jerusalem"
+    ]
+  },
+  {
+    "name": "Western Wall (Kotel) & Plaza, Jerusalem",
+    "city": "Jerusalem",
+    "country": "Israel",
+    "category": "world_landmark",
+    "lat": 31.7767,
+    "lon": 35.2344,
+    "radius_km": 0.05,
+    "prompts": [
+      "Western Wall Kotel ancient Herodian massive limestone prayer wall and outdoor plaza Jerusalem",
+      "Western Wall and Temple Mount esplanade Jerusalem"
+    ]
+  },
+  {
+    "name": "Church of the Holy Sepulchre, Christian Quarter, Jerusalem",
+    "city": "Jerusalem",
+    "country": "Israel",
+    "category": "historical_church",
+    "lat": 31.7785,
+    "lon": 35.2297,
+    "radius_km": 0.05,
+    "prompts": [
+      "Church of the Holy Sepulchre Romanesque stone facade and belltower Old City Jerusalem",
+      "Holy Sepulchre courtyard and entrance Jerusalem"
+    ]
+  },
+  {
+    "name": "Tel Aviv White City Bauhaus Architecture & Rothschild Blvd",
+    "city": "Tel Aviv",
+    "country": "Israel",
+    "category": "unesco_world_heritage",
+    "lat": 32.0631,
+    "lon": 34.7739,
+    "radius_km": 0.1,
+    "prompts": [
+      "Tel Aviv White City Bauhaus international style rounded balconies tree-lined Rothschild Boulevard",
+      "Rothschild Boulevard modern Bauhaus buildings Tel Aviv"
+    ]
+  },
+  {
+    "name": "Jaffa Old Port & Clock Tower, Tel Aviv-Yafo",
+    "city": "Tel Aviv",
+    "country": "Israel",
+    "category": "heritage_village",
+    "lat": 32.0542,
+    "lon": 34.7522,
+    "radius_km": 0.08,
+    "prompts": [
+      "Old Jaffa stone port lighthouse and limestone alleys overlooking Tel Aviv coastline",
+      "Jaffa Clock Tower Ottoman stone monument square"
+    ]
+  },
+  {
+    "name": "Bahai Gardens & Shrine of the Bab, Mount Carmel, Haifa",
+    "city": "Haifa",
+    "country": "Israel",
+    "category": "unesco_world_heritage",
+    "lat": 32.8133,
+    "lon": 34.9872,
+    "radius_km": 0.08,
+    "prompts": [
+      "Bahai Gardens nineteen terraced symmetrical botanical gardens golden dome Shrine of the Bab Mount Carmel Haifa",
+      "Bahai Terraces cascading down to Mediterranean Sea Haifa"
+    ]
+  },
+  {
+    "name": "Church of the Nativity & Manger Square, Bethlehem",
+    "city": "Bethlehem",
+    "country": "Palestine",
+    "category": "unesco_world_heritage",
+    "lat": 31.7044,
+    "lon": 35.2075,
+    "radius_km": 0.05,
+    "prompts": [
+      "Church of the Nativity ancient basilica entrance Door of Humility Manger Square Bethlehem",
+      "Nativity Church courtyard Bethlehem"
+    ]
+  },
+  {
+    "name": "Yasser Arafat Museum & Al-Manara Square, Ramallah",
+    "city": "Ramallah",
+    "country": "Palestine",
+    "category": "civic_monument",
+    "lat": 31.9039,
+    "lon": 35.2036,
+    "radius_km": 0.05,
+    "prompts": [
+      "Al-Manara Square four stone lions monument central roundabout Ramallah",
+      "Yasser Arafat Mausoleum white limestone building Ramallah"
+    ]
+  },
+  {
+    "name": "Basilica of the Annunciation, Nazareth",
+    "city": "Nazareth",
+    "country": "Israel",
+    "category": "historical_church",
+    "lat": 32.7019,
+    "lon": 35.2978,
+    "radius_km": 0.05,
+    "prompts": [
+      "Basilica of the Annunciation soaring polygonal cupola concrete lantern church Nazareth",
+      "Church of the Annunciation courtyard Nazareth"
+    ]
+  },
+  {
+    "name": "Cave of the Patriarchs (Ibrahimi Mosque), Hebron",
+    "city": "Hebron",
+    "country": "Palestine",
+    "category": "unesco_world_heritage",
+    "lat": 31.5247,
+    "lon": 35.1108,
+    "radius_km": 0.05,
+    "prompts": [
+      "Cave of the Patriarchs Ibrahimi Mosque colossal Herodian ashlar stone walls Hebron",
+      "Ibrahimi Mosque courtyard and battlements Hebron"
+    ]
+  },
+  {
+    "name": "Mount of Temptation Monastery & Ancient Jericho Tell",
+    "city": "Jericho",
+    "country": "Palestine",
+    "category": "historical_monument",
+    "lat": 31.8744,
+    "lon": 35.4333,
+    "radius_km": 0.1,
+    "prompts": [
+      "Mount of Temptation Greek Orthodox monastery clinging to vertical cliff face cable car Jericho",
+      "Tell es-Sultan ancient Neolithic round tower Jericho"
+    ]
+  },
+  {
+    "name": "Crusader Fortress & Ottoman Sea Walls, Acre (Akko)",
+    "city": "Acre",
+    "country": "Israel",
+    "category": "unesco_world_heritage",
+    "lat": 32.9233,
+    "lon": 35.0689,
+    "radius_km": 0.08,
+    "prompts": [
+      "Knights Halls Crusader underground vaulted fortress and sea walls Old Acre Akko",
+      "Old City of Acre stone harbour and Ottoman mosque"
+    ]
+  }
+]

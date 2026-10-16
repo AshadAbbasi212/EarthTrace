@@ -530,11 +530,22 @@
       (report.best_location && report.best_location.camera_heading_deg !== undefined ? report.best_location.camera_heading_deg : null));
 
     if (topLat !== null && topLon !== null && !isNaN(topLat) && !isNaN(topLon)) {
+      const topCity = report.city || (top.city) || (report.best_location && report.best_location.city) || '';
+      const topCountry = report.country || (top.country) || (report.best_location && report.best_location.country) || '';
+      const topSpotName = report.spot_name || (top.spot_name) || (report.best_location && report.best_location.spot_name) || '';
+      const topSpotCategory = report.spot_category || (top.spot_category) || (report.best_location && report.best_location.spot_category) || '';
+      const isSpotVerified = Boolean(report.is_spot_verified || (top.is_spot_verified) || (report.best_location && report.best_location.is_spot_verified) || topSpotName);
+
       allHypotheses.push({
         rank: 1,
         rankLabel: 'T1',
         isTop: true,
         name: report.location_name || top.name || `${topLat.toFixed(5)}, ${topLon.toFixed(5)}`,
+        city: topCity,
+        country: topCountry,
+        spotName: topSpotName,
+        spotCategory: topSpotCategory,
+        isSpotVerified: isSpotVerified,
         lat: topLat,
         lon: topLon,
         tier: topTier,
@@ -578,6 +589,11 @@
               rankLabel: altLabel,
               isTop: false,
               name: alt.name || `Alternative ${altLabel}`,
+              city: alt.city || '',
+              country: alt.country || '',
+              spotName: alt.spot_name || (alt.name && alt.name.startsWith('Landmark: ') ? alt.name.replace('Landmark: ', '') : ''),
+              spotCategory: alt.spot_category || alt.category || '',
+              isSpotVerified: Boolean(alt.is_spot_verified || (alt.name && alt.name.startsWith('Landmark: '))),
               lat: altLat,
               lon: altLon,
               tier: altTier,
@@ -700,6 +716,37 @@
         }
       } else {
         exactMarkHud.style.display = 'none';
+      }
+    }
+
+    // Spot & City Granular Telemetry HUD
+    const spotHud = document.getElementById('spot-telemetry-hud');
+    const spotCityEl = document.getElementById('spot-telemetry-city');
+    const spotNameEl = document.getElementById('spot-telemetry-name');
+    const spotCatEl = document.getElementById('spot-telemetry-category');
+    const spotBadgeEl = document.getElementById('spot-telemetry-badge');
+
+    if (spotHud) {
+      const hasSpotInfo = Boolean(hypo.spotName || hypo.city || hypo.isSpotVerified || (hypo.name && hypo.name.startsWith('Landmark: ')));
+      if (hasSpotInfo) {
+        spotHud.style.display = 'flex';
+        const displayCity = hypo.city || (hypo.country ? hypo.country : 'IDENTIFIED POINT');
+        const displayName = hypo.spotName || hypo.name.replace(/^Landmark:\s*/, '');
+        if (spotCityEl) spotCityEl.textContent = displayCity.toUpperCase();
+        if (spotNameEl) spotNameEl.textContent = displayName;
+        if (spotCatEl) {
+          if (hypo.spotCategory) {
+            spotCatEl.style.display = 'inline-block';
+            spotCatEl.textContent = hypo.spotCategory.replace(/_/g, ' ').toUpperCase();
+          } else {
+            spotCatEl.style.display = 'none';
+          }
+        }
+        if (spotBadgeEl) {
+          spotBadgeEl.textContent = hypo.isSpotVerified ? '✓ CITY SPOT VERIFIED' : '📍 REGIONAL MATCH';
+        }
+      } else {
+        spotHud.style.display = 'none';
       }
     }
 
@@ -1206,7 +1253,13 @@
     });
 
     // Smoothly slide the active tab button into center view in the horizontal tabs bar
-    if (activeBtn) {
+    if (activeBtn && evidenceTabsBar) {
+      const btnLeft = activeBtn.offsetLeft;
+      const btnWidth = activeBtn.offsetWidth;
+      const barWidth = evidenceTabsBar.clientWidth;
+      const targetScroll = btnLeft - (barWidth / 2) + (btnWidth / 2);
+      evidenceTabsBar.scrollTo({ left: targetScroll, behavior: 'smooth' });
+    } else if (activeBtn) {
       activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
 
@@ -1230,10 +1283,7 @@
     if (activePanel && tabKey !== 'overview') {
       const evidenceCard = document.getElementById('evidence-section');
       if (evidenceCard) {
-        const rect = evidenceCard.getBoundingClientRect();
-        if (rect.top < 30 || rect.bottom > (window.innerHeight + 150)) {
-          evidenceCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        evidenceCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
     }
   }
