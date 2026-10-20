@@ -1651,6 +1651,16 @@
       const copilotKeyEl = document.getElementById('copilot-api-key');
       if (savedKey && copilotKeyEl) copilotKeyEl.value = savedKey;
     } catch (e) {}
+
+    // Auto-load job if specified in query params (?job_id=...)
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const qJobId = urlParams.get('job_id') || urlParams.get('job');
+      if (qJobId) {
+        activeJobId = qJobId;
+        loadFinalResults(qJobId);
+      }
+    } catch (e) {}
   });
 })();
 

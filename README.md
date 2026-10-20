@@ -18,13 +18,24 @@ Geolocate any photograph across mountains, deserts, coastlines, rural roads, and
 
 <br>
 
-### 🎬 Live Demonstration
+### 🎬 Live System Showcase (Actual Running Output)
 
-<a href="docs/assets/earthtrace_ui_preview.png">
-  <img src="docs/assets/earthtrace_ui_preview.png" alt="EarthTrace Tactical Web UI Demonstration" width="850" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" />
+<a href="docs/assets/earthtrace_full_dashboard.png">
+  <img src="docs/assets/earthtrace_full_dashboard.png" alt="EarthTrace Full Tactical Mission Control UI" width="900" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" />
 </a>
 <br>
-<em><b>Tactical Mission Control Interface</b>: Full multi-hypothesis geolocation in action with 3D tactical globe telemetry, real-time Server-Sent Events (SSE) pipeline timeline, Leaflet map with calibrated uncertainty circle ($R=15\text{m}$) and camera heading ray, backed by all four multimodal evidence audit cards.</em>
+<em><b>Live Mission Control Dashboard</b>: Real running output showing 3D tactical globe telemetry (35.69°N, 139.69°E), real-time Leaflet vector map with exact viewpoint lock, ±50m calibrated uncertainty circle, directional heading ray, and live multimodal evidence cards (OSM Cadastral Building Geometry, 30m DEM Skyline, Satellite Homography, Street Ground Photos).</em>
+
+<br><br>
+
+<div align="center">
+
+### 🗺️ Multi-Terrain Geolocation in Action
+
+| Urban Cadastral Pinpoint (Tokyo, Japan) | Coastal & Terrain Elevation (Vík, Iceland) | Standalone Forensic Audit Report (HTML) |
+| :---: | :---: | :---: |
+| <a href="docs/assets/earthtrace_ui_preview.png"><img src="docs/assets/earthtrace_ui_preview.png" width="300" style="border-radius: 8px;" alt="Tokyo Cadastral Run" /></a> | <a href="docs/assets/earthtrace_terrain_dashboard.png"><img src="docs/assets/earthtrace_terrain_dashboard.png" width="300" style="border-radius: 8px;" alt="Iceland Terrain Run" /></a> | <a href="docs/assets/earthtrace_report_html.png"><img src="docs/assets/earthtrace_report_html.png" width="300" style="border-radius: 8px;" alt="Forensic HTML Report" /></a> |
+| **Cadastral Pinpoint**: ±50m exact mark | **DEM & Coastal**: Basalt stacks match | **Self-Contained Report**: Audit trail & badges |
 
 </div>
 
