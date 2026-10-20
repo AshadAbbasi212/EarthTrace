@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use EarthTrace in your research, OSINT workflows, or benchmarks, please cite it as below."
+authors:
+  - family-names: "Abbasi"
+    given-names: "Ashad"
+title: "EarthTrace: Free & Open-Source 100% Local AI Geo Locator and Multimodal Picture Location Finder"
+version: 1.0.0
+date-released: 2026-10-20
+url: "https://github.com/AshadAbbasi212/EarthTrace"
+repository-code: "https://github.com/AshadAbbasi212/EarthTrace"
+keywords:
+  - "geo-locator"
+  - "location-finder"
+  - "picture-location"
+  - "photo-location-finder"
+  - "image-geolocation"
+  - "osint-geolocation"
+  - "where-was-this-photo-taken"
+  - "geospy-alternative"
+  - "geoclip"
+  - "computer-vision"
+  - "digital-elevation-model"
+  - "openstreetmap"
+license: "MIT"

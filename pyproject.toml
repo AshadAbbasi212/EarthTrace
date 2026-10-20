@@ -3,15 +3,56 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "geolocator"
-version = "0.1.0"
-description = "Self-hosted Global Photo Geolocator with Multi-Evidence Verification"
+name = "earthtrace"
+version = "1.0.0"
+description = "EarthTrace: Free & Open-Source 100% Local AI Geo Locator & Picture Location Finder with Multimodal Verification"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
-    {name = "GeoLocator Team"}
+    {name = "Ashad Abbasi"}
 ]
+keywords = [
+    "geo-locator",
+    "geolocator",
+    "location-finder",
+    "picture-location",
+    "photo-location-finder",
+    "image-geolocation",
+    "find-location-from-photo",
+    "where-was-this-photo-taken",
+    "photo-coordinate-finder",
+    "osint",
+    "osint-geolocation",
+    "geospy",
+    "geospy-alternative",
+    "geoclip",
+    "pigeon",
+    "geoguessr",
+    "geolocation-ai",
+    "computer-vision",
+    "openstreetmap",
+    "dem-elevation",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Security",
+]
+
+[project.urls]
+Homepage = "https://github.com/AshadAbbasi212/EarthTrace"
+Documentation = "https://github.com/AshadAbbasi212/EarthTrace#readme"
+Repository = "https://github.com/AshadAbbasi212/EarthTrace"
+"Bug Tracker" = "https://github.com/AshadAbbasi212/EarthTrace/issues"
 dependencies = [
     "fastapi>=0.110.0",
     "uvicorn[standard]>=0.28.0",

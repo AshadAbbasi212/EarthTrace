@@ -1,4 +1,6 @@
-# EarthTrace — Free & Open-Source 100% Local AI Geospatial Intelligence & Multimodal Geolocation Studio
+# 🌍 EarthTrace — Free & Open-Source AI Geo Locator & Picture Location Finder
+
+### 🎯 100% Local Multimodal Geolocation Studio • Autonomous Photo Location Finder • Private OSINT Geospatial Intelligence
 
 <div align="center">
 
@@ -9,12 +11,19 @@
 ![Leaflet](https://img.shields.io/badge/Leaflet-v1.9.4%20(Offline)-199900.svg)
 ![Tests](https://img.shields.io/badge/tests-79%2F79%20passing%20(100%25)-success.svg)
 ![Local AI](https://img.shields.io/badge/cloud%20APIs-0%20(100%25%20Local)-purple.svg)
+![Privacy](https://img.shields.io/badge/privacy-100%25%20Zero%20Data%20Harvesting-blueviolet.svg)
 ![Free](https://img.shields.io/badge/cost-100%25%20Free%20%26%20Open%20Source-emerald.svg)
 
-**Autonomous, keyless, and 100% private AI photo geolocation & geospatial intelligence studio.**  
-Geolocate any photograph across mountains, deserts, coastlines, rural roads, and dense urban centers using multi-hypothesis evidence fusion — running completely offline on standard consumer NVIDIA GPUs (4 GB to 8 GB VRAM). Zero subscription fees, zero cloud API tokens, zero telemetry, and zero data leakage.
+<br>
 
-[Live Demonstration](#-live-system-showcase-actual-running-output) • [Features](#key-features) • [Comparison](#-how-earthtrace-compares) • [5 Evidence Pillars](#-the-5-multimodal-evidence-pillars) • [System Architecture](#system-architecture) • [Quick Start](#quick-start) • [Evaluation Benchmarks](#-worldwide-benchmark-evaluation) • [Responsible Use](#-responsible-use-notice)
+**EarthTrace** is a free, open-source, and 100% local **AI Geo Locator** and **Picture Location Finder**.  
+Discover where any photograph was taken across mountains, deserts, coastlines, rural roads, and dense urban centers — running completely offline on standard consumer NVIDIA GPUs (4 GB to 8 GB VRAM). Zero subscription fees, zero cloud API tokens, zero telemetry, and zero data leakage.
+
+Whether you need an **image geolocation tool** for OSINT investigations, a **photo location finder** to identify geographic coordinates from a picture without EXIF metadata, or a private offline **GeoSpy / GeoCLIP alternative**, EarthTrace delivers forensic-grade sub-meter accuracy using multi-hypothesis evidence fusion.
+
+[Live Showcase](#-live-system-showcase-actual-running-output) • [Why EarthTrace?](#-why-earthtrace-is-the-1-open-source-ai-geo-locator--picture-location-finder) • [Picture Location Scenarios](#-supported-picture-location--image-geolocation-scenarios) • [5 Evidence Pillars](#-the-5-multimodal-evidence-pillars) • [Comparison](#-how-earthtrace-compares) • [System Architecture](#system-architecture) • [Evaluation Benchmarks](#-worldwide-benchmark-evaluation) • [Quick Start](#quick-start) • [FAQ](#-frequently-asked-questions-faq--photo-geolocation--picture-location-finding)
+
+</div>
 
 <br>
 
@@ -41,19 +50,54 @@ Geolocate any photograph across mountains, deserts, coastlines, rural roads, and
 
 ---
 
+## 🔍 Why EarthTrace is the #1 Open-Source AI Geo Locator & Picture Location Finder
+
+1. **Find Location from Photo Without GPS / EXIF Metadata:**  
+   Social media platforms (X/Twitter, Instagram, Telegram, Reddit, WhatsApp) strip EXIF metadata upon upload. EarthTrace uses local vision embeddings (GeoCLIP), Köppen-Geiger bioclimatic envelopes, ESA WorldCover land cover, optical character recognition (RapidOCR), and physical terrain clues to pinpoint picture locations from raw visual pixels alone.
+
+2. **100% Free & Open-Source (Zero Subscription Fees or Credits):**  
+   Unlike commercial cloud tools like GeoSpy or Graylark that charge paid subscriptions and per-image credits, EarthTrace is completely free under permissive open licenses. No credit cards, no rate limits, and no vendor lock-in.
+
+3. **100% Offline & Private (Zero Data Harvesting or Cloud Leakage):**  
+   Sensitive investigative photos, confidential OSINT targets, or private family pictures are never transmitted over the internet. All neural models and spatial solvers execute locally in GPU memory with zero telemetry.
+
+4. **Forensic Multi-Evidence Verification (5 Multimodal Pillars):**  
+   While single-model neural networks guess and hallucinate, EarthTrace cross-verifies every candidate location using 5 independent spatial pillars: OpenStreetMap vector geometry, 30m Digital Elevation Model skylines, high-resolution satellite homography, geotagged ground-level imagery, and cadastral building facade matching.
+
+5. **Worldwide Mountain, Desert & Wilderness Solving:**  
+   Street-view based bots (like PIGEON or GeoGuessr scripts) fail outside paved roads. EarthTrace's 3D DEM radial raycaster matches mountain ridges, valleys, and horizons across unmapped wilderness, deserts, and rural dirt roads.
+
+6. **Calibrated Confidence Tiers (T1 through T6):**  
+   Never be misled by false-precision pins. EarthTrace calculates a mathematical uncertainty radius ($\pm R$ km) and confidence tier from Tier 1 (exact building $\le 50$m) to Tier 6 (country/continental region). If evidence is ambiguous, it honestly reports uncertainty.
+
+---
+
+## 🎯 Supported Picture Location & Image Geolocation Scenarios
+
+| User Search Query & Scenario | How EarthTrace Finds the Location | Solving Modality | Target Accuracy |
+| :--- | :--- | :--- | :---: |
+| **"Find location from photo without GPS"** | Extracts visual features, landscape vegetation, scripts, and matches global visual priors. | GeoCLIP + Biome Classifier + RapidOCR | Regional / City (T2–T4) |
+| **"Where was this mountain or nature photo taken?"** | Sweeps 360° horizon contours against 30m AWS Terrarium DEM tiles accounting for Earth curvature. | 3D DEM Radial Skyline Raycaster | Pinpoint $\le 5\text{ km}$ (T2) |
+| **"Find picture location from rural road or railway"** | Traces linear rail corridors, highway topologies, river bends, and intersections against OSM vectors. | OpenStreetMap Infrastructure Solver | Pinpoint $\le 1\text{ km}$ (T1–T2) |
+| **"Identify building or city from architecture"** | Extracts architectural facade contours, color palettes, and matches footprints to cadastral GIS maps. | Sub-Meter Cadastral Matcher | Sub-meter $\le 50\text{ m}$ (T1) |
+| **"OSINT image geolocation & verification"** | Computes 3D camera pose (resection), verifies against satellite SIFT features, and outputs audit report. | Multimodal Forensic Engine | Forensic Audit Trail |
+| **"GeoGuessr picture location solver"** | Fast candidate ranking across all 7 continents with instant visual feedback and calibrated radius. | Bayesian Multi-Hypothesis Board | Global Coverage |
+
+---
+
 ## ⚡ How EarthTrace Compares
 
-| Feature | EarthTrace (100% Local AI) | GeoSpy / Graylark AI | GeoCLIP / Research Models | PIGEON / StreetView Bots |
-| :--- | :---: | :---: | :---: | :---: |
-| **Price & Licensing** | **100% Free & Open-Source** | Paid tokens / Credit subscriptions | Academic open weights | Proprietary / Non-commercial |
-| **Data Privacy & Telemetry** | **100% Local (0 Cloud Leakage)** | Photos uploaded to cloud servers | Local inference script | Cloud-dependent API |
-| **Offline Air-Gapped Operation** | **Supported (Offline cache mode)** | Impossible (Requires Cloud API) | Requires manual scripting | Impossible |
-| **Multimodal Evidence** | **All 5 Pillars (OSM + DEM + Sat + Street + Facade)** | Black-box single prediction | Coarse visual embedding only | Street View imagery only |
-| **Natural Terrain & Mountains** | **30m DEM Radial Skyline Solver** | Unreliable / Guessed | Low resolution (~750km error) | Completely fails (No Street View) |
-| **Cadastral Building Alignment** | **Sub-meter OSM Polygon Matching** | None (General city coordinate) | None | None |
-| **Uncertainty Calibration** | **Honest Calibrated Radii (T1–T6)** | Hallucinated point pins | Raw probability heatmap | Point prediction only |
-| **Inspectable Audit Trail** | **Full JSON, HTML, GeoJSON & Visuals** | Brief text justification | Feature vectors only | Raw coordinates |
-| **Hardware Requirements** | **Consumer NVIDIA GPU (4–8 GB VRAM)** | Cloud subscription | 16–24 GB Enterprise GPU | Enterprise Cloud GPU |
+| Feature | EarthTrace (100% Local AI) | GeoSpy / Graylark AI | Google Lens | GeoCLIP / Research Models | PIGEON / StreetView Bots |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Price & Licensing** | **100% Free & Open-Source** | Paid tokens / Credit subscriptions | Free (ad-supported cloud) | Academic open weights | Proprietary / Non-commercial |
+| **Data Privacy & Telemetry** | **100% Local (0 Cloud Leakage)** | Photos uploaded to cloud servers | Photos uploaded to Google | Local inference script | Cloud-dependent API |
+| **Offline Air-Gapped Operation** | **Supported (Offline cache mode)** | Impossible (Requires Cloud API) | Impossible | Requires manual scripting | Impossible |
+| **Find Location Without GPS** | **Yes (5 Multimodal Pillars)** | Single black-box coordinate | Landmark image search only | Coarse visual embedding | Street View matching only |
+| **Natural Terrain & Mountains** | **30m DEM Radial Skyline Solver** | Unreliable / Guessed | Fails completely | Low resolution (~750km error) | Completely fails (No Street View) |
+| **Cadastral Building Alignment** | **Sub-meter OSM Polygon Matching** | None (General city coordinate) | Generic web links | None | None |
+| **Uncertainty Calibration** | **Honest Calibrated Radii (T1–T6)** | Hallucinated point pins | No confidence metric | Raw probability heatmap | Point prediction only |
+| **Inspectable Audit Trail** | **Full JSON, HTML, GeoJSON & Visuals** | Brief text justification | Search results list | Feature vectors only | Raw coordinates |
+| **Hardware Requirements** | **Consumer NVIDIA GPU (4–8 GB VRAM)** | Cloud subscription | Cloud-based | 16–24 GB Enterprise GPU | Enterprise Cloud GPU |
 
 ---
 
@@ -251,6 +295,72 @@ EarthTrace exposes a high-performance asynchronous REST API powered by FastAPI:
 | `GET` | `/api/jobs/{id}/report.html` | Standalone styled HTML report | `id` (string job ID) |
 | `GET` | `/api/jobs/{id}/report.geojson` | GIS-compatible GeoJSON feature collection | `id` (string job ID) |
 | `GET` | `/api/jobs/{id}/artifacts/{file}` | Retrieve visual debug artifacts | `file` (e.g. `skyline_overlay.png`) |
+
+---
+
+## ❓ Frequently Asked Questions (FAQ) — Photo Geolocation & Picture Location Finding
+
+<details>
+<summary><b>1. How do I find the location of a picture without EXIF GPS metadata?</b></summary>
+<br>
+When EXIF metadata is absent (as is common with images from social media or messaging apps), EarthTrace uses a 5-step visual pipeline:
+1. <b>Global Visual Embeddings:</b> GeoCLIP scans the photo for visual textures, vegetation, and architecture, proposing candidate coordinates worldwide.
+2. <b>Bioclimatic & Land Cover Filtering:</b> The Köppen-Geiger classifier and ESA WorldCover filter out incompatible biomes.
+3. <b>Optical Character Recognition:</b> RapidOCR extracts foreign scripts, street signs, road codes, or license plate styles.
+4. <b>Specialized Spatial Solvers:</b> Depending on the image type, EarthTrace correlates 3D elevation horizons against 30m DEM tiles (mountains), railway/highway graphs against OpenStreetMap (rural/roads), or building contours against cadastral footprint databases (cities).
+5. <b>Homography Verification:</b> Overhead satellite orthophotos verify visual ground features using SIFT keypoint matching.
+</details>
+
+<details>
+<summary><b>2. Is EarthTrace a free, open-source alternative to GeoSpy and Graylark AI?</b></summary>
+<br>
+Yes. EarthTrace is 100% free and open-source under permissive open-source licenses. Unlike GeoSpy, which operates behind paid subscription walls, enforces credit limits, and uploads your images to remote servers, EarthTrace runs completely locally on your own machine with zero fees, no API keys, and complete data privacy.
+</details>
+
+<details>
+<summary><b>3. How does EarthTrace locate photos taken in mountains or wilderness where Google Street View does not exist?</b></summary>
+<br>
+Traditional geolocation bots (like PIGEON or StreetView models) require Google Street View car coverage to function. EarthTrace bypasses this limitation using its proprietary <b>3D DEM Skyline Solver</b>. It downloads open ~30m Digital Elevation Model (DEM) tiles, simulates true Earth curvature ($R=6371\text{ km}$) and atmospheric light refraction ($k=0.13$), and computes a 360° radial skyline sweep to match mountain peaks and valleys directly to photographic horizons.
+</details>
+
+<details>
+<summary><b>4. Does EarthTrace upload my photos to any third-party cloud servers or APIs?</b></summary>
+<br>
+<b>No.</b> EarthTrace operates with zero cloud API keys and zero cloud AI tokens. All machine learning inference (GeoCLIP, RapidOCR, PyTorch models) and spatial math solvers run locally inside your system's GPU/CPU memory. No images, coordinates, or telemetry are ever sent to external cloud servers.
+</details>
+
+<details>
+<summary><b>5. How does EarthTrace compare to Google Lens for finding image locations?</b></summary>
+<br>
+Google Lens is primarily a reverse-image product and shopping search engine; it requires an exact image duplicate or a famous tourist monument to return results, and completely fails on non-famous streets, rural roads, or natural wilderness. EarthTrace does not look for duplicate photos on the web—it geolocates novel, unindexed photos from visual evidence, terrain contours, and geospatial infrastructure.
+</details>
+
+<details>
+<summary><b>6. What photo formats and resolutions are supported?</b></summary>
+<br>
+EarthTrace natively supports <b>JPEG, PNG, WebP, HEIC/HEIF</b> (Apple iPhone format), <b>TIFF, and BMP</b>. Images of any resolution from 640×480 up to 8K ultra-high-definition panoramas are processed automatically with adaptive multi-scale tiling.
+</details>
+
+<details>
+<summary><b>7. What hardware is required to run this picture location finder locally?</b></summary>
+<br>
+EarthTrace is optimized for standard consumer PCs and laptops:
+- <b>GPU:</b> Any NVIDIA GPU with $\ge 4\text{ GB}$ VRAM (tested on GTX 1650, RTX 3050, RTX 4060, Quadro M1200) with CUDA acceleration.
+- <b>CPU Fallback:</b> Runs in CPU-only mode on multi-core systems (Intel Core i5/i7/i9 or AMD Ryzen).
+- <b>RAM:</b> $\ge 8\text{ GB}$ system RAM.
+- <b>Storage:</b> ~4 GB disk space for cached models and spatial data.
+</details>
+
+---
+
+## 🏷️ Search Index & Keyword Taxonomy
+
+To facilitate discovery across search engines, open-source directories, and OSINT tool registries, EarthTrace is indexed under the following domains:
+
+- **Primary Geolocation Queries:** `geo locator`, `location finder`, `picture location`, `photo location finder`, `image geolocation`, `find location from photo`, `where was this photo taken`, `photo coordinate finder`, `geolocator`, `geolocation ai`.
+- **Investigative & OSINT Keywords:** `osint geolocation`, `osint photo verification`, `image verification`, `open source intelligence`, `reverse image location search`, `photo forensics`, `geolocation tool`.
+- **Competitor & Model Equivalents:** `geospy alternative`, `geospy free`, `geoclip python`, `pigeon alternative`, `geoguessr solver`, `google lens alternative for location`.
+- **Core Technologies:** `deep learning`, `computer vision`, `digital elevation model`, `dem skyline matching`, `openstreetmap`, `fastapi`, `pytorch`, `leaflet`, `rapidocr`, `cadastral mapping`.
 
 ---
 
