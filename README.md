@@ -78,7 +78,7 @@ In strict compliance with forensic auditability, **EarthTrace evaluates and disp
 
 | Pillar | Modality | Source / Algorithm | Visual Evidence Artifact |
 | :--- | :--- | :--- | :---: |
-| **1. Linear Infrastructure** | OpenStreetMap Vector Geometry | Highway, Rail, Bridge & River Corridors | <img src="docs/assets/building_detection_overlay.png" width="220" alt="Infrastructure Geometry" /> |
+| **1. Linear Infrastructure** | OpenStreetMap Vector Geometry | Highway, Rail, Bridge & River Corridors | <img src="docs/assets/linear_infrastructure_corridor.png" width="220" alt="Linear Infrastructure Corridors" /> |
 | **2. 3D Elevation Skylines** | 30m Terrarium DEM Elevation | Earth Curvature & Atmospheric Refraction Profile | <img src="docs/assets/skyline_overlay.png" width="220" alt="Mountain DEM Skyline Profile" /> |
 | **3. Satellite Correspondence** | High-Res Orthophoto Mosaics | SIFT / FLANN Visual Feature Homography | <img src="docs/assets/satellite_evidence.png" width="220" alt="Satellite Evidence" /> |
 | **4. Ground-Level Imagery** | Keyless Street-Level Geosearch | Wikimedia Commons & Geotagged Archives | <img src="docs/assets/street_evidence.png" width="220" alt="Street Evidence" /> |
@@ -175,32 +175,32 @@ EarthTrace has been evaluated on rigorous multi-biome benchmarks spanning all 7 
 
 ### Verified Global Evaluation Showcase
 
-| Target Landmark | Country | True Coordinates | EarthTrace Result | Error Distance | Confidence Tier |
-| :--- | :--- | :---: | :---: | :---: | :---: |
-| **Shibuya Crossing** | Japan 🇯🇵 | `35.6595°N, 139.7005°E` | `35.6895°N, 139.6917°E` | 3.43 km | **T1** ($R \le 5\text{km}$) |
-| **Colosseum, Rome** | Italy 🇮🇹 | `41.8902°N, 12.4922°E` | `41.8902°N, 12.4922°E` | **0.00 km** | **T1** ($R \le 50\text{m}$) |
-| **Lake Louise, Banff** | Canada 🇨🇦 | `51.4254°N, -116.1773°W` | `51.4254°N, -116.1773°W` | **0.00 km** | **T1** ($R \le 100\text{m}$) |
-| **Giza Pyramids** | Egypt 🇪🇬 | `29.9792°N, 31.1342°E` | `29.9791°N, 31.1341°E` | **0.00 km** | **T1** ($R \le 50\text{m}$) |
-| **Sydney Opera House** | Australia 🇦🇺 | `-33.8568°S, 151.2153°E` | `-33.8567°S, 151.2152°E` | **0.00 km** | **T1** ($R \le 50\text{m}$) |
-| **Sugarloaf Mountain** | Brazil 🇧🇷 | `-22.9492°S, -43.1545°W` | `-22.9492°S, -43.1545°W` | **0.00 km** | **T1** ($R \le 100\text{m}$) |
-| **Reynisfjara Beach** | Iceland 🇮🇸 | `63.4044°N, -19.0494°W` | `63.4044°N, -19.0494°W` | **0.00 km** | **T1** ($R \le 50\text{m}$) |
-| **Table Mountain** | South Africa 🇿🇦 | `-33.9628°S, 18.4098°E` | `-33.9628°S, 18.4098°E` | **0.00 km** | **T1** ($R \le 50\text{m}$) |
-| **Taj Mahal, Agra** | India 🇮🇳 | `27.1751°N, 78.0421°E` | `27.1751°N, 78.0421°E` | **0.01 km** | **T1** ($R \le 50\text{m}$) |
-| **Machu Picchu** | Peru 🇵🇪 | `-13.1631°S, -72.5450°W` | `-13.1631°S, -72.5449°W` | **0.01 km** | **T1** ($R \le 50\text{m}$) |
+| Target Landmark | Target Photo (Input) | Country | True Coordinates | EarthTrace Result | Error Distance | Confidence Tier |
+| :--- | :---: | :--- | :---: | :---: | :---: | :---: |
+| **Shibuya Crossing** | <img src="docs/assets/thumbnails/web_01_shibuya.jpg" width="110" style="border-radius: 6px;" alt="Shibuya Crossing" /> | Japan 🇯🇵 | `35.6595°N, 139.7005°E` | `35.6895°N, 139.6917°E` | 3.43 km | **T1** ($R \le 5\text{km}$) |
+| **Colosseum, Rome** | <img src="docs/assets/thumbnails/web_02_colosseum.jpg" width="110" style="border-radius: 6px;" alt="Colosseum" /> | Italy 🇮🇹 | `41.8902°N, 12.4922°E` | `41.8902°N, 12.4922°E` | **0.00 km** | **T1** ($R \le 50\text{m}$) |
+| **Lake Louise, Banff** | <img src="docs/assets/thumbnails/web_03_lake_louise.jpg" width="110" style="border-radius: 6px;" alt="Lake Louise" /> | Canada 🇨🇦 | `51.4254°N, -116.1773°W` | `51.4254°N, -116.1773°W` | **0.00 km** | **T1** ($R \le 100\text{m}$) |
+| **Giza Pyramids** | <img src="docs/assets/thumbnails/web_04_giza.jpg" width="110" style="border-radius: 6px;" alt="Giza Pyramids" /> | Egypt 🇪🇬 | `29.9792°N, 31.1342°E` | `29.9791°N, 31.1341°E` | **0.00 km** | **T1** ($R \le 50\text{m}$) |
+| **Sydney Opera House** | <img src="docs/assets/thumbnails/web_05_sydney.jpg" width="110" style="border-radius: 6px;" alt="Sydney Opera House" /> | Australia 🇦🇺 | `-33.8568°S, 151.2153°E` | `-33.8567°S, 151.2152°E` | **0.00 km** | **T1** ($R \le 50\text{m}$) |
+| **Sugarloaf Mountain** | <img src="docs/assets/thumbnails/web_06_sugarloaf.jpg" width="110" style="border-radius: 6px;" alt="Sugarloaf Mountain" /> | Brazil 🇧🇷 | `-22.9492°S, -43.1545°W` | `-22.9492°S, -43.1545°W` | **0.00 km** | **T1** ($R \le 100\text{m}$) |
+| **Reynisfjara Beach** | <img src="docs/assets/thumbnails/web_07_reynisfjara.jpg" width="110" style="border-radius: 6px;" alt="Reynisfjara Beach" /> | Iceland 🇮🇸 | `63.4044°N, -19.0494°W` | `63.4044°N, -19.0494°W` | **0.00 km** | **T1** ($R \le 50\text{m}$) |
+| **Table Mountain** | <img src="docs/assets/thumbnails/web_08_table_mountain.jpg" width="110" style="border-radius: 6px;" alt="Table Mountain" /> | South Africa 🇿🇦 | `-33.9628°S, 18.4098°E` | `-33.9628°S, 18.4098°E` | **0.00 km** | **T1** ($R \le 50\text{m}$) |
+| **Taj Mahal, Agra** | <img src="docs/assets/thumbnails/web_09_taj_mahal.jpg" width="110" style="border-radius: 6px;" alt="Taj Mahal" /> | India 🇮🇳 | `27.1751°N, 78.0421°E` | `27.1751°N, 78.0421°E` | **0.01 km** | **T1** ($R \le 50\text{m}$) |
+| **Machu Picchu** | <img src="docs/assets/thumbnails/web_10_machu_picchu.jpg" width="110" style="border-radius: 6px;" alt="Machu Picchu" /> | Peru 🇵🇪 | `-13.1631°S, -72.5450°W` | `-13.1631°S, -72.5449°W` | **0.01 km** | **T1** ($R \le 50\text{m}$) |
 
 ### 🧗 Obscure & Challenging Geolocation Showcase (Where Competing Models Fail)
 
 Unlike cloud bots trained exclusively on dense urban Google Street View coverage, **EarthTrace thrives on remote, signless, and natural wilderness terrain**:
 
-| Challenging Target Location | Terrain / Biome | Competing Models Outcome (GeoSpy / CLIP / Street Bots) | EarthTrace Forensic Result | Solving Evidence Modality |
-| :--- | :--- | :--- | :--- | :--- |
-| **Somero, Finland** (`obs_01`) | Rural boreal crossroad, zero signs | **Failed**: Guessed generic Siberia/Sweden (>1,250 km error) | **Pinpoint**: $\le 15\text{ km}$ (**T3**) | OSM rural road network + Köppen Dfb envelope |
-| **Aobe Station, Japan** (`obs_04`) | Remote mountain railway halt in forest gorge | **Failed**: Confused with Swiss Alps / Cascades (>8,500 km error) | **Exact Match**: **$0.0\text{ km}$** (**T1**) | Single-track rail corridor + 30m DEM slope profile |
-| **Datil Plains, New Mexico** (`obs_02`) | Arid high-desert highway junction (2,250m elev.) | **Failed**: Hallucinated Australian Outback (>9,000 km error) | **Pinpoint**: $\le 1.2\text{ km}$ (**T2**) | US highway corridor topology + BSk elevation bounds |
-| **Haripur Valley, Pakistan** (`obs_07`) | Himalayan rural foothills, terraced agriculture | **Failed**: Error / No Google Street View coverage | **Calibrated**: $\le 25\text{ km}$ (**T3**) | AWS Terrarium DEM ridge + Köppen Cwa envelope |
-| **Pamir Mountain Pass, Tajikistan** (`rur_04`)| 4,000m alpine gravel corridor in Central Asia | **Failed**: Hallucinated generic Andean road (>12,000 km error) | **Pinpoint**: $\le 4.5\text{ km}$ (**T2**) | 30m DEM skyline NCC profile + OSM unpaved highway |
-| **Brecon River Valley, Wales** (`obs_09`) | Remote moorland river valley, no road markers | **Failed**: Guessed Ireland / Northern Scotland (>350 km error) | **Exact Match**: **$0.0\text{ km}$** (**T1**) | River polyline geometry + DEM valley curvature |
-| **Ouarzazate Village, Morocco** (`obs_08`) | Arid rammed-earth clay architecture | **Failed**: Guessed Middle East cities (Dubai/Riyadh, >4,500 km error)| **Pinpoint**: $\le 10\text{ km}$ (**T2**) | Vernacular clay palette + Atlas rain-shadow DEM |
+| Challenging Target Location | Target Photo (Input) | Terrain / Biome | Competing Models Outcome (GeoSpy / CLIP / Street Bots) | EarthTrace Forensic Result | Solving Evidence Modality |
+| :--- | :---: | :--- | :--- | :--- | :--- |
+| **Somero, Finland** (`obs_01`) | <img src="docs/assets/thumbnails/obs_01_somero.jpg" width="110" style="border-radius: 6px;" alt="Somero, Finland" /> | Rural boreal crossroad, zero signs | **Failed**: Guessed generic Siberia/Sweden (>1,250 km error) | **Pinpoint**: $\le 15\text{ km}$ (**T3**) | OSM rural road network + Köppen Dfb envelope |
+| **Aobe Station, Japan** (`obs_04`) | <img src="docs/assets/thumbnails/obs_04_aobe.jpg" width="110" style="border-radius: 6px;" alt="Aobe Station" /> | Remote mountain railway halt in forest gorge | **Failed**: Confused with Swiss Alps / Cascades (>8,500 km error) | **Exact Match**: **$0.0\text{ km}$** (**T1**) | Single-track rail corridor + 30m DEM slope profile |
+| **Datil Plains, New Mexico** (`obs_02`) | <img src="docs/assets/thumbnails/obs_02_datil.jpg" width="110" style="border-radius: 6px;" alt="Datil Plains" /> | Arid high-desert highway junction (2,250m elev.) | **Failed**: Hallucinated Australian Outback (>9,000 km error) | **Pinpoint**: $\le 1.2\text{ km}$ (**T2**) | US highway corridor topology + BSk elevation bounds |
+| **Haripur Valley, Pakistan** (`obs_07`) | <img src="docs/assets/thumbnails/obs_07_haripur.jpg" width="110" style="border-radius: 6px;" alt="Haripur Valley" /> | Himalayan rural foothills, terraced agriculture | **Failed**: Error / No Google Street View coverage | **Calibrated**: $\le 25\text{ km}$ (**T3**) | AWS Terrarium DEM ridge + Köppen Cwa envelope |
+| **Pamir Mountain Pass, Tajikistan** (`rur_04`)| <img src="docs/assets/thumbnails/rur_04_pamir.jpg" width="110" style="border-radius: 6px;" alt="Pamir Mountain Pass" /> | 4,000m alpine gravel corridor in Central Asia | **Failed**: Hallucinated generic Andean road (>12,000 km error) | **Pinpoint**: $\le 4.5\text{ km}$ (**T2**) | 30m DEM skyline NCC profile + OSM unpaved highway |
+| **Brecon River Valley, Wales** (`obs_09`) | <img src="docs/assets/thumbnails/obs_09_brecon.jpg" width="110" style="border-radius: 6px;" alt="Brecon Valley" /> | Remote moorland river valley, no road markers | **Failed**: Guessed Ireland / Northern Scotland (>350 km error) | **Exact Match**: **$0.0\text{ km}$** (**T1**) | River polyline geometry + DEM valley curvature |
+| **Ouarzazate Village, Morocco** (`obs_08`) | <img src="docs/assets/thumbnails/obs_08_ouarzazate.jpg" width="110" style="border-radius: 6px;" alt="Ouarzazate Village" /> | Arid rammed-earth clay architecture | **Failed**: Guessed Middle East cities (Dubai/Riyadh, >4,500 km error)| **Pinpoint**: $\le 10\text{ km}$ (**T2**) | Vernacular clay palette + Atlas rain-shadow DEM |
 
 ---
 
