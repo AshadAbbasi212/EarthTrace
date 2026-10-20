@@ -29,6 +29,8 @@ def test_index_html_served(client):
     html = response.text
 
     # Title & Branding
+    assert "EarthTrace" in html
+    assert "EARTHTRACE" in html
     assert "Global Photo Geolocator" in html
     assert "GLOBAL PHOTO GEOLOCATOR" in html
 

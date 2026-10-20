@@ -70,7 +70,7 @@ if (Test-PortOccupied -CheckPort $Port) {
 }
 
 Write-Host "`n============================================================" -ForegroundColor Cyan
-Write-Host "             GLOBAL PHOTO GEOLOCATOR (100% Local)           " -ForegroundColor Cyan
+Write-Host "             EARTHTRACE — GLOBAL PHOTO GEOLOCATOR           " -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host "  Architecture: Keyless Multi-Hypothesis Pipeline           " -ForegroundColor White
 Write-Host "  Evidence:     OSM Geometry | DEM Skyline | Sat | Street   " -ForegroundColor White
