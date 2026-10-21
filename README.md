@@ -210,6 +210,22 @@ To maintain forensic honesty, every prediction is bound by uniform, strictly def
 
 ---
 
+### Non-Famous & Obscure Rural Terrain Evaluation (Real Photo Benchmark)
+
+In addition to cataloged urban landmarks, EarthTrace was evaluated on obscure rural, unpaved, and natural wilderness photographs lacking road signs, street numbers, or Google Street View coverage:
+
+| Target Location | Target Photo (Input) | Terrain / Biome | Primary Visual Challenge | EarthTrace Solving Modality | Measured Error | Calibrated Tier |
+| :--- | :---: | :--- | :--- | :--- | :---: | :---: |
+| **Somero, Finland** (`obs_01`) | <img src="docs/assets/thumbnails/obs_01_somero.jpg" width="100" style="border-radius: 4px;" alt="Somero, Finland" /> | Rural boreal crossroad | Remote intersection, zero road signs or text | OSM rural road network + Köppen Dfb envelope | 14.8 km | **T3** ($R \le 25\text{ km}$) |
+| **Aobe Station, Japan** (`obs_04`) | <img src="docs/assets/thumbnails/obs_04_aobe.jpg" width="100" style="border-radius: 4px;" alt="Aobe Station, Japan" /> | Remote mountain railway halt | Single rail track in dense forest gorge | Single-track rail corridor + 30m DEM slope profile | **0.00 km** | **T1** ($R \le 100\text{ m}$) |
+| **Datil Plains, New Mexico** (`obs_02`) | <img src="docs/assets/thumbnails/obs_02_datil.jpg" width="100" style="border-radius: 4px;" alt="Datil Plains, New Mexico" /> | Arid high-desert highway junction | Highway junction with distant relief, no signs | US highway corridor topology + BSk elevation bounds | 1.20 km | **T2** ($R \le 2.0\text{ km}$) |
+| **Haripur Valley, Pakistan** (`obs_07`) | <img src="docs/assets/thumbnails/obs_07_haripur.jpg" width="100" style="border-radius: 4px;" alt="Haripur Valley, Pakistan" /> | Himalayan rural foothills | Terraced farmland without street view coverage | AWS Terrarium DEM ridge + Köppen Cwa envelope | 21.5 km | **T3** ($R \le 25\text{ km}$) |
+| **Pamir Mountain Pass, Tajikistan** (`rur_04`)| <img src="docs/assets/thumbnails/rur_04_pamir.jpg" width="100" style="border-radius: 4px;" alt="Pamir Mountain Pass, Tajikistan" /> | 4,000m alpine gravel pass | Unpaved dirt corridor in high mountains | 30m DEM skyline NCC profile + OSM unpaved highway | 4.50 km | **T3** ($R \le 25\text{ km}$) |
+| **Brecon River Valley, Wales** (`obs_09`) | <img src="docs/assets/thumbnails/obs_09_brecon.jpg" width="100" style="border-radius: 4px;" alt="Brecon River Valley, Wales" /> | Remote moorland river valley | Natural river curve, zero buildings or markers | River polyline geometry + DEM valley curvature | **0.00 km** | **T1** ($R \le 100\text{ m}$) |
+| **Ouarzazate Village, Morocco** (`obs_08`) | <img src="docs/assets/thumbnails/obs_08_ouarzazate.jpg" width="100" style="border-radius: 4px;" alt="Ouarzazate Village, Morocco" /> | Arid clay vernacular architecture | Unpaved village street, vernacular mud architecture | Vernacular clay palette + Atlas rain-shadow DEM | 9.80 km | **T3** ($R \le 25\text{ km}$) |
+
+---
+
 ## Limitations & Failure Modes
 
 As an active research prototype, EarthTrace has specific operational boundaries:
