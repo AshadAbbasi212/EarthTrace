@@ -16,11 +16,13 @@ build/
 /data/*
 !/data/landmarks/
 vendor/**/data/
+!vendor/geo-sleuth/skills/geo-sleuth/data/
 !src/geolocator/data/
 *.sqlite
 jobs/
 logs/
-eval/photos/
+!eval/photos/
+!eval/photos_exif/
 eval/results/
 !eval/results/real_50_benchmark/
 eval/results/real_50_benchmark/*
