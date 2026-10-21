@@ -167,6 +167,15 @@ python -m eval.run_eval --manifest eval/manifest.csv --photos-dir eval/photos --
 
 ---
 
+### Verification Protocol: EXIF & Ground-Level Retrieval Controls
+
+To prevent data leakage during benchmark evaluation:
+- **EXIF Stripping:** All benchmark evaluation photos in `eval/photos/` and `eval/photos_obscure/` have EXIF metadata completely stripped (`has_exif: False`).
+- **Bypassed Fast Path:** The Stage 0 EXIF fast-path is strictly bypassed during evaluation; coordinates are solved exclusively from visual inference (Stages 1–3) and physical verification (Stage 4).
+- **Ground-Level Retrieval Isolation:** Ground-level geotagged search (Wikimedia Commons) queries only candidate coordinates generated downstream by Stages 2 & 3 to display reference context. It does not propose coordinates or participate in candidate formulation.
+
+---
+
 ### Demonstration: Fast-Path Landmark Matching (10 Reference Samples)
 
 > **Evaluation Transparency Note:** The 10 landmark targets below illustrate the fast-path catalog and cadastral building footprint alignment. Because these structures have cataloged footprints in OpenStreetMap, errors are near-zero. They serve as a pipeline sanity demonstration rather than an unconstrained blind benchmark.
@@ -198,38 +207,6 @@ To maintain forensic honesty, every prediction is bound by uniform, strictly def
 - **Tier 4 (T4) — District / Subnational County:** Calibrated radius $R \le 200\text{ km}$. Assigned when subnational scripts, ccTLDs, or dialed telephone codes establish district bounds.
 - **Tier 5 (T5) — Biome / State / Province:** Calibrated radius $R \le 750\text{ km}$. Assigned when Köppen-Geiger climate classification, ESA WorldCover, and solar hemisphere match.
 - **Tier 6 (T6) — Macro-Region / Continent:** Calibrated radius $R > 750\text{ km}$. Assigned when evidence is diffuse or ambiguous.
-
----
-
-### Obscure & Signless Terrain Showcase
-
-Tested on rural, unpaved, or natural wilderness photos lacking road signs or Google Street View coverage:
-
-| Target Location | Target Photo | Terrain / Biome | Primary Visual Challenge | EarthTrace Solving Modality | Observed Result |
-| :--- | :---: | :--- | :--- | :--- | :--- |
-| **Somero, Finland** (`obs_01`) | <img src="docs/assets/thumbnails/obs_01_somero.jpg" width="100" style="border-radius: 4px;" alt="Somero" /> | Rural boreal crossroad | No road signs or text markers | OSM rural road network + Köppen Dfb envelope | Pinpoint $\le 15\text{ km}$ (**T3**) |
-| **Aobe Station, Japan** (`obs_04`) | <img src="docs/assets/thumbnails/obs_04_aobe.jpg" width="100" style="border-radius: 4px;" alt="Aobe" /> | Mountain railway halt in forest | Single track in dense foliage | Single-track rail corridor + 30m DEM slope profile | Exact Match **$0.0\text{ km}$** (**T1**) |
-| **Datil Plains, New Mexico** (`obs_02`) | <img src="docs/assets/thumbnails/obs_02_datil.jpg" width="100" style="border-radius: 4px;" alt="Datil" /> | High-desert highway junction | Arid highway with distant ridgeline | Highway junction topology + BSk elevation bounds | Pinpoint $\le 1.2\text{ km}$ (**T2**) |
-| **Haripur Valley, Pakistan** (`obs_07`) | <img src="docs/assets/thumbnails/obs_07_haripur.jpg" width="100" style="border-radius: 4px;" alt="Haripur" /> | Himalayan rural foothills | Terraced farmland without street view | AWS Terrarium DEM ridge + Köppen Cwa envelope | Calibrated $\le 25\text{ km}$ (**T3**) |
-| **Pamir Pass, Tajikistan** (`rur_04`)| <img src="docs/assets/thumbnails/rur_04_pamir.jpg" width="100" style="border-radius: 4px;" alt="Pamir" /> | 4,000m alpine gravel pass | Unpaved dirt track in high mountains | 30m DEM skyline NCC sweep + OSM unpaved highway | Pinpoint $\le 4.5\text{ km}$ (**T2**) |
-| **Brecon River Valley, Wales** (`obs_09`) | <img src="docs/assets/thumbnails/obs_09_brecon.jpg" width="100" style="border-radius: 4px;" alt="Brecon" /> | Moorland river valley | Remote stream corridor without buildings | River polyline geometry + DEM valley curvature | Exact Match **$0.0\text{ km}$** (**T1**) |
-| **Ouarzazate, Morocco** (`obs_08`) | <img src="docs/assets/thumbnails/obs_08_ouarzazate.jpg" width="100" style="border-radius: 4px;" alt="Ouarzazate" /> | Arid clay vernacular architecture | Unpaved desert village | Vernacular clay palette + Atlas rain-shadow DEM | Pinpoint $\le 10\text{ km}$ (**T2**) |
-
----
-
-## Architectural Comparison
-
-| Architectural Dimension | EarthTrace | Commercial Web Tools (e.g. GeoSpy) | Reverse Image Search (e.g. Google Lens) | Pure Vision Models (e.g. GeoCLIP) | Street-Level Bots (e.g. PIGEON) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Inference Location** | **100% Local GPU/CPU** | Cloud Server | Cloud Server | Local Script | Cloud API |
-| **Photo Upload Required** | **No** | Yes | Yes | No | Yes |
-| **Open Source License** | **MIT License** | Proprietary | Proprietary | MIT License | Research Only |
-| **3D Elevation (DEM) Skylines** | **Yes (~30m Terrarium)** | No | No | No | No |
-| **Vector Infrastructure Corridors** | **Yes (OpenStreetMap)** | No | No | No | Street View features |
-| **Cadastral Building Footprints** | **Yes (OSM Polygons)** | No | Duplicate photos only | No | No |
-| **Uncertainty Bounds** | **Calibrated Tiers (T1–T6)** | Single coordinate point | None | Probability distribution | Single coordinate point |
-| **Audit Trail** | **JSON, HTML, GeoJSON** | Brief text summary | Web links | Raw embeddings | Coordinates |
-| **Cost** | **Free & Open Source** | Subscription credits | Free (cloud-hosted) | Free | Non-commercial |
 
 ---
 
