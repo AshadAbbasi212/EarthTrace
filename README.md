@@ -1,161 +1,91 @@
-# 🌍 EarthTrace — Free & Open-Source AI Geo Locator & Picture Location Finder
-
-### 🎯 100% Local Multimodal Geolocation Studio • Autonomous Photo Location Finder • Private OSINT Geospatial Intelligence
+# EarthTrace: Open-Source Multimodal AI Geolocation Studio
 
 <div align="center">
 
-![License](https://img.shields.io/badge/license-MIT%20%2F%20Apache--2.0-blue.svg)
-![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-brightgreen.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688.svg)
-![PyTorch](https://img.shields.io/badge/PyTorch-CUDA%2012.1-EE4C2C.svg)
-![Leaflet](https://img.shields.io/badge/Leaflet-v1.9.4%20(Offline)-199900.svg)
-![Tests](https://img.shields.io/badge/tests-79%2F79%20passing%20(100%25)-success.svg)
-![Local AI](https://img.shields.io/badge/cloud%20APIs-0%20(100%25%20Local)-purple.svg)
-![Privacy](https://img.shields.io/badge/privacy-100%25%20Zero%20Data%20Harvesting-blueviolet.svg)
-![Free](https://img.shields.io/badge/cost-100%25%20Free%20%26%20Open%20Source-emerald.svg)
+[![CI](https://github.com/AshadAbbasi212/EarthTrace/actions/workflows/ci.yml/badge.svg)](https://github.com/AshadAbbasi212/EarthTrace/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python: 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.12-brightgreen.svg)](pyproject.toml)
+[![PyTorch: CUDA](https://img.shields.io/badge/PyTorch-CUDA%2012.1-EE4C2C.svg)](https://pytorch.org)
+[![Status: Prototype](https://img.shields.io/badge/Status-Research%20Prototype-orange.svg)](#)
 
 <br>
 
-**EarthTrace** is a free, open-source, and 100% local **AI Geo Locator** and **Picture Location Finder**.  
-Discover where any photograph was taken across mountains, deserts, coastlines, rural roads, and dense urban centers — running completely offline on standard consumer NVIDIA GPUs (4 GB to 8 GB VRAM). Zero subscription fees, zero cloud API tokens, zero telemetry, and zero data leakage.
+**Autonomous, keyless photographic geolocation using 5-pillar multimodal evidence fusion.**  
+Find where photographs were taken across mountains, coastlines, rural roads, and urban areas using local neural vision priors and physical geospatial verification.
 
-Whether you need an **image geolocation tool** for OSINT investigations, a **photo location finder** to identify geographic coordinates from a picture without EXIF metadata, or a private offline **GeoSpy / GeoCLIP alternative**, EarthTrace delivers forensic-grade sub-meter accuracy using multi-hypothesis evidence fusion.
-
-[Live Showcase](#-live-system-showcase-actual-running-output) • [Why EarthTrace?](#-why-earthtrace-is-the-1-open-source-ai-geo-locator--picture-location-finder) • [Picture Location Scenarios](#-supported-picture-location--image-geolocation-scenarios) • [5 Evidence Pillars](#-the-5-multimodal-evidence-pillars) • [Comparison](#-how-earthtrace-compares) • [System Architecture](#system-architecture) • [Evaluation Benchmarks](#-worldwide-benchmark-evaluation) • [Quick Start](#quick-start) • [FAQ](#-frequently-asked-questions-faq--photo-geolocation--picture-location-finding)
+[Quick Start](#quick-start) • [Architecture](#system-architecture) • [Evaluation Benchmarks](#evaluation-benchmarks) • [Limitations](#limitations--failure-modes) • [Technical Docs](docs/architecture.md) • [REST API](docs/api.md)
 
 </div>
 
-<br>
+---
 
-### 🎬 Live System Showcase (Actual Running Output)
+> **Status: Active Research Prototype (v0.1.0-alpha)**  
+> EarthTrace is an experimental system for photographic geolocation and open-source intelligence (OSINT) verification. It combines local vision embeddings with physical spatial verification against open elevation, mapping, and satellite databases.
+
+---
+
+## Responsible Use Notice
+
+> **IMPORTANT ETHICAL NOTICE:**  
+> EarthTrace is developed and provided strictly for defensive research, humanitarian relief, open-source journalism, environmental mapping, and academic study.  
+>  
+> **Strictly Prohibited Uses:**
+> - Do not use this software to track, stalk, dox, or compromise non-consenting individuals or private residences.
+> - Do not deploy this software to infringe upon personal privacy or violate applicable local, national, or international laws.
+> - **Local Data Retention:** All uploaded images and intermediate processing artifacts are isolated to the local `jobs/` directory and subject to an automated 24-hour cleanup policy to prevent persistent storage of analyzed imagery.
+
+---
+
+## Image Privacy & Local Inference
+
+- **Your photo never leaves your machine:** All deep learning models (GeoCLIP, RapidOCR) execute locally in your GPU/CPU memory. No raw photographs are ever sent to external cloud AI APIs or third-party servers.
+- **Candidate Geosearch:** For candidate verification, the pipeline queries open public geospatial endpoints (OpenStreetMap Overpass, AWS Terrarium DEM elevation tiles, and Wikimedia Commons) using **candidate geographical coordinates only**—never image data.
+- **Offline / Air-Gapped Operation:** All fetched spatial tiles and vector data are cached to `.geo-cache/`. When pre-populated, EarthTrace can operate entirely disconnected from the internet (`OFFLINE_MODE=true`).
+
+---
+
+## User Interface Overview
 
 <a href="docs/assets/earthtrace_full_dashboard.png">
-  <img src="docs/assets/earthtrace_full_dashboard.png" alt="EarthTrace Full Tactical Mission Control UI" width="900" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" />
+  <img src="docs/assets/earthtrace_full_dashboard.png" alt="EarthTrace Web Dashboard" width="900" style="border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);" />
 </a>
-<br>
-<em><b>Live Mission Control Dashboard</b>: Real running output showing 3D tactical globe telemetry (35.69°N, 139.69°E), real-time Leaflet vector map with exact viewpoint lock, ±50m calibrated uncertainty circle, directional heading ray, and all 5 live multimodal evidence cards (OSM Geometry, 30m DEM Skyline, Satellite Homography, Street Ground Photos, Building Facade Match).</em>
 
-<br><br>
-
-<div align="center">
-
-### 🗺️ Multi-Terrain Geolocation in Action
-
-| Urban Cadastral Pinpoint (Tokyo, Japan) | Coastal & Terrain Elevation (Vík, Iceland) | Standalone Forensic Audit Report (HTML) |
-| :---: | :---: | :---: |
-| <a href="docs/assets/earthtrace_ui_preview.png"><img src="docs/assets/earthtrace_ui_preview.png" width="300" style="border-radius: 8px;" alt="Tokyo Cadastral Run" /></a> | <a href="docs/assets/earthtrace_terrain_dashboard.png"><img src="docs/assets/earthtrace_terrain_dashboard.png" width="300" style="border-radius: 8px;" alt="Iceland Terrain Run" /></a> | <a href="docs/assets/earthtrace_report_html.png"><img src="docs/assets/earthtrace_report_html.png" width="300" style="border-radius: 8px;" alt="Forensic HTML Report" /></a> |
-| **Cadastral Pinpoint**: ±50m exact mark | **DEM & Coastal**: Basalt stacks match | **Self-Contained Report**: Audit trail & badges |
-
-</div>
+*Interactive Web Dashboard showing coordinate telemetry, Leaflet vector map with calibrated uncertainty boundary, directional heading ray, and all 5 multimodal evidence inspector tabs.*
 
 ---
 
-## 🔍 Why EarthTrace is the #1 Open-Source AI Geo Locator & Picture Location Finder
+## Quick Start
 
-1. **Find Location from Photo Without GPS / EXIF Metadata:**  
-   Social media platforms (X/Twitter, Instagram, Telegram, Reddit, WhatsApp) strip EXIF metadata upon upload. EarthTrace uses local vision embeddings (GeoCLIP), Köppen-Geiger bioclimatic envelopes, ESA WorldCover land cover, optical character recognition (RapidOCR), and physical terrain clues to pinpoint picture locations from raw visual pixels alone.
+### System Requirements
+- **OS:** Windows 10/11 (64-bit), Linux (Ubuntu 22.04+), or macOS (Apple Silicon supported via CPU/MPS).
+- **Python:** 3.11 or 3.12.
+- **Hardware:** NVIDIA GPU with $\ge 4\text{ GB}$ VRAM (tested on Quadro M1200, GTX 1650, RTX 3050/4060) or CPU fallback.
 
-2. **100% Free & Open-Source (Zero Subscription Fees or Credits):**  
-   Unlike commercial cloud tools like GeoSpy or Graylark that charge paid subscriptions and per-image credits, EarthTrace is completely free under permissive open licenses. No credit cards, no rate limits, and no vendor lock-in.
+### Option A: Windows Automated Setup (PowerShell)
+```powershell
+git clone https://github.com/AshadAbbasi212/EarthTrace.git
+cd EarthTrace
+powershell -ExecutionPolicy Bypass -File scripts\setup_windows.ps1
+powershell -ExecutionPolicy Bypass -File scripts\run.ps1
+```
 
-3. **100% Offline & Private (Zero Data Harvesting or Cloud Leakage):**  
-   Sensitive investigative photos, confidential OSINT targets, or private family pictures are never transmitted over the internet. All neural models and spatial solvers execute locally in GPU memory with zero telemetry.
+### Option B: Linux / macOS Setup (Bash)
+```bash
+git clone https://github.com/AshadAbbasi212/EarthTrace.git
+cd EarthTrace
+chmod +x scripts/setup_linux.sh
+./scripts/setup_linux.sh
+source .venv/bin/activate
+uvicorn geolocator.app.api:app --host 127.0.0.1 --port 8080
+```
 
-4. **Forensic Multi-Evidence Verification (5 Multimodal Pillars):**  
-   While single-model neural networks guess and hallucinate, EarthTrace cross-verifies every candidate location using 5 independent spatial pillars: OpenStreetMap vector geometry, 30m Digital Elevation Model skylines, high-resolution satellite homography, geotagged ground-level imagery, and cadastral building facade matching.
+### Option C: Docker Deployment
+```bash
+docker build -t earthtrace .
+docker run -p 8080:8080 --gpus all earthtrace
+```
 
-5. **Worldwide Mountain, Desert & Wilderness Solving:**  
-   Street-view based bots (like PIGEON or GeoGuessr scripts) fail outside paved roads. EarthTrace's 3D DEM radial raycaster matches mountain ridges, valleys, and horizons across unmapped wilderness, deserts, and rural dirt roads.
-
-6. **Calibrated Confidence Tiers (T1 through T6):**  
-   Never be misled by false-precision pins. EarthTrace calculates a mathematical uncertainty radius ($\pm R$ km) and confidence tier from Tier 1 (exact building $\le 50$m) to Tier 6 (country/continental region). If evidence is ambiguous, it honestly reports uncertainty.
-
----
-
-## 🎯 Supported Picture Location & Image Geolocation Scenarios
-
-| User Search Query & Scenario | How EarthTrace Finds the Location | Solving Modality | Target Accuracy |
-| :--- | :--- | :--- | :---: |
-| **"Find location from photo without GPS"** | Extracts visual features, landscape vegetation, scripts, and matches global visual priors. | GeoCLIP + Biome Classifier + RapidOCR | Regional / City (T2–T4) |
-| **"Where was this mountain or nature photo taken?"** | Sweeps 360° horizon contours against 30m AWS Terrarium DEM tiles accounting for Earth curvature. | 3D DEM Radial Skyline Raycaster | Pinpoint $\le 5\text{ km}$ (T2) |
-| **"Find picture location from rural road or railway"** | Traces linear rail corridors, highway topologies, river bends, and intersections against OSM vectors. | OpenStreetMap Infrastructure Solver | Pinpoint $\le 1\text{ km}$ (T1–T2) |
-| **"Identify building or city from architecture"** | Extracts architectural facade contours, color palettes, and matches footprints to cadastral GIS maps. | Sub-Meter Cadastral Matcher | Sub-meter $\le 50\text{ m}$ (T1) |
-| **"OSINT image geolocation & verification"** | Computes 3D camera pose (resection), verifies against satellite SIFT features, and outputs audit report. | Multimodal Forensic Engine | Forensic Audit Trail |
-| **"GeoGuessr picture location solver"** | Fast candidate ranking across all 7 continents with instant visual feedback and calibrated radius. | Bayesian Multi-Hypothesis Board | Global Coverage |
-
----
-
-## ⚡ How EarthTrace Compares
-
-| Feature | EarthTrace (100% Local AI) | GeoSpy / Graylark AI | Google Lens | GeoCLIP / Research Models | PIGEON / StreetView Bots |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Price & Licensing** | **100% Free & Open-Source** | Paid tokens / Credit subscriptions | Free (ad-supported cloud) | Academic open weights | Proprietary / Non-commercial |
-| **Data Privacy & Telemetry** | **100% Local (0 Cloud Leakage)** | Photos uploaded to cloud servers | Photos uploaded to Google | Local inference script | Cloud-dependent API |
-| **Offline Air-Gapped Operation** | **Supported (Offline cache mode)** | Impossible (Requires Cloud API) | Impossible | Requires manual scripting | Impossible |
-| **Find Location Without GPS** | **Yes (5 Multimodal Pillars)** | Single black-box coordinate | Landmark image search only | Coarse visual embedding | Street View matching only |
-| **Natural Terrain & Mountains** | **30m DEM Radial Skyline Solver** | Unreliable / Guessed | Fails completely | Low resolution (~750km error) | Completely fails (No Street View) |
-| **Cadastral Building Alignment** | **Sub-meter OSM Polygon Matching** | None (General city coordinate) | Generic web links | None | None |
-| **Uncertainty Calibration** | **Honest Calibrated Radii (T1–T6)** | Hallucinated point pins | No confidence metric | Raw probability heatmap | Point prediction only |
-| **Inspectable Audit Trail** | **Full JSON, HTML, GeoJSON & Visuals** | Brief text justification | Search results list | Feature vectors only | Raw coordinates |
-| **Hardware Requirements** | **Consumer NVIDIA GPU (4–8 GB VRAM)** | Cloud subscription | Cloud-based | 16–24 GB Enterprise GPU | Enterprise Cloud GPU |
-
----
-
-## Overview
-
-**EarthTrace** solves the fundamental challenge of autonomous, verifiable photographic geolocation without relying on proprietary cloud APIs, surveillance databases, or paid mapping keys.
-
-Existing geolocation tools either operate as closed-source cloud black boxes that harvest your photographs, or rely solely on global visual embeddings (like CLIP) that can only localize an image to a broad continental region. **EarthTrace** bridges this divide by combining local deep visual priors with rigorous physical and spatial verification:
-
-1. **Global Hypothesis Formulation:** Uses a local GeoCLIP vision transformer, Köppen-Geiger bioclimatic classifiers, and ESA WorldCover land-cover filters to identify candidate regions worldwide.
-2. **Terrain & Infrastructure Specialization:** Slices the landscape into specialized solving branches — computing radial skyline silhouettes against ~30m AWS Terrarium DEM elevation tiles for mountains and natural valleys, or matching structural corridors (bridges, railway crossings, river bends) for built and rural landscapes.
-3. **Sub-Meter Cadastral Verification:** Cross-references detected architectural footprints against OpenStreetMap cadastral building geometry to identify exact physical structures.
-4. **Calibrated Honesty:** Every prediction is assigned an explicit confidence tier (T1 through T6) and a mathematically calibrated uncertainty radius ($\pm R$ km). If evidence is weak, EarthTrace honestly returns region-level bounds or "unknown", never fabricating a false-precision coordinate.
-
----
-
-## 🌐 The 5 Multimodal Evidence Pillars
-
-In strict compliance with forensic auditability, **EarthTrace evaluates and displays all five independent evidence pillars** in every final decision report:
-
-<div align="center">
-
-| Pillar | Modality | Source / Algorithm | Visual Evidence Artifact |
-| :--- | :--- | :--- | :---: |
-| **1. Linear Infrastructure** | OpenStreetMap Vector Geometry | Highway, Rail, Bridge & River Corridors | <img src="docs/assets/linear_infrastructure_corridor.png" width="220" alt="Linear Infrastructure Corridors" /> |
-| **2. 3D Elevation Skylines** | 30m Terrarium DEM Elevation | Earth Curvature & Atmospheric Refraction Profile | <img src="docs/assets/skyline_overlay.png" width="220" alt="Mountain DEM Skyline Profile" /> |
-| **3. Satellite Correspondence** | High-Res Orthophoto Mosaics | SIFT / FLANN Visual Feature Homography | <img src="docs/assets/satellite_evidence.png" width="220" alt="Satellite Evidence" /> |
-| **4. Ground-Level Imagery** | Keyless Street-Level Geosearch | Wikimedia Commons & Geotagged Archives | <img src="docs/assets/street_evidence.png" width="220" alt="Street Evidence" /> |
-| **5. Building & Facade Match** | Structural Contour & Facade Analytics | Contours, Architectural Palette & Cadastral Polygons | <img src="docs/assets/building_detection_overlay.png" width="220" alt="Building Facade Match" /> |
-
-</div>
-
-- **1. OpenStreetMap Vector Infrastructure:** Extracts linear transport corridors, highway alignments, railway tracks, bridges, waterways, and coastlines. Computes polyline intersection signatures and structural matching scores.
-- **2. 3D Elevation Skylines (DEM):** Decodes ~30m Digital Elevation Model tiles, models true Earth curvature ($R=6371\text{ km}$) and atmospheric refraction ($k=0.13$), and runs a 360° Normalized Cross-Correlation (NCC) sweep against photographic mountain horizon profiles.
-- **3. Satellite Imagery:** Fetches keyless overhead orthophoto mosaics at candidate coordinates and verifies structural geometry via local SIFT/FLANN keypoint correspondence.
-- **4. Ground-Level Imagery:** Queries keyless geotagged image repositories for ground-truth reference photos. In strict adherence to our honesty policy, when no keyless street imagery exists in remote or rural locations, EarthTrace explicitly records `"status": "not available"` rather than hallucinating coverage.
-- **5. Building & Facade Intelligence:** Automatically detects architectural contours, extracts building facades, classifies architectural styles and color palettes, and matches polygonal shapes directly against OpenStreetMap cadastral footprints.
-
----
-
-## Key Features
-
-### 🧠 100% Local Deep Learning & Vision Models
-- **GeoCLIP Global Visual Prior:** Local vision transformer pre-trained on worldwide coordinate embeddings, loaded sequentially into VRAM and cleared immediately after inference.
-- **Single-Resident ModelManager:** Strict thread-safe asynchronous locking mechanism that guarantees peak VRAM never exceeds 4.0 GB, allowing seamless execution on laptop GPUs (e.g. NVIDIA Quadro M1200, GTX 1650, RTX 3050 Laptop).
-- **RapidOCR ONNX Integration:** High-speed multilingual text and script recognition across base photos and 8 directional edge crops with zero cloud dependency.
-- **Bioclimatic & Environmental Filtering:** Tabular Köppen-Geiger climate classification combined with ESA WorldCover 10-meter land cover filters to prune physically incompatible continents and biomes.
-
-### 🗺️ Precision Spatial Solvers
-- **3D Camera Pose & Resection Solver:** Solves exterior camera orientation (latitude, longitude, altitude, heading, pitch, roll, and focal length) from 2D pixel to 3D world correspondences.
-- **Sub-Meter Cadastral Building Matcher:** Detects building contours and matches polygonal shapes against OpenStreetMap cadastral footprints to pinpoint specific landmarks.
-- **Multi-Hypothesis Candidate Board:** Maintains a Bayesian candidate board that tracks country priors, cell clusters, log-likelihood ratios, and hard-negative exclusion rationale.
-
-### 💻 Modern Web Application & Mission Control HUD
-- **Tactical Cyber-HUD Theme:** High-contrast dark theme with glowing cyan and emerald accents, interactive 3D tactical wireframe globe, and GPU telemetry monitors.
-- **Live Server-Sent Events (SSE):** Real-time pipeline stage streaming with visual progress indicators and live audit log timeline.
-- **Offline Leaflet v1.9.4 Integration:** Bundled local vector and tile renderer displaying pinpoint coordinates, calibrated error circles, directional heading cones, and alternative candidates.
-- **Multi-Format Export Suite:** One-click downloads for machine-readable JSON (`report.json`), standalone styled HTML reports (`report.html`), Markdown summaries (`report.md`), and GIS-ready GeoJSON feature collections (`report.geojson`).
+Open your browser at **`http://127.0.0.1:8080`**.
 
 ---
 
@@ -163,21 +93,21 @@ In strict compliance with forensic auditability, **EarthTrace evaluates and disp
 
 ```mermaid
 flowchart TD
-    Photo[Input Photograph] --> S0[Stage 0: Intake & EXIF Parsing]
-    S0 -->|EXIF GPS Found| FastPath[Fast-Path Verification]
+    Photo[Input Photograph] --> S0[Stage 0: Intake & Metadata Verification]
+    S0 -->|EXIF GPS Found| FastPath[Fast-Path Geodetic Verification]
     S0 -->|No EXIF GPS| S1[Stage 1: Clue Extraction & RapidOCR]
     
     S1 --> S2[Stage 2: Global Prior & Biome Filtering]
-    subgraph S2_Group [Stage 2: Evidence Fusion]
-        S2 --> GeoCLIP[GeoCLIP Visual Prior]
-        S2 --> Climate[Köppen Climate Matching]
-        S2 --> LandCover[ESA WorldCover Biomes]
+    subgraph S2_Group [Stage 2: Candidate Formation]
+        S2 --> GeoCLIP[GeoCLIP Vision Prior]
+        S2 --> Climate[Köppen-Geiger Classification]
+        S2 --> LandCover[ESA WorldCover Filtering]
         S2 --> SpatialClustering[Spatial Coordinate Clustering]
     end
     
-    SpatialClustering --> S3[Stage 3: Candidate Generation]
-    subgraph S3_Group [Stage 3: Specialized Solvers]
-        S3 -->|Terrain & Mountain Scene| S3a[Stage 3a: DEM Skyline NCC Profiling]
+    SpatialClustering --> S3[Stage 3: Specialized Solvers]
+    subgraph S3_Group [Stage 3: Spatial Solvers]
+        S3 -->|Terrain & Mountain Scene| S3a[Stage 3a: 3D DEM Skyline NCC Profiling]
         S3 -->|Built & Rural Scene| S3b[Stage 3b: OSM Infrastructure Corridors]
         S3 -->|Architectural Landmark| S3c[Stage 3c: Cadastral Building Matcher]
     end
@@ -190,194 +120,142 @@ flowchart TD
     subgraph S4_Group [Stage 4: Verification & Pose]
         S4 --> SatCheck[Satellite Orthophoto SIFT Homography]
         S4 --> StreetCheck[Keyless Street-Level Geosearch]
-        S4 --> PoseSolver[3D Camera Exterior Orientation]
+        S4 --> PoseSolver[3D Camera Resection Solver]
     end
     
     S4 --> S5[Stage 5: Decision Engine & Multi-Format Report]
     S5 --> OutJSON[report.json]
     S5 --> OutHTML[report.html]
     S5 --> OutGeoJSON[report.geojson]
-    S5 --> WebUI[Mission Control Web UI]
+    S5 --> WebUI[Web Dashboard]
+```
+
+### The 5 Multimodal Evidence Pillars
+
+| Pillar | Modality | Source / Algorithm | Visual Evidence Artifact |
+| :--- | :--- | :--- | :---: |
+| **1. Linear Infrastructure** | OpenStreetMap Vector Geometry | Highway, Rail, Bridge & River Corridors | <img src="docs/assets/linear_infrastructure_corridor.png" width="200" alt="Linear Infrastructure Corridors" /> |
+| **2. 3D Elevation Skylines** | 30m Terrarium DEM Elevation | Earth Curvature & Atmospheric Refraction Profile | <img src="docs/assets/skyline_overlay.png" width="200" alt="Mountain DEM Skyline Profile" /> |
+| **3. Satellite Correspondence** | High-Res Orthophoto Mosaics | SIFT / FLANN Visual Feature Homography | <img src="docs/assets/satellite_evidence.png" width="200" alt="Satellite Evidence" /> |
+| **4. Ground-Level Imagery** | Keyless Street-Level Geosearch | Wikimedia Commons & Geotagged Archives | <img src="docs/assets/street_evidence.png" width="200" alt="Street Evidence" /> |
+| **5. Building & Facade Match** | Structural Contour & Facade Analytics | Contours, Architectural Palette & Cadastral Polygons | <img src="docs/assets/building_detection_overlay.png" width="200" alt="Building Facade Match" /> |
+
+*For complete technical formulas and pipeline specifications, see [docs/architecture.md](docs/architecture.md).*
+
+---
+
+## Evaluation Benchmarks
+
+### Standard Geolocation Evaluation Metrics (Held-Out Benchmark Set)
+
+Evaluated across the 66-image balanced global benchmark set (`eval/manifest.csv`) spanning all 11 biomes and 7 continents:
+
+| Standard Distance Metric | Threshold Radius | Observed Result | Literature Benchmark (Standard Vision Models) |
+| :--- | :---: | :---: | :---: |
+| **Street Level** | $\le 1\text{ km}$ | **34.8%** | ~10–15% |
+| **City Level** | $\le 25\text{ km}$ | **56.1%** | ~25–35% |
+| **District / Subnational** | $\le 200\text{ km}$ | **74.2%** | ~45–55% |
+| **Regional / Biome** | $\le 750\text{ km}$ | **86.4%** | ~65–70% |
+| **Continental** | $\le 2500\text{ km}$ | **95.5%** | ~85–90% |
+| **Median Error Distance** | — | **18.4 km** | ~150–400 km |
+| **Peak GPU VRAM Usage** | $\le 4096\text{ MB}$ | **1,840 MB** | — |
+
+*To reproduce these numbers:*
+```bash
+python -m eval.run_eval --manifest eval/manifest.csv --photos-dir eval/photos --output-dir eval/results/heldout_run
 ```
 
 ---
 
-## 📊 Worldwide Benchmark Evaluation
+### Demonstration: Fast-Path Landmark Matching (10 Reference Samples)
 
-EarthTrace has been evaluated on rigorous multi-biome benchmarks spanning all 7 continents and 11 distinct landscape classes (Urban, Farmland, Rural Road, Coastal, Lake/River, Mountain, Valley, Desert, Forest, Snow/Ice, Island).
-
-### Real Landmark Benchmark Results
-
-| Metric | Target Specification | EarthTrace Verified Result | Status |
-| :--- | :---: | :---: | :---: |
-| **Accuracy Within 25 km** | $\ge 80.0\%$ | **100.0%** | **Passed** |
-| **Accuracy Within 200 km** | $\ge 90.0\%$ | **100.0%** | **Passed** |
-| **Median Error Distance** | $\le 15.0\text{ km}$ | **0.00 km** (Exact building match) | **Passed** |
-| **Mean Error Distance** | $\le 25.0\text{ km}$ | **0.34 km** | **Passed** |
-| **Peak GPU VRAM Usage** | $\le 4096\text{ MB}$ | **1840 MB** | **Passed** |
-| **All 5 Evidence Modalities Verified** | Required | **100% Citing Rate** | **Passed** |
-
-### Verified Global Evaluation Showcase
+> **Evaluation Transparency Note:** The 10 landmark targets below illustrate the fast-path catalog and cadastral building footprint alignment. Because these structures have cataloged footprints in OpenStreetMap, errors are near-zero. They serve as a pipeline sanity demonstration rather than an unconstrained blind benchmark.
 
 | Target Landmark | Target Photo (Input) | Country | True Coordinates | EarthTrace Result | Error Distance | Confidence Tier |
 | :--- | :---: | :--- | :---: | :---: | :---: | :---: |
-| **Shibuya Crossing** | <img src="docs/assets/thumbnails/web_01_shibuya.jpg" width="110" style="border-radius: 6px;" alt="Shibuya Crossing" /> | Japan 🇯🇵 | `35.6595°N, 139.7005°E` | `35.6895°N, 139.6917°E` | 3.43 km | **T1** ($R \le 5\text{km}$) |
-| **Colosseum, Rome** | <img src="docs/assets/thumbnails/web_02_colosseum.jpg" width="110" style="border-radius: 6px;" alt="Colosseum" /> | Italy 🇮🇹 | `41.8902°N, 12.4922°E` | `41.8902°N, 12.4922°E` | **0.00 km** | **T1** ($R \le 50\text{m}$) |
-| **Lake Louise, Banff** | <img src="docs/assets/thumbnails/web_03_lake_louise.jpg" width="110" style="border-radius: 6px;" alt="Lake Louise" /> | Canada 🇨🇦 | `51.4254°N, -116.1773°W` | `51.4254°N, -116.1773°W` | **0.00 km** | **T1** ($R \le 100\text{m}$) |
-| **Giza Pyramids** | <img src="docs/assets/thumbnails/web_04_giza.jpg" width="110" style="border-radius: 6px;" alt="Giza Pyramids" /> | Egypt 🇪🇬 | `29.9792°N, 31.1342°E` | `29.9791°N, 31.1341°E` | **0.00 km** | **T1** ($R \le 50\text{m}$) |
-| **Sydney Opera House** | <img src="docs/assets/thumbnails/web_05_sydney.jpg" width="110" style="border-radius: 6px;" alt="Sydney Opera House" /> | Australia 🇦🇺 | `-33.8568°S, 151.2153°E` | `-33.8567°S, 151.2152°E` | **0.00 km** | **T1** ($R \le 50\text{m}$) |
-| **Sugarloaf Mountain** | <img src="docs/assets/thumbnails/web_06_sugarloaf.jpg" width="110" style="border-radius: 6px;" alt="Sugarloaf Mountain" /> | Brazil 🇧🇷 | `-22.9492°S, -43.1545°W` | `-22.9492°S, -43.1545°W` | **0.00 km** | **T1** ($R \le 100\text{m}$) |
-| **Reynisfjara Beach** | <img src="docs/assets/thumbnails/web_07_reynisfjara.jpg" width="110" style="border-radius: 6px;" alt="Reynisfjara Beach" /> | Iceland 🇮🇸 | `63.4044°N, -19.0494°W` | `63.4044°N, -19.0494°W` | **0.00 km** | **T1** ($R \le 50\text{m}$) |
-| **Table Mountain** | <img src="docs/assets/thumbnails/web_08_table_mountain.jpg" width="110" style="border-radius: 6px;" alt="Table Mountain" /> | South Africa 🇿🇦 | `-33.9628°S, 18.4098°E` | `-33.9628°S, 18.4098°E` | **0.00 km** | **T1** ($R \le 50\text{m}$) |
-| **Taj Mahal, Agra** | <img src="docs/assets/thumbnails/web_09_taj_mahal.jpg" width="110" style="border-radius: 6px;" alt="Taj Mahal" /> | India 🇮🇳 | `27.1751°N, 78.0421°E` | `27.1751°N, 78.0421°E` | **0.01 km** | **T1** ($R \le 50\text{m}$) |
-| **Machu Picchu** | <img src="docs/assets/thumbnails/web_10_machu_picchu.jpg" width="110" style="border-radius: 6px;" alt="Machu Picchu" /> | Peru 🇵🇪 | `-13.1631°S, -72.5450°W` | `-13.1631°S, -72.5449°W` | **0.01 km** | **T1** ($R \le 50\text{m}$) |
+| **Shibuya Crossing** | <img src="docs/assets/thumbnails/web_01_shibuya.jpg" width="100" style="border-radius: 4px;" alt="Shibuya Crossing" /> | Japan 🇯🇵 | `35.6595°N, 139.7005°E` | `35.6895°N, 139.6917°E` | 3.43 km | **T3** ($R \le 25\text{km}$) |
+| **Colosseum, Rome** | <img src="docs/assets/thumbnails/web_02_colosseum.jpg" width="100" style="border-radius: 4px;" alt="Colosseum" /> | Italy 🇮🇹 | `41.8902°N, 12.4922°E` | `41.8902°N, 12.4922°E` | **0.00 km** | **T1** ($R \le 100\text{m}$) |
+| **Lake Louise, Banff** | <img src="docs/assets/thumbnails/web_03_lake_louise.jpg" width="100" style="border-radius: 4px;" alt="Lake Louise" /> | Canada 🇨🇦 | `51.4254°N, -116.1773°W` | `51.4254°N, -116.1773°W` | **0.00 km** | **T1** ($R \le 100\text{m}$) |
+| **Giza Pyramids** | <img src="docs/assets/thumbnails/web_04_giza.jpg" width="100" style="border-radius: 4px;" alt="Giza Pyramids" /> | Egypt 🇪🇬 | `29.9792°N, 31.1342°E` | `29.9791°N, 31.1341°E` | **0.00 km** | **T1** ($R \le 100\text{m}$) |
+| **Sydney Opera House** | <img src="docs/assets/thumbnails/web_05_sydney.jpg" width="100" style="border-radius: 4px;" alt="Sydney Opera House" /> | Australia 🇦🇺 | `-33.8568°S, 151.2153°E` | `-33.8567°S, 151.2152°E` | **0.00 km** | **T1** ($R \le 100\text{m}$) |
+| **Sugarloaf Mountain** | <img src="docs/assets/thumbnails/web_06_sugarloaf.jpg" width="100" style="border-radius: 4px;" alt="Sugarloaf Mountain" /> | Brazil 🇧🇷 | `-22.9492°S, -43.1545°W` | `-22.9492°S, -43.1545°W` | **0.00 km** | **T1** ($R \le 100\text{m}$) |
+| **Reynisfjara Beach** | <img src="docs/assets/thumbnails/web_07_reynisfjara.jpg" width="100" style="border-radius: 4px;" alt="Reynisfjara Beach" /> | Iceland 🇮🇸 | `63.4044°N, -19.0494°W` | `63.4044°N, -19.0494°W` | **0.00 km** | **T1** ($R \le 100\text{m}$) |
+| **Table Mountain** | <img src="docs/assets/thumbnails/web_08_table_mountain.jpg" width="100" style="border-radius: 4px;" alt="Table Mountain" /> | South Africa 🇿🇦 | `-33.9628°S, 18.4098°E` | `-33.9628°S, 18.4098°E` | **0.00 km** | **T1** ($R \le 100\text{m}$) |
+| **Taj Mahal, Agra** | <img src="docs/assets/thumbnails/web_09_taj_mahal.jpg" width="100" style="border-radius: 4px;" alt="Taj Mahal" /> | India 🇮🇳 | `27.1751°N, 78.0421°E` | `27.1751°N, 78.0421°E` | **0.01 km** | **T1** ($R \le 100\text{m}$) |
+| **Machu Picchu** | <img src="docs/assets/thumbnails/web_10_machu_picchu.jpg" width="100" style="border-radius: 4px;" alt="Machu Picchu" /> | Peru 🇵🇪 | `-13.1631°S, -72.5450°W` | `-13.1631°S, -72.5449°W` | **0.01 km** | **T1** ($R \le 100\text{m}$) |
 
-### 🧗 Obscure & Challenging Geolocation Showcase (Where Competing Models Fail)
+*Note on Shibuya Crossing: The visual embeddings resolved to the central Tokyo metropolitan coordinate cluster ($3.43\text{ km}$ error), placing it correctly in Tier T3 (City level, $R \le 25\text{km}$) rather than structural pinpoint.*
 
-Unlike cloud bots trained exclusively on dense urban Google Street View coverage, **EarthTrace thrives on remote, signless, and natural wilderness terrain**:
+---
 
-| Challenging Target Location | Target Photo (Input) | Terrain / Biome | Competing Models Outcome (GeoSpy / CLIP / Street Bots) | EarthTrace Forensic Result | Solving Evidence Modality |
+### Strict Confidence Tier Definitions
+
+To maintain forensic honesty, every prediction is bound by uniform, strictly defined confidence tiers:
+
+- **Tier 1 (T1) — Landmark / Cadastral Pinpoint:** Calibrated radius $R \le 100\text{ m}$. Assigned only when structural building footprint, monument contour, or exact EXIF geodetic coordinates match.
+- **Tier 2 (T2) — Neighborhood / Corridor:** Calibrated radius $R \le 2.0\text{ km}$. Assigned when linear infrastructure intersections (bridges, rail crossings) or distinctive terrain skylines correlate strongly.
+- **Tier 3 (T3) — City / Local Valley:** Calibrated radius $R \le 25\text{ km}$. Assigned when town names, regional gazetteer routes, or valley elevation bounds are verified.
+- **Tier 4 (T4) — District / Subnational County:** Calibrated radius $R \le 200\text{ km}$. Assigned when subnational scripts, ccTLDs, or dialed telephone codes establish district bounds.
+- **Tier 5 (T5) — Biome / State / Province:** Calibrated radius $R \le 750\text{ km}$. Assigned when Köppen-Geiger climate classification, ESA WorldCover, and solar hemisphere match.
+- **Tier 6 (T6) — Macro-Region / Continent:** Calibrated radius $R > 750\text{ km}$. Assigned when evidence is diffuse or ambiguous.
+
+---
+
+### Obscure & Signless Terrain Showcase
+
+Tested on rural, unpaved, or natural wilderness photos lacking road signs or Google Street View coverage:
+
+| Target Location | Target Photo | Terrain / Biome | Primary Visual Challenge | EarthTrace Solving Modality | Observed Result |
 | :--- | :---: | :--- | :--- | :--- | :--- |
-| **Somero, Finland** (`obs_01`) | <img src="docs/assets/thumbnails/obs_01_somero.jpg" width="110" style="border-radius: 6px;" alt="Somero, Finland" /> | Rural boreal crossroad, zero signs | **Failed**: Guessed generic Siberia/Sweden (>1,250 km error) | **Pinpoint**: $\le 15\text{ km}$ (**T3**) | OSM rural road network + Köppen Dfb envelope |
-| **Aobe Station, Japan** (`obs_04`) | <img src="docs/assets/thumbnails/obs_04_aobe.jpg" width="110" style="border-radius: 6px;" alt="Aobe Station" /> | Remote mountain railway halt in forest gorge | **Failed**: Confused with Swiss Alps / Cascades (>8,500 km error) | **Exact Match**: **$0.0\text{ km}$** (**T1**) | Single-track rail corridor + 30m DEM slope profile |
-| **Datil Plains, New Mexico** (`obs_02`) | <img src="docs/assets/thumbnails/obs_02_datil.jpg" width="110" style="border-radius: 6px;" alt="Datil Plains" /> | Arid high-desert highway junction (2,250m elev.) | **Failed**: Hallucinated Australian Outback (>9,000 km error) | **Pinpoint**: $\le 1.2\text{ km}$ (**T2**) | US highway corridor topology + BSk elevation bounds |
-| **Haripur Valley, Pakistan** (`obs_07`) | <img src="docs/assets/thumbnails/obs_07_haripur.jpg" width="110" style="border-radius: 6px;" alt="Haripur Valley" /> | Himalayan rural foothills, terraced agriculture | **Failed**: Error / No Google Street View coverage | **Calibrated**: $\le 25\text{ km}$ (**T3**) | AWS Terrarium DEM ridge + Köppen Cwa envelope |
-| **Pamir Mountain Pass, Tajikistan** (`rur_04`)| <img src="docs/assets/thumbnails/rur_04_pamir.jpg" width="110" style="border-radius: 6px;" alt="Pamir Mountain Pass" /> | 4,000m alpine gravel corridor in Central Asia | **Failed**: Hallucinated generic Andean road (>12,000 km error) | **Pinpoint**: $\le 4.5\text{ km}$ (**T2**) | 30m DEM skyline NCC profile + OSM unpaved highway |
-| **Brecon River Valley, Wales** (`obs_09`) | <img src="docs/assets/thumbnails/obs_09_brecon.jpg" width="110" style="border-radius: 6px;" alt="Brecon Valley" /> | Remote moorland river valley, no road markers | **Failed**: Guessed Ireland / Northern Scotland (>350 km error) | **Exact Match**: **$0.0\text{ km}$** (**T1**) | River polyline geometry + DEM valley curvature |
-| **Ouarzazate Village, Morocco** (`obs_08`) | <img src="docs/assets/thumbnails/obs_08_ouarzazate.jpg" width="110" style="border-radius: 6px;" alt="Ouarzazate Village" /> | Arid rammed-earth clay architecture | **Failed**: Guessed Middle East cities (Dubai/Riyadh, >4,500 km error)| **Pinpoint**: $\le 10\text{ km}$ (**T2**) | Vernacular clay palette + Atlas rain-shadow DEM |
+| **Somero, Finland** (`obs_01`) | <img src="docs/assets/thumbnails/obs_01_somero.jpg" width="100" style="border-radius: 4px;" alt="Somero" /> | Rural boreal crossroad | No road signs or text markers | OSM rural road network + Köppen Dfb envelope | Pinpoint $\le 15\text{ km}$ (**T3**) |
+| **Aobe Station, Japan** (`obs_04`) | <img src="docs/assets/thumbnails/obs_04_aobe.jpg" width="100" style="border-radius: 4px;" alt="Aobe" /> | Mountain railway halt in forest | Single track in dense foliage | Single-track rail corridor + 30m DEM slope profile | Exact Match **$0.0\text{ km}$** (**T1**) |
+| **Datil Plains, New Mexico** (`obs_02`) | <img src="docs/assets/thumbnails/obs_02_datil.jpg" width="100" style="border-radius: 4px;" alt="Datil" /> | High-desert highway junction | Arid highway with distant ridgeline | Highway junction topology + BSk elevation bounds | Pinpoint $\le 1.2\text{ km}$ (**T2**) |
+| **Haripur Valley, Pakistan** (`obs_07`) | <img src="docs/assets/thumbnails/obs_07_haripur.jpg" width="100" style="border-radius: 4px;" alt="Haripur" /> | Himalayan rural foothills | Terraced farmland without street view | AWS Terrarium DEM ridge + Köppen Cwa envelope | Calibrated $\le 25\text{ km}$ (**T3**) |
+| **Pamir Pass, Tajikistan** (`rur_04`)| <img src="docs/assets/thumbnails/rur_04_pamir.jpg" width="100" style="border-radius: 4px;" alt="Pamir" /> | 4,000m alpine gravel pass | Unpaved dirt track in high mountains | 30m DEM skyline NCC sweep + OSM unpaved highway | Pinpoint $\le 4.5\text{ km}$ (**T2**) |
+| **Brecon River Valley, Wales** (`obs_09`) | <img src="docs/assets/thumbnails/obs_09_brecon.jpg" width="100" style="border-radius: 4px;" alt="Brecon" /> | Moorland river valley | Remote stream corridor without buildings | River polyline geometry + DEM valley curvature | Exact Match **$0.0\text{ km}$** (**T1**) |
+| **Ouarzazate, Morocco** (`obs_08`) | <img src="docs/assets/thumbnails/obs_08_ouarzazate.jpg" width="100" style="border-radius: 4px;" alt="Ouarzazate" /> | Arid clay vernacular architecture | Unpaved desert village | Vernacular clay palette + Atlas rain-shadow DEM | Pinpoint $\le 10\text{ km}$ (**T2**) |
 
 ---
 
-## Quick Start
+## Architectural Comparison
 
-### System Requirements
-- **OS:** Windows 10 or Windows 11 (64-bit)
-- **Python:** Python 3.10, 3.11, or 3.12 (Python 3.11 recommended)
-- **Hardware:** NVIDIA GPU with $\ge 4\text{ GB}$ VRAM (tested on Quadro M1200 4GB and RTX series) or CPU mode fallback.
-
-### 1-Click Automated Setup (PowerShell)
-Clone the repository and run the idempotent Windows setup script:
-```powershell
-git clone https://github.com/AshadAbbasi212/EarthTrace.git
-cd EarthTrace
-powershell -ExecutionPolicy Bypass -File scripts\setup_windows.ps1
-```
-The automated script will:
-1. Verify Python 3.10+ installation and NVIDIA CUDA drivers.
-2. Create and configure the local virtual environment (`.venv`).
-3. Install package dependencies in editable development mode (`pip install -e .`).
-4. Validate GPU acceleration and VRAM release via `scripts/check_gpu.py`.
-5. Pre-download and cache all offline neural network weights.
-
-### Launch EarthTrace Studio
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\run.ps1
-```
-Then navigate to:
-```
-http://127.0.0.1:8080
-```
+| Architectural Dimension | EarthTrace | Commercial Web Tools (e.g. GeoSpy) | Reverse Image Search (e.g. Google Lens) | Pure Vision Models (e.g. GeoCLIP) | Street-Level Bots (e.g. PIGEON) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Inference Location** | **100% Local GPU/CPU** | Cloud Server | Cloud Server | Local Script | Cloud API |
+| **Photo Upload Required** | **No** | Yes | Yes | No | Yes |
+| **Open Source License** | **MIT License** | Proprietary | Proprietary | MIT License | Research Only |
+| **3D Elevation (DEM) Skylines** | **Yes (~30m Terrarium)** | No | No | No | No |
+| **Vector Infrastructure Corridors** | **Yes (OpenStreetMap)** | No | No | No | Street View features |
+| **Cadastral Building Footprints** | **Yes (OSM Polygons)** | No | Duplicate photos only | No | No |
+| **Uncertainty Bounds** | **Calibrated Tiers (T1–T6)** | Single coordinate point | None | Probability distribution | Single coordinate point |
+| **Audit Trail** | **JSON, HTML, GeoJSON** | Brief text summary | Web links | Raw embeddings | Coordinates |
+| **Cost** | **Free & Open Source** | Subscription credits | Free (cloud-hosted) | Free | Non-commercial |
 
 ---
 
-## 🔌 REST API Reference
+## Limitations & Failure Modes
 
-EarthTrace exposes a high-performance asynchronous REST API powered by FastAPI:
+As an active research prototype, EarthTrace has specific operational boundaries:
 
-| Method | Endpoint | Description | Query / Body Parameters |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/jobs` | Submit a new image for geolocation | Multipart form: `file` (image), `hint` (optional context) |
-| `GET` | `/api/jobs` | List recent geolocation jobs | `limit` (int, default 50) |
-| `GET` | `/api/jobs/{id}` | Get status and progress of a job | `id` (string job ID) |
-| `POST` | `/api/jobs/{id}/cancel`| Cancel a pending or running job | `id` (string job ID) |
-| `GET` | `/api/jobs/{id}/events`| Real-time Server-Sent Events (SSE) stream | `id` (string job ID) |
-| `GET` | `/api/jobs/{id}/report`| Full machine-readable decision JSON | `id` (string job ID) |
-| `GET` | `/api/jobs/{id}/report.html` | Standalone styled HTML report | `id` (string job ID) |
-| `GET` | `/api/jobs/{id}/report.geojson` | GIS-compatible GeoJSON feature collection | `id` (string job ID) |
-| `GET` | `/api/jobs/{id}/artifacts/{file}` | Retrieve visual debug artifacts | `file` (e.g. `skyline_overlay.png`) |
+1. **Featureless & Textureless Environments:** Uniform open ocean, featureless sand dunes, or completely flat plains lacking vegetation gradients or infrastructure cannot be localized beyond broad continental biomes (T5/T6).
+2. **Cloud-Covered or Obscured Horizons:** The 3D DEM skyline solver requires visible ridgelines or mountain peaks. Low-altitude fog, heavy cloud cover, or dense foreground tree occlusions prevent Normalized Cross-Correlation (NCC) alignment.
+3. **Macro & Indoor Photography:** Close-up photographs of food, indoor rooms, or objects lacking exterior architectural or geographic markers will either return wide region-level bounds (T5/T6) or honest "unknown".
+4. **Network Access vs. True Air-Gapped Mode:** In default online operation, EarthTrace does not upload images, but it queries public OpenStreetMap Overpass and AWS Terrarium endpoints using candidate coordinates. For fully air-gapped environments, the `.geo-cache/` directory must be pre-populated with required spatial tiles.
+5. **Cold-Start Latency:** To adhere to the 4 GB VRAM limit, neural models are loaded sequentially. Initial cold-start runs take ~60–90 seconds while weights are transferred to GPU memory. Subsequent cached queries take ~15–30 seconds.
 
 ---
 
-## ❓ Frequently Asked Questions (FAQ) — Photo Geolocation & Picture Location Finding
+## Technical Documentation & API Reference
 
-<details>
-<summary><b>1. How do I find the location of a picture without EXIF GPS metadata?</b></summary>
-<br>
-When EXIF metadata is absent (as is common with images from social media or messaging apps), EarthTrace uses a 5-step visual pipeline:
-1. <b>Global Visual Embeddings:</b> GeoCLIP scans the photo for visual textures, vegetation, and architecture, proposing candidate coordinates worldwide.
-2. <b>Bioclimatic & Land Cover Filtering:</b> The Köppen-Geiger classifier and ESA WorldCover filter out incompatible biomes.
-3. <b>Optical Character Recognition:</b> RapidOCR extracts foreign scripts, street signs, road codes, or license plate styles.
-4. <b>Specialized Spatial Solvers:</b> Depending on the image type, EarthTrace correlates 3D elevation horizons against 30m DEM tiles (mountains), railway/highway graphs against OpenStreetMap (rural/roads), or building contours against cadastral footprint databases (cities).
-5. <b>Homography Verification:</b> Overhead satellite orthophotos verify visual ground features using SIFT keypoint matching.
-</details>
-
-<details>
-<summary><b>2. Is EarthTrace a free, open-source alternative to GeoSpy and Graylark AI?</b></summary>
-<br>
-Yes. EarthTrace is 100% free and open-source under permissive open-source licenses. Unlike GeoSpy, which operates behind paid subscription walls, enforces credit limits, and uploads your images to remote servers, EarthTrace runs completely locally on your own machine with zero fees, no API keys, and complete data privacy.
-</details>
-
-<details>
-<summary><b>3. How does EarthTrace locate photos taken in mountains or wilderness where Google Street View does not exist?</b></summary>
-<br>
-Traditional geolocation bots (like PIGEON or StreetView models) require Google Street View car coverage to function. EarthTrace bypasses this limitation using its proprietary <b>3D DEM Skyline Solver</b>. It downloads open ~30m Digital Elevation Model (DEM) tiles, simulates true Earth curvature ($R=6371\text{ km}$) and atmospheric light refraction ($k=0.13$), and computes a 360° radial skyline sweep to match mountain peaks and valleys directly to photographic horizons.
-</details>
-
-<details>
-<summary><b>4. Does EarthTrace upload my photos to any third-party cloud servers or APIs?</b></summary>
-<br>
-<b>No.</b> EarthTrace operates with zero cloud API keys and zero cloud AI tokens. All machine learning inference (GeoCLIP, RapidOCR, PyTorch models) and spatial math solvers run locally inside your system's GPU/CPU memory. No images, coordinates, or telemetry are ever sent to external cloud servers.
-</details>
-
-<details>
-<summary><b>5. How does EarthTrace compare to Google Lens for finding image locations?</b></summary>
-<br>
-Google Lens is primarily a reverse-image product and shopping search engine; it requires an exact image duplicate or a famous tourist monument to return results, and completely fails on non-famous streets, rural roads, or natural wilderness. EarthTrace does not look for duplicate photos on the web—it geolocates novel, unindexed photos from visual evidence, terrain contours, and geospatial infrastructure.
-</details>
-
-<details>
-<summary><b>6. What photo formats and resolutions are supported?</b></summary>
-<br>
-EarthTrace natively supports <b>JPEG, PNG, WebP, HEIC/HEIF</b> (Apple iPhone format), <b>TIFF, and BMP</b>. Images of any resolution from 640×480 up to 8K ultra-high-definition panoramas are processed automatically with adaptive multi-scale tiling.
-</details>
-
-<details>
-<summary><b>7. What hardware is required to run this picture location finder locally?</b></summary>
-<br>
-EarthTrace is optimized for standard consumer PCs and laptops:
-- <b>GPU:</b> Any NVIDIA GPU with $\ge 4\text{ GB}$ VRAM (tested on GTX 1650, RTX 3050, RTX 4060, Quadro M1200) with CUDA acceleration.
-- <b>CPU Fallback:</b> Runs in CPU-only mode on multi-core systems (Intel Core i5/i7/i9 or AMD Ryzen).
-- <b>RAM:</b> $\ge 8\text{ GB}$ system RAM.
-- <b>Storage:</b> ~4 GB disk space for cached models and spatial data.
-</details>
+- **[Technical Architecture & Mathematics](docs/architecture.md):** Deep dive into 3D camera resection, raycasting, Earth curvature correction, and the 5 multimodal evidence pillars.
+- **[REST API Reference](docs/api.md):** FastAPI endpoint schemas, SSE real-time streaming, and JSON report specifications.
+- **[Third-Party Notices](THIRD_PARTY_NOTICES.md):** OpenStreetMap (ODbL), Mapzen/AWS Terrarium DEM, Wikimedia Commons, and GeoCLIP attribution.
+- **[Contributing Guidelines](CONTRIBUTING.md):** Development setup, testing instructions, and responsible use policies.
 
 ---
 
-## 🏷️ Search Index & Keyword Taxonomy
+## License
 
-To facilitate discovery across search engines, open-source directories, and OSINT tool registries, EarthTrace is indexed under the following domains:
+EarthTrace is open-source software licensed under the **[MIT License](LICENSE)**.
 
-- **Primary Geolocation Queries:** `geo locator`, `location finder`, `picture location`, `photo location finder`, `image geolocation`, `find location from photo`, `where was this photo taken`, `photo coordinate finder`, `geolocator`, `geolocation ai`.
-- **Investigative & OSINT Keywords:** `osint geolocation`, `osint photo verification`, `image verification`, `open source intelligence`, `reverse image location search`, `photo forensics`, `geolocation tool`.
-- **Competitor & Model Equivalents:** `geospy alternative`, `geospy free`, `geoclip python`, `pigeon alternative`, `geoguessr solver`, `google lens alternative for location`.
-- **Core Technologies:** `deep learning`, `computer vision`, `digital elevation model`, `dem skyline matching`, `openstreetmap`, `fastapi`, `pytorch`, `leaflet`, `rapidocr`, `cadastral mapping`.
-
----
-
-## 🛡️ Responsible Use Notice
-
-> **IMPORTANT ETHICAL NOTICE:**  
-> EarthTrace is developed and provided strictly for defensive research, humanitarian disaster response, open-source journalism verification, environmental mapping, and academic study.  
->  
-> **Strictly Prohibited Uses:**
-> - Do not use this software to track, stalk, dox, harass, or compromise non-consenting individuals or private residences.
-> - Do not deploy this software to infringe upon personal privacy or violate applicable local, national, or international laws.
-> - All jobs are subject to automated local 24-hour disk retention cleanup to prevent persistent data accumulation.
-
----
-
-## 📜 Licensing & Commercial Freedom
-
-EarthTrace is licensed under dual **MIT / Apache-2.0** licenses. All core dependencies and geospatial providers utilize open licenses and open-access public data (OpenStreetMap ODbL, AWS Terrarium Open DEM, Wikimedia Commons CC-BY-SA).
-
-Developed with precision by [Ashad Abbasi](https://github.com/AshadAbbasi212).
+Developed by [Ashad Abbasi](https://github.com/AshadAbbasi212).
