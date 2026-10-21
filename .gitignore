@@ -11,7 +11,8 @@ build/
 
 # Local data & models
 .geo-cache/
-models/
+/models/
+!src/geolocator/models/
 /data/*
 !/data/landmarks/
 vendor/**/data/
