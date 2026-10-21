@@ -44,15 +44,9 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: GIS",
     "Topic :: Scientific/Engineering :: Image Recognition",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Artificial Intelligence",
     "Topic :: Security",
 ]
-
-[project.urls]
-Homepage = "https://github.com/AshadAbbasi212/EarthTrace"
-Documentation = "https://github.com/AshadAbbasi212/EarthTrace#readme"
-Repository = "https://github.com/AshadAbbasi212/EarthTrace"
-"Bug Tracker" = "https://github.com/AshadAbbasi212/EarthTrace/issues"
 dependencies = [
     "fastapi>=0.110.0",
     "uvicorn[standard]>=0.28.0",
@@ -75,6 +69,13 @@ dependencies = [
     "httpx>=0.27.0",
     "pyyaml>=6.0.1",
 ]
+
+[project.urls]
+Homepage = "https://github.com/AshadAbbasi212/EarthTrace"
+Documentation = "https://github.com/AshadAbbasi212/EarthTrace#readme"
+Repository = "https://github.com/AshadAbbasi212/EarthTrace"
+"Bug Tracker" = "https://github.com/AshadAbbasi212/EarthTrace/issues"
+
 
 [project.optional-dependencies]
 dev = [
